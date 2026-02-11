@@ -73,7 +73,7 @@ git --no-pager tag
 
 ### 规则 6: Push 前必须编译通过
 
-**禁止推送编译失败的代码**。Push 前必须执行 `npm run build`。
+**禁止推送编译失败的代码**。Push 前必须执行后端 `cd backend && python -m pytest` 和前端 `cd frontend && npm run build`。
 
 ---
 
@@ -429,11 +429,11 @@ git --no-pager diff
 # 4. 精准暂存（三种方式）
 
 # 方式A: 按文件暂存（文件整体属于本任务）
-git add packages/server/src/modules/user/user.service.ts
-git add packages/server/src/modules/user/user.controller.ts
+git add backend/app/services/pyramid_service.py
+git add backend/app/api/pyramids.py
 
 # 方式B: 交互式暂存（文件中只有部分变更属于本任务）
-git add -p packages/server/src/modules/user/user.service.ts
+git add -p backend/app/services/pyramid_service.py
 # 对每个 hunk 选择 y(暂存) / n(跳过) / s(拆分)
 
 # 方式C: 按行暂存（需要更精细控制）
@@ -462,26 +462,27 @@ git commit -m "{message}"
 ### 交互式暂存示例
 
 ```bash
-$ git add -p src/modules/user/user.service.ts
+$ git add -p backend/app/services/pyramid_service.py
 
-diff --git a/src/modules/user/user.service.ts b/src/modules/user/user.service.ts
-@@ -10,6 +10,15 @@ export class UserService {
-   constructor(private prisma: PrismaService) {}
+diff --git a/backend/app/services/pyramid_service.py b/backend/app/services/pyramid_service.py
+@@ -10,6 +10,15 @@ class PyramidService:
+     def __init__(self, db: AsyncSession):
+         self.db = db
  
-+  // 本任务: 新增获取用户资料方法
-+  async getUserProfile(userId: string) {
-+    return this.prisma.user.findUnique({
-+      where: { id: userId }
-+    });
-+  }
++    # 本任务: 新增获取金字塔详情方法
++    async def get_pyramid(self, pyramid_id: str):
++        result = await self.db.execute(
++            select(Pyramid).where(Pyramid.id == pyramid_id)
++        )
++        return result.scalar_one_or_none()
 +
-   async findAll() {
+     async def list_all(self):
 (1/2) Stage this hunk [y,n,q,a,d,j,J,g,/,e,?]? y  # ← 这是本任务的，暂存
 
-@@ -25,6 +34,7 @@ export class UserService {
-   async updateUser(id: string, data: UpdateUserDto) {
-+    console.log('debug:', data);  // 临时调试代码
-     return this.prisma.user.update({
+@@ -25,6 +34,7 @@ class PyramidService:
+     async def update(self, pyramid_id: str, data: PyramidUpdate):
++        print('debug:', data)  # 临时调试代码
+         stmt = update(Pyramid).where(Pyramid.id == pyramid_id)
 (2/2) Stage this hunk [y,n,q,a,d,K,g,/,e,?]? n  # ← 这是调试代码，不暂存
 ```
 
@@ -502,11 +503,11 @@ diff --git a/src/modules/user/user.service.ts b/src/modules/user/user.service.ts
 
 | 类型 | 说明 | 示例 |
 |------|------|------|
-| feat | 新功能 | `feat(attendance): 添加打卡功能` |
+| feat | 新功能 | `feat(pyramid): 添加金字塔节点管理` |
 | fix | 修复bug | `fix(user): 修复登录验证问题` |
 | docs | 文档更新 | `docs(api): 更新API文档` |
 | refactor | 重构 | `refactor(auth): 重构认证逻辑` |
-| test | 测试 | `test(attendance): 添加打卡测试` |
+| test | 测试 | `test(pyramid): 添加金字塔测试` |
 | chore | 杂项 | `chore(deps): 更新依赖` |
 
 ### 分支策略
@@ -560,8 +561,8 @@ commit
 
 | 项目 | 内容 |
 |------|------|
-| 分支 | feature/attendance |
-| 提交信息 | feat(attendance): 实现打卡服务 |
+| 分支 | feature/pyramid |
+| 提交信息 | feat(pyramid): 实现金字塔节点服务 |
 | 变更文件 | 3个 |
 
 ### 下一步

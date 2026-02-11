@@ -4,6 +4,110 @@
 
 本实现计划将迭代 3 的设计分解为可执行的编码任务。任务按照依赖关系排序，确保每个任务都建立在前一个任务的基础上。
 
+## 任务依赖关系图
+
+> 说明：同一行的任务可并行执行，箭头表示串行依赖。
+
+```mermaid
+graph LR
+  subgraph 阶段1: 数据层
+    T1[Task 1: 数据模型扩展]
+    T2[Task 2: Checkpoint-模型]
+  end
+  subgraph 阶段2: 输入处理
+    T3[Task 3: 文件解析]
+    T4[Task 4: 输入处理]
+    T5[Task 5: 批量处理]
+    T6[Task 6: Checkpoint-输入]
+  end
+  subgraph 阶段3: 概念处理
+    T7[Task 7: 概念提取]
+    T8[Task 8: 同义词管理]
+    T9[Task 9: 概念匹配]
+    T10[Task 10: Checkpoint-概念]
+  end
+  subgraph 阶段4: 提案管理
+    T11[Task 11: 提案生成]
+    T12[Task 12: 优先级计算]
+    T13[Task 13: 审批队列]
+    T14[Task 14: 影响分析]
+    T15[Task 15: Checkpoint-提案]
+  end
+  subgraph 阶段5: 决策执行
+    T16[Task 16: 快照管理]
+    T17[Task 17: 决策执行]
+    T18[Task 18: 贡献追踪]
+    T19[Task 19: 通知服务]
+    T20[Task 20: Checkpoint-核心]
+  end
+  subgraph 阶段6: 接口层
+    T21[Task 21: 后端API]
+    T22[Task 22: Checkpoint-API]
+    T23[Task 23: 前端Client]
+  end
+  subgraph 阶段7: 前端界面
+    T24[Task 24: 审批中心]
+    T25[Task 25: 内容输入]
+    T26[Task 26: 变更历史]
+    T27[Task 27: 贡献记录]
+    T28[Task 28: Checkpoint-界面]
+  end
+  subgraph 阶段8: 集成
+    T29[Task 29: 集成测试]
+    T30[Task 30: 最终Checkpoint]
+  end
+
+  T1 --> T2
+  T2 --> T3
+  T3 --> T4
+  T4 --> T5
+  T5 --> T6
+  T6 --> T7
+  T6 --> T8
+  T7 --> T9
+  T8 --> T9
+  T9 --> T10
+  T10 --> T11
+  T11 --> T12
+  T11 --> T13
+  T11 --> T14
+  T14 --> T15
+  T15 --> T16
+  T16 --> T17
+  T17 --> T18
+  T18 --> T19
+  T19 --> T20
+  T20 --> T21
+  T21 --> T22
+  T22 --> T23
+  T23 --> T24
+  T23 --> T25
+  T23 --> T26
+  T23 --> T27
+  T27 --> T28
+  T28 --> T29
+  T29 --> T30
+```
+
+### 依赖关系速查表
+
+| 任务 | 前置依赖 | 可并行 |
+|------|----------|--------|
+| Task 1: 数据模型 | 无 | - |
+| Task 3: 文件解析 | Task 2 | - |
+| Task 4: 输入处理 | Task 3 | - |
+| Task 7: 概念提取 | Task 6 | ✅ 与 Task 8 |
+| Task 8: 同义词管理 | Task 6 | ✅ 与 Task 7 |
+| Task 9: 概念匹配 | Task 7, 8 | - |
+| Task 11: 提案生成 | Task 10 | - |
+| Task 12: 优先级 | Task 11 | ✅ 与 Task 13, 14 |
+| Task 13: 审批队列 | Task 11 | ✅ 与 Task 12, 14 |
+| Task 14: 影响分析 | Task 11 | ✅ 与 Task 12, 13 |
+| Task 16: 快照管理 | Task 15 | - |
+| Task 17: 决策执行 | Task 16 | - |
+| Task 21: 后端API | Task 20 | - |
+| Task 24-27: 前端 | Task 23 | ✅ 彼此并行 |
+
 ## 技术栈
 
 - 后端：Python FastAPI
@@ -131,6 +235,7 @@
   
   - [ ] 7.2 创建概念提取 Prompt 模板
     - 在 `backend/app/services/ai/prompts.py` 中添加 CONCEPT_EXTRACTION_PROMPT
+    - 确保 Prompt 模板支持参数化配置
     - _Requirements: 2.1_
   
   - [ ]* 7.3 编写概念提取属性测试
@@ -434,6 +539,10 @@
   - [ ] 29.3 编写回滚流程集成测试
     - 测试完整回滚流程（执行→回滚→验证）
     - _Requirements: 8.2-8.5_
+  
+  - [ ] 29.4 完善回归测试
+    - 针对输入处理和审批流程添加边界条件测试
+    - 验证此前发现的 Bug 已被测试覆盖
 
 - [ ] 30. 最终检查点 - 迭代 3 完成
   - 确保所有测试通过，如有问题请询问用户

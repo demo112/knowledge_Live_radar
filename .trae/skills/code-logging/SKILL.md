@@ -204,27 +204,27 @@ logger.error({ err: error, userId }, '登录失败');
 
 ```bash
 # 检查是否有 console.log
-grep -r "console.log" packages/server/src --include="*.ts"
+grep -r "console.log" backend/app --include="*.py"
 
 # 如果有输出，必须替换为 logger
 ```
 
 ### Logger 使用规范
 
-```typescript
-import { createLogger } from '../common/logger';
+```python
+import logging
 
-// 创建模块级 logger
-const logger = createLogger('attendance');
+# 创建模块级 logger
+logger = logging.getLogger('pyramid')
 
-// INFO 级别：关键业务操作
-logger.info({ userId, shiftId }, '创建班次');
+# INFO 级别：关键业务操作
+logger.info('创建金字塔节点', extra={'user_id': user_id, 'node_id': node_id})
 
-// ERROR 级别：错误和异常
-logger.error({ err: error, context }, '班次创建失败');
+# ERROR 级别：错误和异常
+logger.error('节点创建失败', extra={'error': str(error), 'context': context})
 
-// WARN 级别：警告信息
-logger.warn({ userId, reason }, '班次时间重叠');
+# WARNING 级别：警告信息
+logger.warning('节点层级超限', extra={'user_id': user_id, 'reason': reason})
 ```
 
 ---
@@ -406,10 +406,15 @@ logger.warn({ userId, reason }, '班次时间重叠');
 
 **格式**：`[时间] [级别] [模块] [用户ID] 消息 {上下文}`
 
-```typescript
-// 示例
-logger.info('attendance', userId, '用户打卡成功', { location, type })
-logger.error('attendance', userId, '打卡失败', { error: error.message })
+```python
+import logging
+
+logger = logging.getLogger('pyramid')
+
+# INFO 级别
+logger.info('用户操作成功', extra={'user_id': user_id, 'action': action})
+# ERROR 级别
+logger.error('操作失败', extra={'error': str(error), 'user_id': user_id})
 ```
 
 **禁止记录**：
@@ -446,42 +451,38 @@ logger.error('attendance', userId, '打卡失败', { error: error.message })
 
 ### 输出示例
 
-```typescript
-// 补充日志前
-async checkIn(dto: CreateAttendanceDto, userId: string) {
-  try {
-    const record = await this.prisma.attendanceRecord.create({
-      data: { ... }
-    })
-    return record
-  } catch (error) {
-    throw error
-  }
-}
+```python
+# 补充日志前
+async def create_pyramid(self, data: PyramidCreate, user_id: str):
+    try:
+        pyramid = Pyramid(**data.dict())
+        self.db.add(pyramid)
+        await self.db.commit()
+        return pyramid
+    except Exception as error:
+        raise error
 
-// 补充日志后
-async checkIn(dto: CreateAttendanceDto, userId: string) {
-  this.logger.info('attendance', userId, '开始打卡', { type: dto.type })
-  
-  try {
-    const record = await this.prisma.attendanceRecord.create({
-      data: { ... }
-    })
-    
-    this.logger.info('attendance', userId, '打卡成功', { 
-      recordId: record.id, 
-      type: dto.type 
-    })
-    
-    return record
-  } catch (error) {
-    this.logger.error('attendance', userId, '打卡失败', { 
-      error: error.message,
-      type: dto.type 
-    })
-    throw error
-  }
-}
+# 补充日志后
+async def create_pyramid(self, data: PyramidCreate, user_id: str):
+    logger.info('开始创建金字塔', extra={'user_id': user_id, 'name': data.name})
+
+    try:
+        pyramid = Pyramid(**data.dict())
+        self.db.add(pyramid)
+        await self.db.commit()
+
+        logger.info('金字塔创建成功', extra={
+            'pyramid_id': pyramid.id,
+            'user_id': user_id,
+        })
+
+        return pyramid
+    except Exception as error:
+        logger.error('金字塔创建失败', extra={
+            'error': str(error),
+            'user_id': user_id,
+        })
+        raise error
 ```
 
 ---

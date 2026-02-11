@@ -177,7 +177,7 @@ next_skills:
 ### 流程总览
 
 ```
-读取设计 → 提取文件清单 → 按层分组 → 确定依赖 → 设计验证 → 输出清单 → 用户确认
+读取设计 → 提取文件清单 → 按层分组 → 确定依赖 → 生成依赖图 → 设计验证 → 输出清单 → 用户确认
 ```
 
 ### 阶段一：读取设计
@@ -226,11 +226,11 @@ next_skills:
 
 1. **识别文件层次**：判断每个文件属于哪一层
 2. **按层分组**：
-   - 第1层：数据模型（Prisma Schema）
-   - 第2层：类型定义（shared types）
+   - 第1层：数据模型（SQLAlchemy Model / Alembic 迁移）
+   - 第2层：Schema 定义（Pydantic schemas）
    - 第3层：服务层（service）
-   - 第4层：接口层（controller/route）
-   - 第5层：前端组件（pages/components）
+   - 第4层：接口层（FastAPI router）
+   - 第5层：前端组件（Next.js pages/components）
    - 第6层：集成联调
 3. **层内排序**：同一层内按依赖关系排序
 
@@ -261,22 +261,27 @@ next_skills:
 #### 执行步骤
 
 1. **识别依赖**：分析每个任务依赖哪些前置任务
-2. **检测循环**：检查是否存在循环依赖
-3. **解决循环**：如有循环依赖，调整任务划分
-4. **确定顺序**：生成最终的执行顺序
+2. **标注并行**：识别无依赖关系的任务，标记为可并行执行
+3. **检测循环**：检查是否存在循环依赖
+4. **解决循环**：如有循环依赖，调整任务划分
+5. **确定顺序**：生成最终的执行顺序
+6. **生成 Mermaid 图**：用 `graph LR` 绘制依赖关系图，subgraph 按阶段分组，箭头表示串行依赖，同一阶段内无箭头连接的任务为可并行
 
 #### 输出
 
 | 输出项 | 格式 | 说明 |
 |--------|------|------|
-| 依赖关系图 | 列表 | 每个任务的前置依赖 |
+| Mermaid 依赖关系图 | `graph LR` | 可视化展示串行/并行关系 |
+| 依赖关系速查表 | 表格 | 每个任务的前置依赖及可并行标注 |
 | 执行顺序 | 有序列表 | 任务的执行顺序 |
 
 #### 质量门控
 
 - [ ] 依赖关系已识别
+- [ ] 已标注可并行执行的任务
 - [ ] 无循环依赖
 - [ ] 执行顺序合理
+- [ ] Mermaid 图语法正确，可渲染
 
 ---
 
@@ -304,15 +309,14 @@ next_skills:
 
 | 任务类型 | 验证命令模板 | 预期输出 |
 |----------|-------------|---------|
-| **数据模型（Prisma）** | `npx prisma validate` | 退出码 0，无错误输出 |
-| **数据库迁移** | `npx prisma migrate dev --name {name}` | 迁移成功，无错误 |
-| **类型定义** | `npm run type-check` 或 `npx tsc --noEmit` | 退出码 0，无类型错误 |
-| **Service 实现** | `npm run test -- {service}.test.ts` | 所有测试通过 |
-| **Controller 实现** | `curl -X {METHOD} http://localhost:3000/api/v1/{path}` | HTTP 200，返回预期 JSON |
-| **API 集成测试** | `npm run test:e2e -- {module}` | 所有测试通过 |
-| **前端组件** | `npm run test -- {component}.test.tsx` | 所有测试通过 |
-| **编译检查** | `npm run build` | 编译成功，无错误 |
-| **Lint 检查** | `npm run lint -- {file}` | 无 lint 错误 |
+| **数据模型（SQLAlchemy）** | `cd backend && alembic check` | 退出码 0，无错误输出 |
+| **数据库迁移** | `cd backend && alembic upgrade head` | 迁移成功，无错误 |
+| **Schema 定义** | `cd backend && python -c "from app.schemas import *"` | 退出码 0，无导入错误 |
+| **Service 实现** | `cd backend && python -m pytest tests/ -k "test_{service}"` | 所有测试通过 |
+| **Router 实现** | `curl -X {METHOD} http://localhost:8000/api/v1/{path}` | HTTP 200，返回预期 JSON |
+| **API 集成测试** | `cd backend && python -m pytest tests/ -k "{module}"` | 所有测试通过 |
+| **前端组件** | `cd frontend && npm run build` | 编译成功，无错误 |
+| **Lint 检查** | `cd backend && ruff check app/` | 无 lint 错误 |
 
 ##### 验证命令格式规范
 
@@ -328,17 +332,17 @@ next_skills:
 **✅ 正确写法**：
 
 ```markdown
-| 验证 | 命令: `npx prisma validate` |
-|      | 预期: 退出码 0，输出 "Prisma schema is valid" |
+| 验证 | 命令: `cd backend && alembic check` |
+|      | 预期: 退出码 0，无待执行迁移 |
 ```
 
 ```markdown
-| 验证 | 命令: `npm run type-check` |
-|      | 预期: 退出码 0，无类型错误 |
+| 验证 | 命令: `cd backend && python -c "from app.schemas import *"` |
+|      | 预期: 退出码 0，无导入错误 |
 ```
 
 ```markdown
-| 验证 | 命令: `curl -s http://localhost:3000/api/v1/health` |
+| 验证 | 命令: `curl -s http://localhost:8000/api/v1/health` |
 |      | 预期: `{"status":"ok"}` |
 ```
 
@@ -385,8 +389,9 @@ next_skills:
 #### 执行步骤
 
 1. **组装任务清单**：按模板组装所有任务
-2. **添加概览信息**：总任务数、涉及模块、总时间
-3. **添加检查点说明**：说明提交策略
+2. **生成依赖关系图**：用 Mermaid 图表展示任务串行/并行关系，附依赖速查表
+3. **添加概览信息**：总任务数、涉及模块、总时间
+4. **添加检查点说明**：说明提交策略
 
 #### 输出
 
@@ -439,11 +444,11 @@ next_skills:
 
 | 输出项 | 类型 | 格式 | 位置 |
 |--------|------|------|------|
-| 任务清单 | 文档型 | Markdown | `.trae/specs/{feature}/tasks.md` |
+| 任务清单（含依赖关系图） | 文档型 | Markdown + Mermaid | `.trae/specs/{feature}/tasks.md` |
 
 ### 输出模板
 
-```markdown
+````markdown
 # Tasks: {Feature Name}
 
 ## 概览
@@ -454,6 +459,53 @@ next_skills:
 | 涉及模块 | {模块列表} |
 | 涉及端 | Server / Web / App |
 | 预计总时间 | X 分钟 |
+
+## 任务依赖关系图
+
+> 说明：同一行的任务可并行执行，箭头表示串行依赖。
+
+```mermaid
+graph LR
+  subgraph 阶段1: 数据层
+    T1[Task 1: {标题}]
+  end
+  subgraph 阶段2: 类型层
+    T2[Task 2: {标题}]
+  end
+  subgraph 阶段3: 服务层
+    T3[Task 3: {标题}]
+    T4[Task 4: {标题}]
+  end
+  subgraph 阶段4: 接口层
+    T5[Task 5: {标题}]
+  end
+  subgraph 阶段5: 前端层
+    T6[Task 6: {标题}]
+  end
+  subgraph 阶段6: 集成联调
+    TN[Task N: 集成测试]
+  end
+
+  T1 --> T2
+  T2 --> T3
+  T2 --> T4
+  T3 --> T5
+  T4 --> T5
+  T5 --> T6
+  T6 --> TN
+```
+
+### 依赖关系速查表
+
+| 任务 | 前置依赖 | 可并行 |
+|------|----------|--------|
+| Task 1 | 无 | - |
+| Task 2 | Task 1 | - |
+| Task 3 | Task 2 | ✅ 与 Task 4 并行 |
+| Task 4 | Task 2 | ✅ 与 Task 3 并行 |
+| Task 5 | Task 3, Task 4 | - |
+| Task 6 | Task 5 | - |
+| Task N | Task 6 | - |
 
 ## 任务清单
 
@@ -504,7 +556,7 @@ next_skills:
 | 属性 | 值 |
 |------|-----|
 | 内容 | 端到端测试，验证完整流程 |
-| 验证 | 命令: `npm run test:e2e -- {module}.e2e.ts` |
+| 验证 | 命令: `cd backend && python -m pytest tests/ -k "test_integration"` |
 |      | 预期: 所有 E2E 测试通过，退出码 0 |
 | 预计 | X 分钟 |
 | 依赖 | 所有前置任务 |
@@ -522,11 +574,11 @@ next_skills:
 | 任务 | 风险 | 应对 |
 |------|------|------|
 | {任务} | {风险描述} | {应对措施} |
-```
+````
 
 ### 输出示例
 
-```markdown
+````markdown
 # Tasks: 员工打卡
 
 ## 概览
@@ -534,79 +586,118 @@ next_skills:
 | 指标 | 值 |
 |------|-----|
 | 总任务数 | 6 |
-| 涉及模块 | attendance |
-| 涉及端 | Server, App |
+| 涉及模块 | pyramid |
+| 涉及端 | Server, Web |
 | 预计总时间 | 60 分钟 |
+
+## 任务依赖关系图
+
+> 说明：同一行的任务可并行执行，箭头表示串行依赖。
+
+```mermaid
+graph LR
+  subgraph 阶段1: 数据层
+    T1[Task 1: 创建打卡记录数据模型]
+  end
+  subgraph 阶段2: 类型层
+    T2[Task 2: 定义打卡相关类型]
+  end
+  subgraph 阶段3: 服务层
+    T3[Task 3: 实现打卡服务]
+  end
+  subgraph 阶段4: 接口层
+    T4[Task 4: 实现打卡接口]
+  end
+  subgraph 阶段5: 前端层
+    T5[Task 5: 实现打卡页面]
+  end
+  subgraph 阶段6: 集成联调
+    T6[Task 6: 集成测试]
+  end
+
+  T1 --> T2 --> T3 --> T4 --> T5 --> T6
+```
+
+### 依赖关系速查表
+
+| 任务 | 前置依赖 | 可并行 |
+|------|----------|--------|
+| Task 1: 创建打卡记录数据模型 | 无 | - |
+| Task 2: 定义打卡相关类型 | Task 1 | - |
+| Task 3: 实现打卡服务 | Task 2 | - |
+| Task 4: 实现打卡接口 | Task 3 | - |
+| Task 5: 实现打卡页面 | Task 4 | - |
+| Task 6: 集成测试 | Task 5 | - |
 
 ## 任务清单
 
 ### 阶段1：数据层
 
-#### Task 1: 创建打卡记录数据模型
+#### Task 1: 创建数据模型
 
 | 属性 | 值 |
 |------|-----|
-| 文件 | `prisma/schema.prisma` |
-| 操作 | 修改 |
-| 内容 | 添加AttendanceRecord模型 |
-| 验证 | 命令: `npx prisma validate` |
-|      | 预期: 输出 "Prisma schema is valid"，退出码 0 |
+| 文件 | `backend/app/models/{module}.py` |
+| 操作 | 新增 |
+| 内容 | 添加 SQLAlchemy 模型 |
+| 验证 | 命令: `cd backend && alembic check` |
+|      | 预期: 退出码 0，模型定义正确 |
 | 预计 | 5 分钟 |
 | 依赖 | 无 |
 
-### 阶段2：类型层
+### 阶段2：Schema层
 
-#### Task 2: 定义打卡相关类型
+#### Task 2: 定义 Pydantic Schema
 
 | 属性 | 值 |
 |------|-----|
-| 文件 | `packages/shared/src/types/attendance.ts` |
+| 文件 | `backend/app/schemas/{module}.py` |
 | 操作 | 新增 |
-| 内容 | CreateAttendanceDto, AttendanceRecordVo |
-| 验证 | 命令: `npm run type-check` |
-|      | 预期: 退出码 0，无类型错误 |
+| 内容 | CreateSchema, ResponseSchema 等 |
+| 验证 | 命令: `cd backend && python -c "from app.schemas.{module} import *"` |
+|      | 预期: 退出码 0，无导入错误 |
 | 预计 | 5 分钟 |
 | 依赖 | Task 1 |
 
 ### 阶段3：服务层
 
-#### Task 3: 实现打卡服务
+#### Task 3: 实现业务服务
 
 | 属性 | 值 |
 |------|-----|
-| 文件 | `packages/server/src/modules/attendance/attendance.service.ts` |
+| 文件 | `backend/app/services/{module}_service.py` |
 | 操作 | 新增 |
-| 内容 | AttendanceService类，checkIn方法 |
-| 验证 | 命令: `npm run test -- attendance.service.test.ts` |
+| 内容 | Service 类，核心业务方法 |
+| 验证 | 命令: `cd backend && python -m pytest tests/ -k "test_{module}"` |
 |      | 预期: 所有测试通过，退出码 0 |
 | 预计 | 15 分钟 |
 | 依赖 | Task 2 |
 
 ### 阶段4：接口层
 
-#### Task 4: 实现打卡接口
+#### Task 4: 实现 API 路由
 
 | 属性 | 值 |
 |------|-----|
-| 文件 | `packages/server/src/modules/attendance/attendance.controller.ts` |
+| 文件 | `backend/app/api/{module}.py` |
 | 操作 | 新增 |
-| 内容 | POST /api/v1/attendance/check-in |
-| 验证 | 命令: `curl -s -X POST http://localhost:3000/api/v1/attendance/check-in -H "Content-Type: application/json" -d '{"employeeId":"emp_001"}'` |
-|      | 预期: `{"success":true,"data":{"id":"...","timestamp":"..."}}` |
+| 内容 | FastAPI Router，RESTful 接口 |
+| 验证 | 命令: `curl -s -X POST http://localhost:8000/api/v1/{module} -H "Content-Type: application/json" -d '{...}'` |
+|      | 预期: `{"success":true,"data":{...}}` |
 | 预计 | 10 分钟 |
 | 依赖 | Task 3 |
 
 ### 阶段5：前端层
 
-#### Task 5: 实现打卡页面
+#### Task 5: 实现前端页面
 
 | 属性 | 值 |
 |------|-----|
-| 文件 | `packages/app/src/pages/attendance/CheckIn.tsx` |
+| 文件 | `frontend/src/app/(dashboard)/{module}/page.tsx` |
 | 操作 | 新增 |
-| 内容 | 打卡按钮、GPS获取、结果展示 |
-| 验证 | 命令: `npm run test -- CheckIn.test.tsx` |
-|      | 预期: 所有测试通过，退出码 0 |
+| 内容 | 页面组件、数据展示 |
+| 验证 | 命令: `cd frontend && npm run build` |
+|      | 预期: 编译成功，退出码 0 |
 | 预计 | 20 分钟 |
 | 依赖 | Task 4 |
 
@@ -616,9 +707,9 @@ next_skills:
 
 | 属性 | 值 |
 |------|-----|
-| 内容 | 完整打卡流程测试 |
-| 验证 | 命令: `npm run test:e2e -- attendance.e2e.ts` |
-|      | 预期: 所有 E2E 测试通过，退出码 0 |
+| 内容 | 完整流程测试 |
+| 验证 | 命令: `cd backend && python -m pytest tests/ -k "test_integration"` |
+|      | 预期: 所有测试通过，退出码 0 |
 | 预计 | 5 分钟 |
 | 依赖 | Task 5 |
 
@@ -635,7 +726,7 @@ next_skills:
 | 任务 | 风险 | 应对 |
 |------|------|------|
 | Task 5 | GPS权限可能被拒绝 | 添加权限引导提示 |
-```
+````
 
 ---
 
@@ -667,13 +758,13 @@ next_skills:
 #### ✅ 高质量写法
 
 ```markdown
-| 验证 | 命令: `npm run test -- CheckIn.test.tsx` |
-|      | 预期: 所有测试通过，退出码 0 |
+| 验证 | 命令: `cd frontend && npm run build` |
+|      | 预期: 编译成功，退出码 0 |
 ```
 
 ```markdown
-| 验证 | 命令: `curl -s http://localhost:3000/api/v1/attendance/check-in -X POST -H "Content-Type: application/json" -d '{"employeeId":"emp_001"}'` |
-|      | 预期: `{"success":true,"data":{"id":"...","timestamp":"..."}}` |
+| 验证 | 命令: `curl -s http://localhost:8000/api/v1/{resource} -X POST -H "Content-Type: application/json" -d '{...}'` |
+|      | 预期: `{"success":true,"data":{...}}` |
 ```
 
 **改进点**：
@@ -688,11 +779,11 @@ next_skills:
 #### ❌ 低质量写法
 
 ```markdown
-| 验证 | `npm run build` |
+| 验证 | `cd frontend && npm run build` |
 ```
 
 ```markdown
-| 验证 | `npx prisma validate` |
+| 验证 | `cd backend && alembic check` |
 ```
 
 **问题分析**：
@@ -703,13 +794,13 @@ next_skills:
 #### ✅ 高质量写法
 
 ```markdown
-| 验证 | 命令: `npm run build` |
+| 验证 | 命令: `cd frontend && npm run build` |
 |      | 预期: 编译成功，退出码 0，无错误输出 |
 ```
 
 ```markdown
-| 验证 | 命令: `npx prisma validate` |
-|      | 预期: 输出 "Prisma schema is valid"，退出码 0 |
+| 验证 | 命令: `cd backend && alembic check` |
+|      | 预期: 退出码 0，无待执行迁移 |
 ```
 
 **改进点**：
@@ -724,7 +815,7 @@ next_skills:
 #### ❌ 低质量写法
 
 ```markdown
-#### Task: 创建 Prisma 数据模型
+#### Task: 创建 SQLAlchemy 数据模型
 
 | 验证 | 启动服务器，手动测试 |
 ```
@@ -732,27 +823,27 @@ next_skills:
 ```markdown
 #### Task: 实现 API 接口
 
-| 验证 | `npm run type-check` |
+| 验证 | `python -c "import app"` |
 ```
 
 **问题分析**：
-- 数据模型任务应该用 `prisma validate` 验证，而非启动服务器
-- API 接口任务应该用 `curl` 或 API 测试验证，而非类型检查
+- 数据模型任务应该用 `alembic check` 验证，而非启动服务器
+- API 接口任务应该用 `curl` 或 API 测试验证，而非导入检查
 - 验证方式与任务类型不匹配，无法真正验证任务完成
 
 #### ✅ 高质量写法
 
 ```markdown
-#### Task: 创建 Prisma 数据模型
+#### Task: 创建 SQLAlchemy 数据模型
 
-| 验证 | 命令: `npx prisma validate` |
-|      | 预期: 退出码 0，Schema 验证通过 |
+| 验证 | 命令: `cd backend && alembic check` |
+|      | 预期: 退出码 0，模型验证通过 |
 ```
 
 ```markdown
 #### Task: 实现 API 接口
 
-| 验证 | 命令: `curl -s http://localhost:3000/api/v1/users -H "Authorization: Bearer $TOKEN"` |
+| 验证 | 命令: `curl -s http://localhost:8000/api/v1/users -H "Authorization: Bearer $TOKEN"` |
 |      | 预期: HTTP 200，返回用户列表 JSON |
 ```
 
@@ -796,8 +887,8 @@ next_skills:
   - 不使用「正常」「成功」等模糊词汇描述预期
 
 - [ ] **3. 任务类型匹配检查**
-  - 数据模型任务使用 `prisma validate` 或 `prisma migrate` 验证
-  - 类型定义任务使用 `tsc --noEmit` 或 `type-check` 验证
+  - 数据模型任务使用 `alembic check` 或 `alembic upgrade` 验证
+  - Schema 定义任务使用 `python -c "from app.schemas import *"` 验证
   - Service 任务使用单元测试验证
   - Controller/API 任务使用 `curl` 或 API 测试验证
   - 前端组件任务使用组件测试或 E2E 测试验证
@@ -838,7 +929,7 @@ next_skills:
 
 **修正后的验证方式**：
 ```markdown
-| 验证 | 命令: `npm run test:e2e -- clock.e2e.ts` |
+| 验证 | 命令: `cd backend && python -m pytest tests/ -k "test_integration"` |
 |      | 预期: 所有测试通过，退出码 0 |
 ```
 

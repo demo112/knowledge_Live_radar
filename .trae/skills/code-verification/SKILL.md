@@ -150,7 +150,7 @@ describe('契约验证 - 属性测试', () => {
 
 #### 3. 生成契约文档
 
-创建 `docs/contracts/CONTRACT_[功能名].md` 记录所有提取的契约和验证状态。
+创建 `docs/issues/CONTRACT_[功能名].md` 记录所有提取的契约和验证状态。
 
 ### 质量门控
 
@@ -394,12 +394,12 @@ npx stryker run
 
 ```bash
 # 检查是否有 console.log（禁止）
-grep -r "console.log" packages/server/src --include="*.ts"
+grep -r "console.log" backend/app --include="*.py"
 # 如果有输出 → 必须替换为 logger
 
-# 检查是否有 throw new Error（应使用 AppError）
-grep -r "throw new Error" packages/server/src --include="*.ts"
-# 如果有输出 → 建议替换为 AppError
+# 检查是否有 raise Exception（应使用自定义异常）
+grep -r "raise Exception" backend/app --include="*.py"
+# 如果有输出 → 建议替换为自定义异常
 ```
 
 #### 2. 文档完整性检查
@@ -409,7 +409,7 @@ grep -r "throw new Error" packages/server/src --include="*.ts"
 npm run lint:docs
 
 # 检查项：
-# - docs/features/{SPEC_ID}/ 下存在 requirements.md、design.md、tasks.md
+# - docs/feature/{SPEC_ID}/ 下存在 requirements.md、design.md、tasks.md
 # - 文件名无中文
 ```
 

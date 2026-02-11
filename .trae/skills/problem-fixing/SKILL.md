@@ -67,7 +67,7 @@ next_skills:
 **修复前必须执行**：
 
 ```bash
-grep -r "{关键词}" docs/bug_fix/
+grep -r "{关键词}" docs/issues/
 ```
 
 | 检查结果 | 处理 |

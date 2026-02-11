@@ -6,7 +6,7 @@ type: platform-specific
 
 # App 端调试 (React Native + Expo)
 
-> 适用于 attendance-system/packages/app
+> 适用于移动端 App 调试
 
 ---
 

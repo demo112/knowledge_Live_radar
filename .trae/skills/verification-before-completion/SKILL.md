@@ -182,7 +182,7 @@ related_rules:
 npm run build
 
 ### 输出
-> attendance-system@1.0.0 build
+> ai-radar@1.0.0 build
 > tsc && vite build
 
 vite v5.0.0 building for production...

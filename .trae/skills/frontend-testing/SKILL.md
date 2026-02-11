@@ -53,9 +53,8 @@ cat package.json | grep "test"
 
 | 包 | 路径 | 测试命令 |
 |----|------|----------|
-| shared | packages/shared | `pnpm --filter @attendance/shared test` |
-| web | packages/web | `pnpm --filter @attendance/web test` |
-| app | packages/app | `pnpm --filter @attendance/app test` |
+| backend | backend/ | `cd backend && python -m pytest tests/` |
+| frontend | frontend/ | `cd frontend && npm test` |
 
 ---
 
@@ -96,13 +95,13 @@ src/components/Button.tsx   → src/components/Button.test.tsx
 
 ```bash
 # 运行单个文件
-pnpm --filter @attendance/web test -- --run src/utils/date.test.ts
+cd frontend && npx vitest --run src/utils/date.test.ts
 
-# 运行整个包
-pnpm --filter @attendance/web test -- --run
+# 运行整个项目
+cd frontend && npm test
 
-# 运行所有包
-pnpm test
+# 运行后端测试
+cd backend && python -m pytest tests/
 ```
 
 ### 场景 C：测试失败处理

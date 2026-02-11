@@ -312,8 +312,8 @@ related_rules:
 
 | 输出项 | 类型 | 格式 | 位置 |
 |--------|------|------|------|
-| 进度日志 | 文档型 | Markdown | docs/progress/*.md |
-| 决策日志 | 文档型 | Markdown | docs/decisions/*.md |
+| 进度日志 | 文档型 | Markdown | docs/feature/*/tasks.md |
+| 决策日志 | 文档型 | Markdown | docs/feature/*/design.md |
 | 问题日志 | 文档型 | Markdown | docs/issues/*.md |
 | 变更日志 | 文档型 | Markdown | docs/changelog.md |
 
@@ -321,8 +321,8 @@ related_rules:
 
 | 类型 | 记录位置 | 触发时机 |
 |------|---------|---------|
-| 进度 | progress/*.md | 任务状态变化 |
-| 决策 | decisions/*.md | 做出技术/业务决策 |
+| 进度 | feature/*/tasks.md | 任务状态变化 |
+| 决策 | feature/*/design.md | 做出技术/业务决策 |
 | 问题 | issues/*.md | 遇到/解决问题 |
 | 变更 | changelog.md | 代码提交 |
 

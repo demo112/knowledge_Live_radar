@@ -928,8 +928,8 @@ As a 员工, I want 查看我的打卡记录, so that 确认我的出勤情况
 ## Metadata
 
 - 规模：小
-- 涉及模块：attendance
-- 涉及端：App, Server
+- 涉及模块：pyramid
+- 涉及端：Backend, Frontend
 - 创建时间：2026-01-29
 - 状态：已确认
 ```

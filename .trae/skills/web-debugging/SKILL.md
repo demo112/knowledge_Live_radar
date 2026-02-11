@@ -6,7 +6,7 @@ type: platform-specific
 
 # Web 端调试 (React + Vite)
 
-> 适用于 attendance-system/packages/web
+> 适用于前端 Web 调试
 
 ---
 

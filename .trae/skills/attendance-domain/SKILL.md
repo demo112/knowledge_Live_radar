@@ -221,6 +221,6 @@ att_leaves (请假/出差记录)
 ## 引用资料
 
 详细规格请参考：
-- #[[file:attendance-system/docs/requirements.md]]
-- #[[file:attendance-system/docs/database-design.md]]
-- #[[file:attendance-system/docs/project-roadmap.md]]
+- #[[file:docs/requirements.md]]
+- #[[file:docs/database-design.md]]
+- #[[file:docs/project-roadmap.md]]

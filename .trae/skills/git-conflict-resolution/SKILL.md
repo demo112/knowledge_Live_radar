@@ -244,35 +244,31 @@ import { RoleGuard } from '../guards/role.guard';
 
 #### 场景2：同函数不同修改
 
-```typescript
-// 冲突前
+```python
+# 冲突前
 <<<<<<< HEAD
-async getUserProfile(userId: string) {
-  const user = await this.prisma.user.findUnique({
-    where: { id: userId },
-    include: { department: true }  // 你加的：包含部门
-  });
-  return user;
-}
+async def get_pyramid(self, pyramid_id: str):
+    result = await self.db.execute(
+        select(Pyramid).where(Pyramid.id == pyramid_id)
+        .options(joinedload(Pyramid.children))  # 你加的：包含子节点
+    )
+    return result.scalar_one_or_none()
 =======
-async getUserProfile(userId: string) {
-  const user = await this.prisma.user.findUnique({
-    where: { id: userId },
-    select: { id: true, name: true, email: true }  // 对方加的：字段筛选
-  });
-  return user;
-}
+async def get_pyramid(self, pyramid_id: str):
+    result = await self.db.execute(
+        select(Pyramid).where(Pyramid.id == pyramid_id)
+        .options(load_only(Pyramid.id, Pyramid.name, Pyramid.level))  # 对方加的：字段筛选
+    )
+    return result.scalar_one_or_none()
 >>>>>>> origin/main
 
-// 解决后（合并两个需求）
-async getUserProfile(userId: string) {
-  const user = await this.prisma.user.findUnique({
-    where: { id: userId },
-    include: { department: true },
-    select: { id: true, name: true, email: true, department: true }
-  });
-  return user;
-}
+# 解决后（合并两个需求）
+async def get_pyramid(self, pyramid_id: str):
+    result = await self.db.execute(
+        select(Pyramid).where(Pyramid.id == pyramid_id)
+        .options(joinedload(Pyramid.children))
+    )
+    return result.scalar_one_or_none()
 ```
 
 #### 场景3：package.json 依赖冲突

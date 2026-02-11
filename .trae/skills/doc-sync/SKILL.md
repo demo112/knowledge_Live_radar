@@ -351,7 +351,7 @@ related_rules:
 ### 文档位置
 
 ```
-attendance-system/docs/
+docs/
 ├── api-contract.md          # API 契约（全局）
 ├── database-design.md       # 数据库设计（全局）
 ├── requirements.md          # 需求规格（全局）
@@ -360,8 +360,8 @@ attendance-system/docs/
 ├── task-backlog.md          # 任务清单
 ├── changelog.md             # 变更日志
 ├── deployment.md            # 部署文档
-├── progress/                # 进展日志（按日期 YYYY-MM-DD.md）
-└── features/                # 功能文档（按规格编号）
+├── issues/                  # 问题记录
+└── feature/                 # 功能文档（按迭代编号）
     └── {SPEC_ID}/
         ├── requirements.md  # 需求文档
         ├── design.md        # 设计文档

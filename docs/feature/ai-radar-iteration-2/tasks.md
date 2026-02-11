@@ -4,6 +4,88 @@
 
 本任务列表描述 AI Radar 系统迭代 2 的实现步骤。目标是实现动态信息源管理、多类型抓取引擎和三层校验机制。
 
+## 任务依赖关系图
+
+> 说明：同一行的任务可并行执行，箭头表示串行依赖。
+
+```mermaid
+graph LR
+  subgraph 阶段1: 数据层
+    T1[Task 1: 数据模型扩展]
+    T2[Task 2: Checkpoint-模型]
+  end
+  subgraph 阶段2: 基础服务
+    T3[Task 3: AI客户端]
+    T4[Task 4: 抓取器实现]
+    T5[Task 5: Checkpoint-抓取]
+  end
+  subgraph 阶段3: 核心服务
+    T6[Task 6: 校验器实现]
+    T7[Task 7: 内容处理]
+    T8[Task 8: Checkpoint-处理]
+  end
+  subgraph 阶段4: 业务逻辑
+    T9[Task 9: 生命周期]
+    T10[Task 10: 自动发现]
+    T11[Task 11: 调度器]
+    T12[Task 12: Checkpoint-调度]
+  end
+  subgraph 阶段5: 接口层
+    T13[Task 13: API路由]
+    T14[Task 14: Checkpoint-API]
+  end
+  subgraph 阶段6: 前端层
+    T15[Task 15: 前端增强]
+    T16[Task 16: 配置模板]
+    T17[Task 17: Checkpoint-前端]
+  end
+  subgraph 阶段7: 集成
+    T18[Task 18: 集成测试]
+    T19[Task 19: 最终Checkpoint]
+  end
+
+  T1 --> T2
+  T2 --> T3
+  T2 --> T4
+  T4 --> T5
+  T3 --> T6
+  T3 --> T7
+  T5 --> T6
+  T5 --> T7
+  T6 --> T8
+  T7 --> T8
+  T8 --> T9
+  T8 --> T10
+  T8 --> T11
+  T9 --> T12
+  T10 --> T12
+  T11 --> T12
+  T12 --> T13
+  T13 --> T14
+  T14 --> T15
+  T14 --> T16
+  T15 --> T17
+  T16 --> T17
+  T17 --> T18
+  T18 --> T19
+```
+
+### 依赖关系速查表
+
+| 任务 | 前置依赖 | 可并行 |
+|------|----------|--------|
+| Task 1: 数据模型扩展 | 无 | - |
+| Task 3: AI客户端 | Task 2 | ✅ 与 Task 4 |
+| Task 4: 抓取器实现 | Task 2 | ✅ 与 Task 3 |
+| Task 6: 校验器实现 | Task 3, Task 5 | ✅ 与 Task 7 |
+| Task 7: 内容处理 | Task 3, Task 5 | ✅ 与 Task 6 |
+| Task 9: 生命周期 | Task 8 | ✅ 与 Task 10, 11 |
+| Task 10: 自动发现 | Task 8 | ✅ 与 Task 9, 11 |
+| Task 11: 调度器 | Task 8 | ✅ 与 Task 9, 10 |
+| Task 13: API路由 | Task 12 | - |
+| Task 15: 前端增强 | Task 14 | ✅ 与 Task 16 |
+| Task 16: 配置模板 | Task 14 | ✅ 与 Task 15 |
+
 ## 前置条件
 
 - 迭代 1 所有任务已完成
@@ -77,6 +159,7 @@
     - 创建 services/fetcher/base.py
     - 定义 FetchResult 数据类
     - 定义 BaseFetcher 抽象基类（fetch, validate_config 方法）
+    - 提取配置参数（超时时间、User-Agent、重试次数）到配置文件或环境变量
     - _Requirements: 2, 3, 4_
   
   - [ ] 4.2 实现 RSS 抓取器
@@ -312,6 +395,7 @@
     - 更新 components/sources/SourceForm.tsx
     - 添加模板选择下拉框
     - 实现模板预填充功能
+    - 验证配置项的前后端一致性
     - _Requirements: 17.5_
 
 - [ ] 17. Checkpoint - 确保前端功能正常
@@ -331,6 +415,11 @@
     - 添加信息源配置指南
     - 添加 AI 服务配置说明（硅基流动 API Key）
     - 添加抓取调度器配置说明
+  
+  - [ ] 18.3 建立回归测试机制
+    - 创建 tests/regression 目录
+    - 编写基础回归测试用例
+    - 制定 Bug 修复与回归测试流程
 
 - [ ] 19. 最终 Checkpoint
   - 确保所有测试通过

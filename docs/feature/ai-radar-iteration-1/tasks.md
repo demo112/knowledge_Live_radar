@@ -4,6 +4,80 @@
 
 本任务列表描述 AI Radar 系统迭代 1 的实现步骤。目标是搭建系统骨架，包括前后端基础架构、核心数据模型、基本 UI 框架。
 
+## 任务依赖关系图
+
+> 说明：同一行的任务可并行执行，箭头表示串行依赖。
+
+```mermaid
+graph LR
+  subgraph 阶段1: 后端基础
+    T1[Task 1: 项目初始化]
+    T2[Task 2: 数据模型]
+    T3[Task 3: Checkpoint-模型]
+  end
+  subgraph 阶段2: 核心服务
+    T4[Task 4: Schema定义]
+    T5[Task 5: 金字塔服务]
+    T6[Task 6: 节点服务]
+    T7[Task 7: Checkpoint-服务]
+  end
+  subgraph 阶段3: 业务服务
+    T8[Task 8: 信息源服务]
+    T9[Task 9: 事务处理]
+    T10[Task 10: API路由]
+    T11[Task 11: Checkpoint-API]
+  end
+  subgraph 阶段4: 前端基础
+    T12[Task 12: 前端初始化]
+    T13[Task 13: 金字塔UI]
+    T14[Task 14: 信息流UI]
+    T15[Task 15: 信息源UI]
+    T16[Task 16: Checkpoint-前端]
+  end
+  subgraph 阶段5: 交付
+    T17[Task 17: 文档与脚本]
+    T18[Task 18: 最终Checkpoint]
+  end
+
+  T1 --> T2
+  T2 --> T3
+  T3 --> T4
+  T4 --> T5
+  T4 --> T6
+  T5 --> T7
+  T6 --> T7
+  T7 --> T8
+  T8 --> T9
+  T9 --> T10
+  T10 --> T11
+  T11 --> T12
+  T12 --> T13
+  T12 --> T14
+  T12 --> T15
+  T13 --> T16
+  T14 --> T16
+  T15 --> T16
+  T16 --> T17
+  T17 --> T18
+```
+
+### 依赖关系速查表
+
+| 任务 | 前置依赖 | 可并行 |
+|------|----------|--------|
+| Task 1: 项目初始化 | 无 | - |
+| Task 2: 数据模型 | Task 1 | - |
+| Task 4: Schema定义 | Task 3 | - |
+| Task 5: 金字塔服务 | Task 4 | ✅ 与 Task 6 |
+| Task 6: 节点服务 | Task 4 | ✅ 与 Task 5 |
+| Task 8: 信息源服务 | Task 7 | - |
+| Task 9: 事务处理 | Task 8 | - |
+| Task 10: API路由 | Task 9 | - |
+| Task 12: 前端初始化 | Task 11 | - |
+| Task 13: 金字塔UI | Task 12 | ✅ 与 Task 14, 15 |
+| Task 14: 信息流UI | Task 12 | ✅ 与 Task 13, 15 |
+| Task 15: 信息源UI | Task 12 | ✅ 与 Task 13, 14 |
+
 ## 任务
 
 - [ ] 1. 后端项目初始化
@@ -11,6 +85,7 @@
     - 创建 backend 目录和基础文件结构（app/, api/, models/, schemas/, services/, repositories/, db/）
     - 配置 requirements.txt（fastapi, uvicorn, sqlalchemy, alembic, pydantic, hypothesis）
     - 创建 main.py 入口文件和 config.py 配置文件
+    - 确保配置项支持环境变量注入，且有明确的默认值
     - _Requirements: 31.1, 32.6_
   
   - [ ] 1.2 配置数据库连接
@@ -310,6 +385,12 @@
     - 创建前端启动脚本（启动 next dev）
     - 创建数据库初始化脚本（运行迁移、创建初始数据）
     - _Requirements: 32.6_
+  
+  - [ ] 17.3 建立基础测试框架
+    - 配置 pytest 和 hypothesis
+    - 建立 tests/regression 目录
+    - 编写首个端到端回归测试用例（如：创建金字塔->添加节点->验证结构）
+    - 制定回归测试执行规范
 
 - [ ] 18. 最终 Checkpoint
   - 确保所有测试通过

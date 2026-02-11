@@ -90,14 +90,14 @@ next_skills:
 
 #### 1. 数据模型设计
 
-**定义**：设计数据库表结构和实体关系，输出可直接使用的Prisma Schema。
+**定义**：设计数据库表结构和实体关系，输出可直接使用的 SQLAlchemy 模型。
 
 | 能力维度 | 具体表现 |
 |----------|----------|
 | **实体识别** | 从需求中识别核心实体 |
 | **关系设计** | 设计实体之间的关系（1:1, 1:N, N:N） |
 | **字段定义** | 定义字段类型、约束、默认值 |
-| **Schema输出** | 输出可直接使用的Prisma Schema |
+| **模型输出** | 输出可直接使用的 SQLAlchemy 模型 |
 
 **应用场景**：
 - 新功能需要新的数据表
@@ -139,7 +139,7 @@ next_skills:
 
 | 职责 | 说明 |
 |------|------|
-| 数据模型设计 | 设计Prisma Schema |
+| 数据模型设计 | 设计 SQLAlchemy 模型 |
 | API设计 | 设计接口定义和类型 |
 | 文件规划 | 规划需要创建/修改的文件 |
 | 影响分析 | 分析对现有功能的影响 |
@@ -257,27 +257,27 @@ next_skills:
 
 ### 阶段三：数据模型设计
 
-**目标**：设计数据库表结构，输出Prisma Schema。
+**目标**：设计数据库表结构，输出 SQLAlchemy 模型。
 
 #### 输入
 
 | 输入项 | 来源 | 格式 | 必要性 |
 |--------|------|------|--------|
 | 需求摘要 | 阶段一输出 | 文本 | 必须 |
-| 现有Schema | prisma/schema.prisma | Prisma | 按需 |
+| 现有模型 | backend/app/models/ | Python | 按需 |
 
 #### 执行步骤
 
 1. **识别实体**：从需求中识别需要的数据实体
 2. **设计字段**：为每个实体设计字段、类型、约束
 3. **设计关系**：设计实体之间的关系
-4. **输出Schema**：输出可直接使用的Prisma Schema片段
+4. **输出模型**：输出可直接使用的 SQLAlchemy 模型片段
 
 #### 输出
 
 | 输出项 | 格式 | 说明 |
 |--------|------|------|
-| 数据模型设计 | Prisma Schema | 可直接复制使用 |
+| 数据模型设计 | SQLAlchemy Model | 可直接复制使用 |
 | 实体说明 | 表格 | 每个实体的用途说明 |
 
 #### 质量门控
@@ -298,7 +298,7 @@ next_skills:
 | 输入项 | 来源 | 格式 | 必要性 |
 |--------|------|------|--------|
 | 需求摘要 | 阶段一输出 | 文本 | 必须 |
-| 数据模型 | 阶段三输出 | Prisma Schema | 必须 |
+| 数据模型 | 阶段三输出 | SQLAlchemy Model | 必须 |
 
 #### 执行步骤
 
@@ -331,7 +331,7 @@ next_skills:
 
 | 输入项 | 来源 | 格式 | 必要性 |
 |--------|------|------|--------|
-| 数据模型 | 阶段三输出 | Prisma Schema | 必须 |
+| 数据模型 | 阶段三输出 | SQLAlchemy Model | 必须 |
 | API定义 | 阶段四输出 | Markdown | 必须 |
 | 项目结构 | 阶段二输出 | 文本 | 必须 |
 
@@ -476,13 +476,19 @@ next_skills:
 
 ## 数据模型
 
-```prisma
-model {EntityName} {
-  id        String   @id @default(uuid())
-  // 字段定义
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
+```python
+# backend/app/models/{module}.py
+
+from sqlalchemy import Column, String, DateTime, func
+from app.database import Base
+
+class EntityName(Base):
+    __tablename__ = "{entity_name}"
+
+    id = Column(String, primary_key=True)
+    # 字段定义
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, onupdate=func.now())
 ```
 
 ## API定义
@@ -517,15 +523,15 @@ interface {ResponseType} {
 
 | 文件 | 操作 | 内容 |
 |------|------|------|
-| packages/shared/src/types/{module}.ts | 新增 | {类型名}类型定义 |
-| packages/server/src/modules/{module}/{module}.service.ts | 新增 | {Service}类，{方法}方法 |
-| packages/server/src/modules/{module}/{module}.controller.ts | 新增 | 路由处理 |
-| packages/web/src/pages/{module}/{Page}.tsx | 新增 | 页面组件 |
+| backend/app/schemas/{module}.py | 新增 | Pydantic Schema 定义 |
+| backend/app/services/{module}_service.py | 新增 | {Service}类，{方法}方法 |
+| backend/app/api/{module}.py | 新增 | FastAPI Router 路由处理 |
+| frontend/src/app/(dashboard)/{module}/page.tsx | 新增 | 页面组件 |
 
 ## 引用的已有代码
 
-- `packages/shared/src/types/common.ts` - 通用响应类型
-- `packages/server/src/common/middleware/auth.ts` - 认证中间件
+- `backend/app/schemas/common.py` - 通用响应类型
+- `backend/app/database.py` - 数据库连接
 
 ## 影响分析
 
@@ -609,9 +615,9 @@ interface {ResponseType} {
 ```markdown
 | 文件 | 操作 | 内容 |
 |------|------|------|
-| server/src/modules/attendance/ | 新增 | 考勤相关代码 |
-| shared/src/types/ | 修改 | 添加类型 |
-| web/src/pages/ | 新增 | 页面组件 |
+| backend/app/services/{module}_service.py | 新增 | 相关业务代码 |
+| backend/app/schemas/ | 修改 | 添加类型 |
+| frontend/src/app/ | 新增 | 页面组件 |
 ```
 
 **问题**：路径不完整、内容模糊、无法直接用于任务划分
@@ -621,10 +627,10 @@ interface {ResponseType} {
 ```markdown
 | 文件 | 操作 | 内容 |
 |------|------|------|
-| packages/shared/src/types/attendance/clock.ts | 新增 | ClockRecordDto, CreateClockRequest, ClockResponse 类型定义 |
-| packages/server/src/modules/attendance/clock.service.ts | 新增 | ClockService 类，createClock(), getClock() 方法 |
-| packages/server/src/modules/attendance/clock.controller.ts | 新增 | POST /api/v1/clock, GET /api/v1/clock/:id 路由处理 |
-| packages/web/src/pages/attendance/ClockPage.tsx | 新增 | 打卡页面组件，包含打卡按钮和记录列表 |
+| backend/app/schemas/pyramid.py | 新增 | PyramidCreate, PyramidResponse 等 Schema 定义 |
+| backend/app/services/pyramid_service.py | 新增 | PyramidService 类，create(), get() 方法 |
+| backend/app/api/pyramids.py | 新增 | POST /api/v1/pyramids, GET /api/v1/pyramids/:id 路由处理 |
+| frontend/src/app/(dashboard)/pyramid/page.tsx | 新增 | 金字塔可视化页面组件 |
 ```
 
 ---

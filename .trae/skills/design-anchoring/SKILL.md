@@ -54,8 +54,8 @@ description: 修复问题前的设计锚定，确保理解原设计意图，防�
 ```markdown
 **功能定位**
 - 所属规格：{SPEC_ID}
-- 设计文档：`docs/features/{SPEC_ID}/design.md`
-- 相关代码：`packages/{module}/src/...`
+- 设计文档：`docs/feature/{SPEC_ID}/design.md`
+- 相关代码：`backend/app/...`
 ```
 
 ---
@@ -66,7 +66,7 @@ description: 修复问题前的设计锚定，确保理解原设计意图，防�
 
 #### 执行步骤
 
-1. 读取 `docs/features/{SPEC_ID}/design.md`
+1. 读取 `docs/feature/{SPEC_ID}/design.md`
 2. 找到与问题相关的章节
 3. 提取关键设计决策
 
@@ -164,7 +164,7 @@ description: 修复问题前的设计锚定，确保理解原设计意图，防�
 
 ### 功能定位
 - **所属规格**：{SPEC_ID}
-- **设计文档**：`docs/features/{SPEC_ID}/design.md`
+- **设计文档**：`docs/feature/{SPEC_ID}/design.md`
 - **文档状态**：{存在/不存在/疑似过时}
 
 ### 原设计意图

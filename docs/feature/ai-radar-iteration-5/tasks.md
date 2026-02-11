@@ -4,6 +4,90 @@
 
 本实现计划将迭代 5 的设计分解为可执行的编码任务。任务按照依赖关系排序，确保每个任务都建立在前一个任务的基础上。迭代 5 聚焦于系统完善（搜索、提示词管理、通知、导入导出）、性能优化（缓存、索引、速率限制）、监控和 Docker 容器化部署。
 
+## 任务依赖关系图
+
+> 说明：同一行的任务可并行执行，箭头表示串行依赖。
+
+```mermaid
+graph LR
+  subgraph 阶段1: 数据层
+    T1[Task 1: 数据模型扩展]
+    T2[Task 2: Checkpoint-模型]
+  end
+  subgraph 阶段2: 基础服务
+    T3[Task 3: 缓存服务]
+    T4[Task 4: 中间件]
+    T5[Task 5: Checkpoint-基础]
+  end
+  subgraph 阶段3: 功能服务
+    T6[Task 6: 全文搜索]
+    T7[Task 7: 提示词管理]
+    T8[Task 8: 通知服务]
+    T9[Task 9: 导入导出]
+    T10[Task 10: 监控指标]
+    T11[Task 11: Checkpoint-核心]
+  end
+  subgraph 阶段4: 接口层
+    T12[Task 12: 后端API]
+    T13[Task 13: Checkpoint-API]
+  end
+  subgraph 阶段5: 前端层
+    T14[Task 14: 前端Client]
+    T15[Task 15: 搜索界面]
+    T16[Task 16: 提示词界面]
+    T17[Task 17: 监控界面]
+    T18[Task 18: 数据界面]
+    T19[Task 19: 通知组件]
+    T20[Task 20: 导航完善]
+    T21[Task 21: Checkpoint-前端]
+  end
+  subgraph 阶段6: 部署与集成
+    T22[Task 22: Docker化]
+    T23[Task 23: 集成测试]
+    T24[Task 24: 最终Checkpoint]
+  end
+
+  T1 --> T2
+  T2 --> T3
+  T3 --> T4
+  T4 --> T5
+  T5 --> T6
+  T5 --> T7
+  T5 --> T8
+  T5 --> T9
+  T5 --> T10
+  T10 --> T11
+  T11 --> T12
+  T12 --> T13
+  T13 --> T14
+  T14 --> T15
+  T14 --> T16
+  T14 --> T17
+  T14 --> T18
+  T14 --> T19
+  T19 --> T20
+  T20 --> T21
+  T21 --> T22
+  T22 --> T23
+  T23 --> T24
+```
+
+### 依赖关系速查表
+
+| 任务 | 前置依赖 | 可并行 |
+|------|----------|--------|
+| Task 1: 数据模型 | 无 | - |
+| Task 3: 缓存服务 | Task 2 | - |
+| Task 4: 中间件 | Task 3 | - |
+| Task 6: 全文搜索 | Task 5 | ✅ 与 T7-T10 |
+| Task 7: 提示词管理 | Task 5 | ✅ 与 T6, T8-T10 |
+| Task 8: 通知服务 | Task 5 | ✅ 与 T6-T7, T9-T10 |
+| Task 9: 导入导出 | Task 5 | ✅ 与 T6-T8, T10 |
+| Task 10: 监控指标 | Task 5 | ✅ 与 T6-T9 |
+| Task 12: 后端API | Task 11 | - |
+| Task 15-19: 前端 | Task 14 | ✅ 彼此并行 |
+| Task 22: Docker化 | Task 21 | - |
+
 ## 技术栈
 
 - 后端：Python FastAPI
@@ -370,6 +454,10 @@
     - 测试健康检查端点
     - 测试基本功能（创建金字塔、搜索内容）
     - _Requirements: 8.1-8.8_
+
+  - [ ] 23.7 最终回归测试
+    - 执行全量回归测试套件
+    - 验证所有配置项的持久化和同步机制
 
 - [ ] 24. 最终检查点 - 迭代 5 完成
   - 确保所有测试通过

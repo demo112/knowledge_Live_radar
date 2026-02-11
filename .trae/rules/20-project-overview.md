@@ -49,7 +49,7 @@ AI Radar 是一个面向大模型应用领域的自进化知识聚合平台。�
 | 需求规格 | `.kiro/specs/ai-radar/requirements.md` |
 | 数据库设计 | `docs/database-design.md` |
 | API 契约 | `docs/api-contract.md` |
-| 功能文档 | `docs/features/{SPEC_ID}/` |
+| 功能文档 | `docs/feature/{SPEC_ID}/` |
 
 ## AI 行为规则
 
