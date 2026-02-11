@@ -1,3 +1,8 @@
+---
+name: ai-radar-domain
+description: AI Radar 是面向大模型应用领域的自进化知识聚合平台，核心能力：感知（信息抓取）、认知（内容理解）、进化（结构优化）。
+---
+
 # AI Radar 业务领域知识
 
 ## 系统定位
