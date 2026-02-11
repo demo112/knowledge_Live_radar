@@ -6,12 +6,13 @@
 |------|------|
 | `.trae/` | Trae 配置和规则文件 |
 | `.kiro/` | Kiro 配置和 steering 文件 |
-| `attendance-system/docs/*.md` | docs 根目录下的核心文档 |
-| `attendance-system/packages/server/.env` | 环境变量配置文件 |
+| `docs/*.md` | docs 根目录下的核心文档 |
+| `.env` | 环境变量配置文件 |
+| `.env.local` | 本地环境变量配置文件 |
 
 ## docs 根目录保护说明
 
-`attendance-system/docs/` 根目录下的以下文档禁止 AI 直接修改：
+`docs/` 根目录下的以下文档禁止 AI 直接修改：
 
 - `api-contract.md` - API 契约
 - `database-design.md` - 数据库设计

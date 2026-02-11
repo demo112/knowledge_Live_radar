@@ -1,33 +1,40 @@
 # 测试规范
 
 ## 测试类型
-| 类型 | 位置 | 命名 | 说明 |
+
+### 后端（Python）
+| 类型 | 位置 | 命名 | 工具 |
 |------|------|------|------|
-| 单元测试 | 同目录 | `*.test.ts` | 针对函数/类 |
-| 集成测试 | `__tests__/` | `*.integration.test.ts` | 针对模块/API |
-| E2E测试 | `packages/e2e/` | `*.spec.ts` | 全链路黑盒测试 |
+| 单元测试 | `backend/tests/unit/` | `test_*.py` | pytest |
+| 集成测试 | `backend/tests/integration/` | `test_*.py` | pytest + httpx |
+| API 测试 | `backend/tests/api/` | `test_*.py` | pytest + TestClient |
 
-## E2E 测试架构 (Strict)
+### 前端（TypeScript）
+| 类型 | 位置 | 命名 | 工具 |
+|------|------|------|------|
+| 单元测试 | 同目录 | `*.test.ts` | Jest / Vitest |
+| 组件测试 | 同目录 | `*.test.tsx` | Testing Library |
 
-### 唯一路径
-**`packages/e2e/`** 是项目中**唯一**允许存放 E2E 测试代码的地方。
-- 禁止在 `packages/web` 或 `packages/app` 中创建 `e2e` 目录。
+## 测试重点模块
 
-### 目录结构
-| 类型 | 路径 | 技术栈 |
-|------|------|--------|
-| Web/Server | `tests/*.spec.ts` | Playwright |
-| App (Mobile) | `tests/app/*.test.ts` | Maestro / Detox |
-
-### 解耦原则 (Decoupling)
-1.  **禁止源码引用**：E2E 测试代码**严禁** import `packages/server`, `packages/web`, `packages/app` 的源代码。
-2.  **黑盒测试**：必须通过公开接口（HTTP API）或 UI 交互进行验证。
-3.  **配置注入**：端口、URL 等配置必须通过环境变量注入，禁止读取兄弟项目的配置文件（如 `.env`）。
-4.  **数据隔离**：测试数据准备和清理必须通过 API 调用实现，禁止直接连接数据库操作。
+| 模块 | 优先级 | 说明 |
+|------|--------|------|
+| 校验引擎（硬性/软性/交叉） | P0 | 数据质量核心 |
+| 抓取引擎 | P0 | 信息获取核心 |
+| 审批流程 | P0 | 人类决策核心 |
+| 金字塔 CRUD | P1 | 基础数据管理 |
+| AI 服务集成 | P1 | 需 Mock 测试 |
+| 健康度计算 | P2 | 评估逻辑 |
 
 ## 覆盖率要求
 | 模块 | 最低覆盖率 |
 |------|-----------|
-| API接口 | 95% |
-| 核心业务逻辑 | 90% |
-| 工具函数 | 90% |
+| API 路由 | 90% |
+| 核心服务（校验、抓取、审批） | 90% |
+| 工具函数 | 85% |
+| 前端组件 | 80% |
+
+## AI 服务测试
+- 使用 Mock 替代真实 AI 调用
+- 测试 Prompt 模板的格式正确性
+- 测试重试和降级逻辑

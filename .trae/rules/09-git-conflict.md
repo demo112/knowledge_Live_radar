@@ -24,7 +24,10 @@
 
 ```bash
 git --no-pager diff | grep -E "^(<<<<<<<|=======|>>>>>>>)"
-npm run build
+# 后端
+cd backend && python -m pytest --tb=short
+# 前端
+cd frontend && npm run build
 ```
 
 ## 放弃解决
