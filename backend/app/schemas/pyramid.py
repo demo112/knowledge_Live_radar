@@ -10,6 +10,7 @@ class PyramidNodeBase(BaseModel):
     level: int = 0
     sort_order: int = 0
     health_score: int = 100
+    status: str = "pending"
 
 class PyramidNodeCreate(PyramidNodeBase):
     parent_id: Optional[UUID] = None
@@ -19,6 +20,7 @@ class PyramidNodeUpdate(BaseModel):
     description: Optional[str] = None
     parent_id: Optional[UUID] = None
     sort_order: Optional[int] = None
+    status: Optional[str] = None
 
 class PyramidNodeMove(BaseModel):
     new_parent_id: Optional[UUID] = None

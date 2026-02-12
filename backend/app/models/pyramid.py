@@ -16,6 +16,7 @@ class Pyramid(Base):
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    is_deleted: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
     
     # Relationships
     nodes: Mapped[List["PyramidNode"]] = relationship("PyramidNode", back_populates="pyramid", cascade="all, delete-orphan")
@@ -36,6 +37,8 @@ class PyramidNode(Base):
     sort_order: Mapped[int] = mapped_column(Integer, default=0)
     path: Mapped[str] = mapped_column(String(255), index=True) # Materialized path
     health_score: Mapped[int] = mapped_column(Integer, default=100)
+    status: Mapped[str] = mapped_column(String(20), default="pending") # pending, completed
+    is_deleted: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
     
     # Relationships
     pyramid: Mapped["Pyramid"] = relationship("Pyramid", back_populates="nodes")

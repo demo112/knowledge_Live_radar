@@ -100,51 +100,51 @@ graph LR
 
 ## 任务列表
 
-- [ ] 1. 数据模型扩展
-  - [ ] 1.1 创建热点话题数据模型
+- [x] 1. 数据模型扩展
+  - [x] 1.1 创建热点话题数据模型
     - 创建 `backend/app/models/hotspot.py`
     - 定义 Hotspot 模型，包含 id、topic_name、description、status、mention_count、recent_7d_count、previous_7d_count、growth_rate、display_priority、related_node_ids、related_content_ids、first_seen_at、last_mentioned_at、status_changed_at 等字段
     - 创建 `backend/app/models/hotspot_event.py`
     - 定义 HotspotEvent 模型，包含 id、hotspot_id、event_type、old_status、new_status、trigger_condition、operator 等字段
     - _Requirements: 3.1-3.8_
 
-  - [ ] 1.2 创建概念定义版本数据模型
+  - [x] 1.2 创建概念定义版本数据模型
     - 创建 `backend/app/models/concept_definition.py`
     - 定义 ConceptDefinition 模型，包含 id、term、definition、context_examples、version、drift_detected、drift_evidence、previous_version_id、proposal_id、is_current 等字段
     - _Requirements: 4.5_
 
-  - [ ] 1.3 创建健康报告数据模型
+  - [x] 1.3 创建健康报告数据模型
     - 创建 `backend/app/models/health_report.py`
     - 定义 HealthReport 模型，包含 id、report_type、overall_score、pyramid_scores、source_health_score、content_coverage_score、hotspot_distribution、approval_backlog、crawl_stats、issues 等字段
     - _Requirements: 1.1-1.9_
 
-  - [ ] 1.4 创建策略调整记录数据模型
+  - [x] 1.4 创建策略调整记录数据模型
     - 创建 `backend/app/models/strategy_adjustment.py`
     - 定义 StrategyAdjustment 模型，包含 id、source_id、adjustment_type、old_value、new_value、reason、expected_effect、requires_approval、proposal_id、applied_at 等字段
     - _Requirements: 5.6_
 
-  - [ ] 1.5 创建定时任务和执行记录数据模型
+  - [x] 1.5 创建定时任务和执行记录数据模型
     - 创建 `backend/app/models/scheduled_task.py`
     - 定义 ScheduledTask 模型，包含 id、task_name、task_type、cron_expression、is_active、last_run_at、next_run_at、is_running、max_retries、retry_delay_seconds 等字段
     - 创建 `backend/app/models/task_execution.py`
     - 定义 TaskExecution 模型，包含 id、task_id、status、started_at、ended_at、duration_seconds、result、error_message、retry_count 等字段
     - _Requirements: 7.1-7.7_
 
-  - [ ] 1.6 创建配置变更历史数据模型
+  - [x] 1.6 创建配置变更历史数据模型
     - 创建 `backend/app/models/config_history.py`
     - 定义 ConfigHistory 模型，包含 id、config_key、old_value、new_value、changed_by 等字段
     - _Requirements: 8.5_
 
-  - [ ] 1.7 创建数据库迁移脚本
+  - [x] 1.7 创建数据库迁移脚本
     - 使用 Alembic 创建迁移脚本
     - 执行迁移创建新表
     - _Requirements: 1.1-1.7_
 
-- [ ] 2. 检查点 - 数据模型完成
+- [x] 2. 检查点 - 数据模型完成
   - 确保所有测试通过，如有问题请询问用户
 
-- [ ] 3. 系统配置管理服务
-  - [ ] 3.1 实现配置管理服务
+- [x] 3. 系统配置管理服务
+  - [x] 3.1 实现配置管理服务
     - 创建 `backend/app/services/config/configuration_service.py`
     - 实现 ConfigurationService 类，包含 load、get、set、validate、get_all、get_history、reload 方法
     - 实现环境变量加载、配置文件解析、默认值回退
@@ -153,14 +153,14 @@ graph LR
     - 实现配置项导出接口，确保前后端配置一致性
     - _Requirements: 8.1-8.7_
 
-  - [ ]* 3.2 编写配置管理属性测试
+  - [x] 3.2 编写配置管理属性测试
     - **Property 20: 配置验证拒绝无效值**
     - **Property 21: 配置变更历史完整性**
     - **Property 22: 配置热更新往返一致性**
     - **Validates: Requirements 8.4, 8.5, 8.6**
 
-- [ ] 4. 定时任务调度服务
-  - [ ] 4.1 实现定时任务调度服务
+- [x] 4. 定时任务调度服务
+  - [x] 4.1 实现定时任务调度服务
     - 创建 `backend/app/services/scheduler/scheduler_service.py`
     - 创建 `backend/app/services/scheduler/task_registry.py`
     - 实现 SchedulerService 类，包含 register_task、start、stop、trigger_task、pause_task、resume_task 方法
@@ -169,14 +169,14 @@ graph LR
     - 实现执行历史记录和查询
     - _Requirements: 7.1-7.7_
 
-  - [ ]* 4.2 编写定时任务属性测试
+  - [x] 4.2 编写定时任务属性测试
     - **Property 16: 任务执行记录完整性**
     - **Property 17: 任务重试策略正确性**
     - **Property 18: 任务暂停/恢复一致性**
     - **Property 19: 任务并发执行防护**
     - **Validates: Requirements 7.2, 7.3, 7.5, 7.6**
 
-- [ ] 5. 检查点 - 基础设施完成
+- [x] 5. 检查点 - 基础设施完成
   - 确保配置管理和定时任务调度正常工作
   - 如有问题请询问用户
 
@@ -334,14 +334,14 @@ graph LR
     - _Requirements: 所有前端相关需求_
 
 - [ ] 17. 健康报告界面
-  - [ ] 17.1 创建健康报告页面
-    - 创建 `frontend/src/app/health/page.tsx`
+  - [x] 17.1 创建健康报告页面
+    - 创建 `frontend/src/app/(dashboard)/health/page.tsx`
     - 实现整体健康评分展示（大数字 + 健康等级标签）
     - 实现时间范围选择器（7天/30天/90天）
     - _Requirements: 6.1, 6.8_
 
   - [ ] 17.2 创建健康报告组件
-    - 创建 `frontend/src/components/health/HealthOverview.tsx` - 整体评分和各维度评分
+    - 创建 `frontend/src/components/health/HealthOverview.tsx` - 整体评分和各维度评分 (已创建基础版)
     - 创建 `frontend/src/components/health/PyramidHealthCard.tsx` - 金字塔健康度卡片和趋势图
     - 创建 `frontend/src/components/health/SourceHealthSummary.tsx` - 信息源健康汇总
     - 创建 `frontend/src/components/health/HotspotDistribution.tsx` - 热点分布饼图

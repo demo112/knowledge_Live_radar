@@ -8,9 +8,9 @@ export class PyramidPage extends BasePage {
 
   constructor(page: Page) {
     super(page, '/pyramid');
-    this.createButton = page.getByRole('button', { name: 'Create New' });
+    this.createButton = page.getByRole('button', { name: '新建金字塔' });
     this.pyramidList = page.locator('.grid > a'); // Links in the grid
-    this.emptyState = page.getByText('No pyramids found');
+    this.emptyState = page.getByText('暂无金字塔');
   }
 
   async getPyramidCard(name: string): Promise<Locator> {
@@ -28,6 +28,6 @@ export class PyramidPage extends BasePage {
   }
 
   async expectLoaded() {
-    await expect(this.page.getByRole('heading', { name: 'Knowledge Pyramids' })).toBeVisible();
+    await expect(this.page.getByRole('heading', { name: '知识金字塔' })).toBeVisible();
   }
 }

@@ -17,12 +17,12 @@ export class SourcesPage extends BasePage {
 
   constructor(page: Page) {
     super(page, '/sources');
-    this.addButton = page.getByRole('button', { name: 'Add Source' });
+    this.addButton = page.getByRole('button', { name: '添加信息源' });
     this.sourceList = page.locator('ul > li');
-    this.emptyState = page.getByText('No sources found');
+    this.emptyState = page.getByText('未找到信息源');
 
     // Modal
-    this.modalTitle = page.getByRole('heading', { name: 'Add New Source' });
+    this.modalTitle = page.getByRole('heading', { name: '添加新信息源' });
     // Using getByLabel which is more robust if labels are correctly associated
     // If not, we might need to fallback to getByRole or css
     // In the code: <label>Name</label><input ...> - they are not linked with htmlFor/id
@@ -33,9 +33,9 @@ export class SourcesPage extends BasePage {
     this.urlInput = page.locator('input[type="url"]');
     this.nameInput = page.locator('input[type="text"]');
     this.typeSelect = page.locator('select');
-    this.discoverButton = page.getByRole('button', { name: '🔍' });
-    this.modalAddButton = page.getByRole('button', { name: 'Add', exact: true });
-    this.modalCancelButton = page.getByRole('button', { name: 'Cancel' });
+    this.discoverButton = page.getByRole('button', { name: '发现' });
+    this.modalAddButton = page.getByRole('button', { name: '添加', exact: true });
+    this.modalCancelButton = page.getByRole('button', { name: '取消' });
   }
 
   async openAddModal() {
@@ -43,7 +43,7 @@ export class SourcesPage extends BasePage {
     await expect(this.modalTitle).toBeVisible();
   }
 
-  async createSource(name: string, url: string, type: 'RSS' | 'API' | 'WEB' = 'RSS') {
+  async createSource(name: string, url: string, type: 'RSS' | 'SITEMAP' | 'WEB' = 'RSS') {
     await this.openAddModal();
     await this.urlInput.fill(url);
     await this.nameInput.fill(name);
@@ -58,7 +58,7 @@ export class SourcesPage extends BasePage {
 
   async crawlSource(name: string) {
     const sourceItem = this.page.locator('li').filter({ hasText: name });
-    await sourceItem.getByRole('button', { name: 'Crawl' }).click();
+    await sourceItem.getByRole('button', { name: '抓取' }).click();
     // Wait for crawl to start/finish - in the UI it shows an alert
     // Handling dialogs in Playwright:
     // page.on('dialog', dialog => dialog.accept());

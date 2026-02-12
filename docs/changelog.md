@@ -18,4 +18,5 @@
 - 重构 `project-roadmap.md`，使用 Mermaid 图表（Mindmap, Timeline, Gantt, Quadrant, State）替代纯文本规划
 
 ### Fixed
+- 修复健康报告页面 404 错误 (创建 `frontend/src/app/(dashboard)/health/page.tsx`)
 - 修复 `project-roadmap.md` 中 Mermaid 象限图的语法错误 (Lexical error)

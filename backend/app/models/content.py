@@ -25,6 +25,7 @@ class ContentItem(Base):
     
     submitter_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True) # User ID who submitted this
     input_type: Mapped[str] = mapped_column(String(20), default="url", server_default="url") # url, pdf, word, markdown, image, text
+    is_deleted: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
     
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

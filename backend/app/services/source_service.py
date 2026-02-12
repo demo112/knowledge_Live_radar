@@ -33,4 +33,4 @@ class SourceService:
 
     async def delete_source(self, id: UUID) -> Any:
         await self.get_source(id)
-        return await self.source_repo.delete(id)
+        return await self.source_repo.soft_delete(id)

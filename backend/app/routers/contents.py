@@ -12,7 +12,7 @@ from app.schemas.approval import ApprovalResponse
 from app.services.input_processor import InputProcessor
 from app.services.content_analyzer import ContentAnalyzer
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 
 class ContentResponse(BaseModel):
@@ -24,8 +24,7 @@ class ContentResponse(BaseModel):
     status: str
     created_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 router = APIRouter(prefix="/contents", tags=["contents"])
 

@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import AsyncMock, patch, MagicMock
-from app.services.scheduler import CrawlScheduler
+from app.services.scheduler.legacy_scheduler import CrawlScheduler
 from app.models.source import InformationSource
 from datetime import datetime, timezone, timedelta
 
@@ -12,9 +12,9 @@ async def test_check_sources():
     mock_session_cls.return_value = mock_session
     mock_session_cls.return_value.__aenter__.return_value = mock_session
     
-    with patch("app.services.scheduler.AsyncSessionLocal", mock_session_cls), \
-         patch("app.services.scheduler.content_processor.process_source") as mock_process, \
-         patch("app.services.scheduler.lifecycle_manager.update_source_status") as mock_update:
+    with patch("app.services.scheduler.legacy_scheduler.AsyncSessionLocal", mock_session_cls), \
+         patch("app.services.scheduler.legacy_scheduler.content_processor.process_source") as mock_process, \
+         patch("app.services.scheduler.legacy_scheduler.lifecycle_manager.update_source_status") as mock_update:
         
         scheduler = CrawlScheduler()
         
@@ -44,8 +44,8 @@ async def test_check_sources_not_due():
     mock_session_cls.return_value = mock_session
     mock_session_cls.return_value.__aenter__.return_value = mock_session
     
-    with patch("app.services.scheduler.AsyncSessionLocal", mock_session_cls), \
-         patch("app.services.scheduler.content_processor.process_source") as mock_process:
+    with patch("app.services.scheduler.legacy_scheduler.AsyncSessionLocal", mock_session_cls), \
+         patch("app.services.scheduler.legacy_scheduler.content_processor.process_source") as mock_process:
         
         scheduler = CrawlScheduler()
         

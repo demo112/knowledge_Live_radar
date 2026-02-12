@@ -35,9 +35,30 @@ class PyramidService:
         pyramid = await self.get_pyramid(id)
         return await self.pyramid_repo.update(pyramid, schema.model_dump(exclude_unset=True))
 
+    async def calculate_health_score(self, pyramid_id: UUID) -> int:
+        """
+        Calculate health score for a pyramid.
+        Score = (Completed Nodes / Total Nodes) * 100
+        """
+        pyramid = await self.get_pyramid_details(pyramid_id)
+        if not pyramid or not pyramid.nodes:
+            return 100
+            
+        total_nodes = len(pyramid.nodes)
+        if total_nodes == 0:
+            return 100
+            
+        completed_nodes = sum(1 for node in pyramid.nodes if node.status == "completed")
+        
+        return int((completed_nodes / total_nodes) * 100)
+
     async def delete_pyramid(self, id: UUID) -> Any:
         pyramid = await self.get_pyramid(id)
-        return await self.pyramid_repo.delete(id)
+        # Soft delete nodes first
+        await self.node_repo.soft_delete_by_pyramid(id)
+        # Soft delete pyramid
+        return await self.pyramid_repo.soft_delete(id)
+
 
     # Node Operations (Task 6)
     async def add_node(self, pyramid_id: UUID, schema: PyramidNodeCreate) -> Any:
@@ -73,7 +94,7 @@ class PyramidService:
 
     async def get_node(self, node_id: UUID) -> Any:
         node = await self.node_repo.get(node_id)
-        if not node:
+        if not node or node.is_deleted:
              raise HTTPException(status_code=404, detail="Node not found")
         return node
 
@@ -83,7 +104,18 @@ class PyramidService:
 
     async def delete_node(self, node_id: UUID) -> Any:
         node = await self.get_node(node_id)
-        return await self.node_repo.delete(node_id)
+        
+        # Soft delete descendants
+        # Path format for children: {node.path}{node.id}/
+        if node.path == "/":
+             child_path_prefix = f"/{node.id}/"
+        else:
+             child_path_prefix = f"{node.path}{node.id}/"
+             
+        await self.node_repo.soft_delete_descendants(node.pyramid_id, child_path_prefix)
+        
+        # Soft delete the node itself
+        return await self.node_repo.soft_delete(node_id)
 
     async def move_node(self, node_id: UUID, new_parent_id: Optional[UUID], new_sort_order: Optional[int]) -> Any:
         """
@@ -96,48 +128,57 @@ class PyramidService:
             node.sort_order = new_sort_order
             
         # 2. Handle Parent Change
-        if new_parent_id is not None or (new_parent_id is None and node.parent_id is not None):
-            # If new_parent_id is explicitly passed (even if same as current), we process it.
-            # But usually we check if it's different.
-            if new_parent_id != node.parent_id:
-                old_path = node.path
+        if new_parent_id is not None and new_parent_id != node.parent_id:
+            old_path = node.path
+            old_level = node.level
+            old_prefix = f"{old_path}{node.id}/" if old_path != "/" else f"/{node.id}/"
+
+            if new_parent_id == node.id:
+                 raise HTTPException(status_code=400, detail="Cannot move node to itself")
+
+            new_parent = await self.get_node(new_parent_id)
+            if new_parent.pyramid_id != node.pyramid_id:
+                raise HTTPException(status_code=400, detail="Cannot move node to a different pyramid")
+            
+            # Circular dependency check: Is new_parent a descendant of node?
+            # Descendant path starts with node.path + node.id
+            if new_parent.path.startswith(old_prefix) or new_parent.id == node.id:
+                raise HTTPException(status_code=400, detail="Cannot move node to its own descendant")
                 
-                if new_parent_id is None:
-                    # Move to root
-                    node.parent_id = None
-                    node.level = 0
-                    node.path = "/"
-                else:
-                    # Move to new parent
-                    new_parent = await self.get_node(new_parent_id)
-                    if new_parent.pyramid_id != node.pyramid_id:
-                        raise HTTPException(status_code=400, detail="Cannot move node to a different pyramid")
-                    
-                    # Circular dependency check: Is new_parent a descendant of node?
-                    # Descendant path starts with node.path + node.id
-                    node_path_prefix = f"{node.path}{node.id}/"
-                    if new_parent.path.startswith(node_path_prefix) or new_parent.id == node.id:
-                        raise HTTPException(status_code=400, detail="Cannot move node to its own descendant")
-                        
-                    node.parent_id = new_parent.id
-                    node.level = new_parent.level + 1
-                    node.path = f"{new_parent.path}{new_parent.id}/"
-                
-                # Update descendants
-                # We need to find all nodes starting with old_path + node.id
-                # and replace that prefix with new node.path + node.id
-                # This requires repository support or direct SQL execution.
-                # For simplicity here, assuming repository can handle or we do it here.
-                # Actually, implementing recursive update in service is cleaner but slower for big trees.
-                # Let's try to do it via repository method if possible, or direct logic here.
-                
-                # We need a method to update descendants paths.
-                await self.node_repo.update_descendants_path(
-                    pyramid_id=node.pyramid_id,
-                    old_prefix=f"{old_path}{node.id}/",
-                    new_prefix=f"{node.path}{node.id}/",
-                    level_diff=node.level - (len(old_path.strip("/").split("/")) if old_path != "/" else 0) # Approximation, safer to calculate diff
-                )
+            # Update node
+            node.parent_id = new_parent.id
+            node.level = new_parent.level + 1
+            node.path = f"{new_parent.path}{new_parent.id}/" if new_parent.path != "/" else f"/{new_parent.id}/"
+            
+            new_prefix = f"{node.path}{node.id}/"
+            level_diff = node.level - old_level
+            
+            # Update descendants
+            await self.node_repo.update_descendants_path(
+                pyramid_id=node.pyramid_id,
+                old_prefix=old_prefix,
+                new_prefix=new_prefix,
+                level_diff=level_diff
+            )
+        elif new_parent_id is None and node.parent_id is not None:
+             # Move to root
+             old_path = node.path
+             old_level = node.level
+             old_prefix = f"{old_path}{node.id}/" if old_path != "/" else f"/{node.id}/"
+
+             node.parent_id = None
+             node.level = 0
+             node.path = "/"
+             
+             new_prefix = f"/{node.id}/"
+             level_diff = node.level - old_level
+             
+             await self.node_repo.update_descendants_path(
+                pyramid_id=node.pyramid_id,
+                old_prefix=old_prefix,
+                new_prefix=new_prefix,
+                level_diff=level_diff
+             )
 
         await self.db.commit()
         await self.db.refresh(node)

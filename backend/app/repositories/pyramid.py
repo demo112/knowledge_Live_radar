@@ -39,3 +39,20 @@ class PyramidNodeRepository(BaseRepository[PyramidNode]):
             )
         )
         await self.db.execute(query)
+
+    async def soft_delete_by_pyramid(self, pyramid_id: UUID):
+        query = (
+            update(PyramidNode)
+            .where(PyramidNode.pyramid_id == pyramid_id)
+            .values(is_deleted=True)
+        )
+        await self.db.execute(query)
+
+    async def soft_delete_descendants(self, pyramid_id: UUID, path_prefix: str):
+        query = (
+            update(PyramidNode)
+            .where(PyramidNode.pyramid_id == pyramid_id)
+            .where(PyramidNode.path.like(f"{path_prefix}%"))
+            .values(is_deleted=True)
+        )
+        await self.db.execute(query)

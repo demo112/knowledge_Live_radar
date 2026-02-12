@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.services.approval_service import ApprovalService
 from app.services.decision_executor import DecisionExecutor
+from app.services.impact_analyzer import ImpactAnalyzer
 from app.schemas.approval import ApprovalCreate, ApprovalUpdate, ApprovalResponse
 from app.schemas.common import SuccessResponse
 
@@ -21,13 +22,24 @@ async def create_approval(
     approval = await service.create_approval(schema)
     return SuccessResponse(data=approval)
 
+@router.get("/", response_model=SuccessResponse[List[ApprovalResponse]])
+async def get_approvals(
+    status: str = None,
+    skip: int = 0,
+    limit: int = 100,
+    service: ApprovalService = Depends(get_service)
+):
+    approvals = await service.get_approvals(status, skip, limit)
+    return SuccessResponse(data=approvals)
+
 @router.get("/pending", response_model=SuccessResponse[List[ApprovalResponse]])
 async def get_pending_approvals(
     skip: int = 0,
     limit: int = 100,
     service: ApprovalService = Depends(get_service)
 ):
-    approvals = await service.get_pending_approvals(skip, limit)
+    # Keep this for backward compatibility if needed, or redirect
+    approvals = await service.get_approvals("pending", skip, limit)
     return SuccessResponse(data=approvals)
 
 @router.get("/{id}", response_model=SuccessResponse[ApprovalResponse])
@@ -62,3 +74,22 @@ async def execute_approval(
     if not success:
         raise HTTPException(status_code=400, detail="Execution failed. Ensure approval is approved and valid.")
     return SuccessResponse(data=success)
+
+@router.get("/{id}/impact", response_model=SuccessResponse[dict])
+async def get_approval_impact(
+    id: UUID,
+    db: AsyncSession = Depends(get_db)
+):
+    service = ApprovalService(db)
+    approval = await service.get_approval(id)
+    if not approval:
+        raise HTTPException(status_code=404, detail="Approval not found")
+        
+    analyzer = ImpactAnalyzer(db)
+    impact = await analyzer.analyze_impact(approval)
+    
+    # Commit the analysis result
+    db.add(approval)
+    await db.commit()
+    
+    return SuccessResponse(data=impact)

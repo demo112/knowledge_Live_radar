@@ -1,20 +1,24 @@
 import React from 'react';
 import Link from 'next/link';
 import { 
+  LayoutDashboard,
   Layers, 
   Globe, 
   FileText, 
   Activity, 
   ClipboardCheck, 
-  HeartPulse 
+  HeartPulse,
+  History
 } from 'lucide-react';
 
 const NAV_ITEMS = [
+  { href: '/dashboard', label: '仪表板', icon: LayoutDashboard },
   { href: '/pyramid', label: '知识金字塔', icon: Layers },
   { href: '/sources', label: '信息源', icon: Globe },
   { href: '/contents', label: '内容库', icon: FileText },
   { href: '/feed', label: '动态流', icon: Activity },
   { href: '/approval', label: '审批中心', icon: ClipboardCheck },
+  { href: '/history', label: '变更历史', icon: History },
   { href: '/health', label: '健康报告', icon: HeartPulse },
 ];
 
@@ -47,7 +51,7 @@ export default function DashboardLayout({
         </nav>
         <div className="p-4 border-t border-border">
           <p className="text-xs text-muted-foreground text-center">
-            v0.3.0 Iteration 3
+            v0.4.0 Iteration 4
           </p>
         </div>
       </aside>

@@ -88,3 +88,8 @@ class SnapshotService:
         # 3. Recreate nodes from snapshot data
         logger.warning("Restore snapshot not fully implemented yet")
         pass
+
+    async def get_snapshots_by_pyramid(self, pyramid_id: uuid.UUID, skip: int = 0, limit: int = 20) -> list[Snapshot]:
+        stmt = select(Snapshot).where(Snapshot.pyramid_id == pyramid_id).order_by(Snapshot.created_at.desc()).offset(skip).limit(limit)
+        result = await self.db.execute(stmt)
+        return result.scalars().all()

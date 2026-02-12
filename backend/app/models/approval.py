@@ -21,6 +21,7 @@ class Approval(Base):
     reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True) # Proposal reason
     confidence_score: Mapped[Optional[float]] = mapped_column(Float, nullable=True) # AI confidence
     original_data: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True) # Snapshot for rollback
+    impact_analysis: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True) # Impact analysis result
 
     applicant_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True) # User ID or "system"
     reviewer_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)

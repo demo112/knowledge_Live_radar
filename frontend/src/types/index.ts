@@ -63,3 +63,23 @@ export interface SuccessResponse<T> {
   success: boolean;
   data: T;
 }
+
+export interface DomainWhitelist {
+  id: string;
+  domain: string;
+  credibility: number;
+  reason?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DiscoveredDomain {
+  id: string;
+  domain: string;
+  occurrence_count: number;
+  first_seen_at: string;
+  last_seen_at: string;
+  evaluation_status: string;
+  has_rss: boolean;
+  proposal_id?: string;
+}

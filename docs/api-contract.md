@@ -41,6 +41,10 @@
 - **Query**: `include_tree=true` (是否包含完整节点树)
 - **Response**: `Pyramid & { root_node?: NodeTree }`
 
+### 获取金字塔历史快照
+- **GET** `/pyramids/{id}/snapshots`
+- **Response**: `Snapshot[]`
+
 ### 更新金字塔
 - **PUT** `/pyramids/{id}`
 - **Body**: `{ name?: string, description?: string }`
@@ -118,9 +122,15 @@
 - **Response**: `ContentItem & { validation: ValidationResult, relations: NodeRelation[] }`
 
 ### 提交用户贡献
-- **POST** `/contents/contribute`
-- **Body**: `{ url?: string, file?: Blob, text?: string }` (Multipart)
-- **Response**: `{ success: true, contribution_id: string }`
+- **POST** `/contents/upload` (Multipart)
+- **POST** `/contents/url` (JSON)
+- **POST** `/contents/text` (JSON)
+- **Response**: `ContentItem`
+
+### 分析内容
+- **POST** `/contents/{id}/analyze`
+- **Body**: `{ pyramid_id: string }`
+- **Response**: `Approval[]`
 
 ## 5. 审批中心 (Approvals)
 
@@ -133,13 +143,13 @@
 - **GET** `/approvals/{id}`
 - **Response**: `ChangeProposal & { impact_analysis: ImpactReport }`
 
-### 批准提案
-- **POST** `/approvals/{id}/approve`
-- **Response**: `{ success: true, execution_result: any }`
+### 审核提案 (Review)
+- **POST** `/approvals/{id}/review`
+- **Body**: `{ status: 'approved'|'rejected', review_comment?: string }`
+- **Response**: `ChangeProposal`
 
-### 拒绝提案
-- **POST** `/approvals/{id}/reject`
-- **Body**: `{ reason: string }`
+### 执行提案 (Execute)
+- **POST** `/approvals/{id}/execute`
 - **Response**: `{ success: true }`
 
 ## 6. 健康监控 (Health)

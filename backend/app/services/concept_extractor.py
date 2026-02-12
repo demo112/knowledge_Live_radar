@@ -33,18 +33,23 @@ Focus on extracting:
 4. Organizations/Companies (e.g., Google, OpenAI)
 5. Core Concepts (e.g., Machine Learning, Knowledge Graph)
 
+CRITICAL REQUIREMENT:
+- Output MUST be in Simplified Chinese (简体中文).
+- Translate all concept names and descriptions into Chinese if they are in other languages.
+- Ensure the "name" and "description" fields are in Chinese.
+
 Return the result as a strictly valid JSON object with a single key "concepts", which is a list of objects.
 Each object must have:
-- "name": The canonical name of the concept (string, Title Case)
+- "name": The canonical name of the concept in Chinese (string, Title Case)
 - "type": One of ["technology", "tool", "method", "organization", "concept"]
-- "description": A concise description based on the text (string, max 20 words)
+- "description": A concise description based on the text in Chinese (string, max 20 words)
 - "confidence": A float between 0.0 and 1.0 indicating your confidence
 
 Example output:
 {
   "concepts": [
-    {"name": "Python", "type": "technology", "description": "A high-level programming language.", "confidence": 0.98},
-    {"name": "TDD", "type": "method", "description": "Test Driven Development practice.", "confidence": 0.95}
+    {"name": "Python", "type": "technology", "description": "一种高级编程语言。", "confidence": 0.98},
+    {"name": "测试驱动开发", "type": "method", "description": "一种先写测试的软件开发方法。", "confidence": 0.95}
   ]
 }
 Do not include any markdown formatting (like ```json) in the response. Just the raw JSON string.

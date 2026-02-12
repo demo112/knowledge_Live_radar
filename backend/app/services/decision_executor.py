@@ -61,11 +61,16 @@ class DecisionExecutor:
                 return False
 
             # 3. Update Approval Status
+            old_status = approval.status
             approval.status = "executed"
             # approval.executed_at = datetime.utcnow() # If we had this field
             
             await self.db.commit()
             logger.info(f"Approval {approval_id} executed successfully")
+            
+            from app.services.notification_service import notification_service
+            await notification_service.notify_approval_status_change(approval, old_status, "executed")
+
             return True
 
         except Exception as e:

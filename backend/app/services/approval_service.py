@@ -20,8 +20,12 @@ class ApprovalService:
         result = await self.db.execute(select(Approval).where(Approval.id == id))
         return result.scalar_one_or_none()
 
-    async def get_pending_approvals(self, skip: int = 0, limit: int = 100) -> List[Approval]:
-        query = select(Approval).where(Approval.status == "pending").offset(skip).limit(limit)
+    async def get_approvals(self, status: Optional[str] = None, skip: int = 0, limit: int = 100) -> List[Approval]:
+        query = select(Approval)
+        if status:
+            query = query.where(Approval.status == status)
+        
+        query = query.order_by(Approval.created_at.desc()).offset(skip).limit(limit)
         result = await self.db.execute(query)
         return result.scalars().all()
 
@@ -30,9 +34,16 @@ class ApprovalService:
         if not approval:
             return None
         
+        old_status = approval.status
+        
         for key, value in schema.model_dump(exclude_unset=True).items():
             setattr(approval, key, value)
             
         await self.db.commit()
         await self.db.refresh(approval)
+        
+        if old_status != approval.status:
+            from app.services.notification_service import notification_service
+            await notification_service.notify_approval_status_change(approval, old_status, approval.status)
+
         return approval

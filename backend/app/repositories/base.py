@@ -51,3 +51,15 @@ class BaseRepository(Generic[ModelType]):
             else:
                 await self.db.flush()
         return obj
+
+    async def soft_delete(self, id: UUID, commit: bool = True) -> Optional[ModelType]:
+        obj = await self.get(id)
+        if obj and hasattr(obj, "is_deleted"):
+            obj.is_deleted = True
+            self.db.add(obj)
+            if commit:
+                await self.db.commit()
+                await self.db.refresh(obj)
+            else:
+                await self.db.flush()
+        return obj
