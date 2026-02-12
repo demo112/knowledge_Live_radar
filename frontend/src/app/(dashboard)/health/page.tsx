@@ -3,7 +3,12 @@
 import React, { useEffect, useState } from 'react';
 import { healthApi, hotspotApi, evolutionApi } from '@/lib/api';
 import { HealthReport, Hotspot } from '@/lib/types';
-import { Activity, Zap, RefreshCw, AlertTriangle, TrendingUp, Layers, Globe, FileText } from 'lucide-react';
+import { Activity, Zap, RefreshCw, AlertTriangle } from 'lucide-react';
+import PyramidHealthCard from '@/components/health/PyramidHealthCard';
+import SourceHealthSummary from '@/components/health/SourceHealthSummary';
+import HotspotDistribution from '@/components/health/HotspotDistribution';
+import CrawlStats from '@/components/health/CrawlStats';
+import ApprovalBacklog from '@/components/health/ApprovalBacklog';
 
 export default function HealthPage() {
   const [report, setReport] = useState<HealthReport | null>(null);
@@ -80,8 +85,9 @@ export default function HealthPage() {
         </div>
       </div>
 
-      {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* Top Row: Overall + Key Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Overall Score */}
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
             <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">总体健康分</h3>
             <div className="mt-2 flex items-baseline">
@@ -93,110 +99,59 @@ export default function HealthPage() {
             </p>
         </div>
         
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                <Layers className="w-4 h-4" /> 金字塔结构
-            </h3>
-            <div className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">
-                {(Object.values(report?.pyramid_scores || {}).reduce((a: any, b: any) => a + b, 0) as number / (Object.values(report?.pyramid_scores || {}).length || 1) || 100).toFixed(1)}
-            </div>
-            <p className="text-xs text-gray-400 mt-1">平均分</p>
-        </div>
+        {/* Source Health */}
+        <SourceHealthSummary score={report?.source_health_score || 0} />
 
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                <Globe className="w-4 h-4" /> 信息源健康
-            </h3>
-            <div className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">
-                {report?.source_health_score || 0}
-            </div>
-        </div>
+        {/* Approval Backlog */}
+        <ApprovalBacklog backlog={report?.approval_backlog || {}} />
 
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                <FileText className="w-4 h-4" /> 待处理审批
-            </h3>
-            <div className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">
-                {report?.approval_backlog?.total_pending || 0}
-            </div>
-            <p className="text-xs text-gray-400 mt-1">
-                扣分: -{report?.approval_backlog?.backlog_penalty || 0}
-            </p>
-        </div>
+        {/* Crawl Stats */}
+        <CrawlStats stats={report?.crawl_stats || {}} />
       </div>
 
+      {/* Middle Row: Detailed Analysis */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Hotspots */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-            <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center gap-2">
-                    <TrendingUp className="w-5 h-5 text-purple-500" />
-                    热点话题 (Hotspots)
-                </h3>
-            </div>
-            <div className="p-4">
-                <div className="space-y-4">
-                    {hotspots.length === 0 ? (
-                        <p className="text-sm text-gray-500">暂无热点数据</p>
-                    ) : (
-                        hotspots.map((h: any) => (
-                            <div key={h.id} className="flex justify-between items-center border-b border-gray-100 dark:border-gray-700 pb-2 last:border-0 last:pb-0">
-                                <div>
-                                    <div className="font-medium text-gray-900 dark:text-white">{h.topic_name}</div>
-                                    <div className="text-xs text-gray-500 flex gap-2 mt-1">
-                                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                                            h.status === 'trending' ? 'bg-green-100 text-green-800' :
-                                            h.status === 'emerging' ? 'bg-blue-100 text-blue-800' :
-                                            'bg-gray-100 text-gray-800'
-                                        }`}>
-                                            {h.status ? h.status.toUpperCase() : 'UNKNOWN'}
-                                        </span>
-                                        <span>Growth: {h.growth_rate?.toFixed(1) || 0}%</span>
-                                    </div>
-                                </div>
-                                <div className="text-right">
-                                    <div className="font-bold text-gray-900 dark:text-white">{h.recent_7d_count}</div>
-                                    <div className="text-xs text-gray-500">Mentions (7d)</div>
-                                </div>
-                            </div>
-                        ))
-                    )}
-                </div>
-            </div>
-        </div>
+        {/* Pyramid Structure Health */}
+        <PyramidHealthCard scores={report?.pyramid_scores || {}} />
 
-        {/* Issues */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-            <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center gap-2">
-                    <AlertTriangle className="w-5 h-5 text-red-500" />
-                    系统问题 (Issues)
-                </h3>
-            </div>
-            <div className="p-4">
-                <div className="space-y-3">
-                    {(!report?.issues || report.issues.length === 0) ? (
-                        <p className="text-sm text-gray-500">系统运行良好，未发现问题。</p>
-                    ) : (
-                        report.issues.map((issue: any, idx: number) => (
-                            <div key={idx} className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-100 dark:border-red-900/50">
-                                <div className="flex justify-between">
-                                    <span className="font-medium text-sm text-red-800 dark:text-red-300">
-                                        [{issue.category}] {issue.type}
-                                    </span>
-                                    <span className="text-xs bg-red-200 dark:bg-red-800 text-red-800 dark:text-red-200 px-1.5 py-0.5 rounded font-medium">
-                                        -{issue.severity} pts
-                                    </span>
-                                </div>
-                                <p className="text-xs text-red-600 dark:text-red-400 mt-1">
-                                    {issue.description}
-                                </p>
-                            </div>
-                        ))
-                    )}
-                </div>
-            </div>
-        </div>
+        {/* Hotspots Distribution */}
+        <HotspotDistribution 
+            distribution={report?.hotspot_distribution || {}} 
+            hotspots={hotspots}
+        />
+      </div>
+
+      {/* Bottom Row: Issues */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-red-500" />
+                  系统问题 (Issues)
+              </h3>
+          </div>
+          <div className="p-4">
+              <div className="space-y-3">
+                  {(!report?.issues || report.issues.length === 0) ? (
+                      <p className="text-sm text-gray-500">系统运行良好，未发现问题。</p>
+                  ) : (
+                      report.issues.map((issue: any, idx: number) => (
+                          <div key={idx} className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-100 dark:border-red-900/50">
+                              <div className="flex justify-between">
+                                  <span className="font-medium text-sm text-red-800 dark:text-red-300">
+                                      [{issue.category}] {issue.type}
+                                  </span>
+                                  <span className="text-xs bg-red-200 dark:bg-red-800 text-red-800 dark:text-red-200 px-1.5 py-0.5 rounded font-medium">
+                                      -{issue.severity} pts
+                                  </span>
+                              </div>
+                              <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                                  {issue.description}
+                              </p>
+                          </div>
+                      ))
+                  )}
+              </div>
+          </div>
       </div>
     </div>
   );

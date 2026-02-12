@@ -10,7 +10,7 @@ from app.models.task_execution import TaskExecution
 from app.services.scheduler.scheduler_service import SchedulerService
 
 # Assuming Pydantic models for response
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 
 class ScheduledTaskRead(BaseModel):
@@ -24,20 +24,18 @@ class ScheduledTaskRead(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class TaskExecutionRead(BaseModel):
     id: uuid.UUID
     task_id: uuid.UUID
     status: str
     started_at: datetime
-    completed_at: Optional[datetime]
+    ended_at: Optional[datetime]
     duration_seconds: Optional[float]
     error_message: Optional[str]
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 router = APIRouter(
     prefix="/scheduler",

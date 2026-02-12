@@ -39,7 +39,7 @@ async def run_content_crawl():
                 # Calculate next run time
                 # If check_interval is seconds
                 interval = timedelta(seconds=source.check_interval or 3600)
-                last_checked = source.last_checked or datetime.min.replace(tzinfo=timezone.utc)
+                last_checked = source.last_crawled_at or datetime.min.replace(tzinfo=timezone.utc)
                 
                 if (now - last_checked) >= interval:
                     logger.info(f"Crawling source: {source.name}")
@@ -56,16 +56,16 @@ async def run_content_crawl():
                         items = await crawl_engine.crawl_source(source)
                         
                         # Update success
-                        source.last_checked = now
-                        source.consecutive_failures = 0
+                        source.last_crawled_at = now
+                        source.error_count = 0
                         source.status = "active"
                         
                         # TODO: Save items to DB (ContentService)
                         
                     except Exception as e:
                         logger.error(f"Failed to crawl {source.name}: {e}")
-                        source.consecutive_failures = (source.consecutive_failures or 0) + 1
-                        if source.consecutive_failures > 3:
+                        source.error_count = (source.error_count or 0) + 1
+                        if source.error_count > 3:
                             source.status = "error"
                             
                     db.add(source)
@@ -91,13 +91,13 @@ async def run_source_health_check():
                 try:
                     is_valid = await crawl_engine.validate_source(source.type, source.url)
                     if not is_valid:
-                        source.consecutive_failures = (source.consecutive_failures or 0) + 1
+                        source.error_count = (source.error_count or 0) + 1
                     else:
                         # Only reset if it was error, but don't reset full crawl failure count?
                         # Maybe just log warning.
                         pass
                 except Exception:
-                    source.consecutive_failures = (source.consecutive_failures or 0) + 1
+                    source.error_count = (source.error_count or 0) + 1
                     
             await db.commit()
         except Exception as e:

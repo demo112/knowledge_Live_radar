@@ -93,34 +93,43 @@ class SchedulerService:
             
             return new_task
 
-    async def trigger_task(self, task_id: uuid.UUID):
+    async def trigger_task(self, task_id: uuid.UUID) -> bool:
         # Trigger manually
         job = self.scheduler.get_job(str(task_id))
         if job:
             job.modify(next_run_time=datetime.now(timezone.utc))
+            return True
         else:
-            # If not in scheduler (e.g. inactive), load from DB and run once?
-            # Or just call wrapper directly.
+            # If not in scheduler (e.g. inactive), load from DB and run once
             async with AsyncSessionLocal() as session:
                 task = await session.get(ScheduledTask, task_id)
                 if task:
                     await self._execute_wrapper(task.id, task.task_type)
+                    return True
+                return False
 
-    async def pause_task(self, task_id: uuid.UUID):
+    async def pause_task(self, task_id: uuid.UUID) -> bool:
         async with AsyncSessionLocal() as session:
             task = await session.get(ScheduledTask, task_id)
             if task:
                 task.is_active = False
                 await session.commit()
-                self.scheduler.remove_job(str(task_id))
+                try:
+                    self.scheduler.remove_job(str(task_id))
+                except Exception:
+                    pass # Job might not be in scheduler if it was already inactive/removed
+                return True
+            return False
 
-    async def resume_task(self, task_id: uuid.UUID):
+    async def resume_task(self, task_id: uuid.UUID) -> bool:
         async with AsyncSessionLocal() as session:
             task = await session.get(ScheduledTask, task_id)
             if task:
                 task.is_active = True
                 await session.commit()
                 self._schedule_job(task)
+                return True
+            return False
 
     async def _execute_wrapper(self, task_id, task_type):
         handler = TaskRegistry.get_handler(task_type)

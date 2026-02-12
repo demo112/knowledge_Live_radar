@@ -340,8 +340,8 @@ graph LR
     - 实现时间范围选择器（7天/30天/90天）
     - _Requirements: 6.1, 6.8_
 
-  - [ ] 17.2 创建健康报告组件
-    - 创建 `frontend/src/components/health/HealthOverview.tsx` - 整体评分和各维度评分 (已创建基础版)
+  - [x] 17.2 创建健康报告组件
+    - 创建 `frontend/src/components/health/HealthOverview.tsx` - 整体评分和各维度评分 (已集成到页面)
     - 创建 `frontend/src/components/health/PyramidHealthCard.tsx` - 金字塔健康度卡片和趋势图
     - 创建 `frontend/src/components/health/SourceHealthSummary.tsx` - 信息源健康汇总
     - 创建 `frontend/src/components/health/HotspotDistribution.tsx` - 热点分布饼图

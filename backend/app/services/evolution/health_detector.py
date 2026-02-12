@@ -128,13 +128,13 @@ class HealthDetector:
             source_score = 100.0
             
             # Penalty for consecutive failures
-            if source.consecutive_failures > 0:
-                penalty = min(source.consecutive_failures * 10, 80)
+            if source.error_count > 0:
+                penalty = min(source.error_count * 10, 80)
                 source_score -= penalty
                 issues.append({
                     "type": "source_failing",
-                    "severity": "high" if source.consecutive_failures > 3 else "medium",
-                    "description": f"Source '{source.name}' failing ({source.consecutive_failures} times)",
+                    "severity": "high" if source.error_count > 3 else "medium",
+                    "description": f"Source '{source.name}' failing ({source.error_count} times)",
                     "entity_id": str(source.id)
                 })
                 

@@ -24,7 +24,7 @@ async def list_hotspots(
     """
     List hotspots with optional status filtering.
     """
-    query = select(Hotspot).order_by(desc(Hotspot.heat_score)).offset(offset).limit(limit)
+    query = select(Hotspot).order_by(desc(Hotspot.recent_7d_count)).offset(offset).limit(limit)
     
     if status:
         query = query.where(Hotspot.status == status)
@@ -49,7 +49,7 @@ async def get_hotspot(
 @router.put("/{id}/status")
 async def update_hotspot_status(
     id: uuid.UUID,
-    status: str = Query(..., regex="^(new|emerging|trending|mature|cooling|archived)$"),
+    status: str = Query(..., pattern="^(new|emerging|trending|mature|cooling|archived)$"),
     db: AsyncSession = Depends(get_db)
 ):
     """
