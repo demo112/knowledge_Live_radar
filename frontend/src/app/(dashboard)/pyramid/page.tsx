@@ -119,7 +119,7 @@ export default function PyramidListPage() {
                   创建时间: {new Date(pyramid.created_at).toLocaleDateString('zh-CN')}
               </div>
             </Link>
-            <div className="absolute top-4 right-4 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="absolute top-4 right-4 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
               <button
                 onClick={(e) => handleOpenEditModal(e, pyramid)}
                 className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
