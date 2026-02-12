@@ -65,7 +65,7 @@ export interface TaskExecution {
   task_id: string;
   status: 'running' | 'success' | 'failed';
   started_at: string;
-  completed_at?: string;
+  ended_at?: string;
   duration_seconds?: number;
   error_message?: string;
   result?: any;
@@ -87,4 +87,16 @@ export interface DriftProposal {
   target_id: string;
   data: any;
   created_at: string;
+}
+
+export interface ChangeItem {
+  id: string;
+  type: string;
+  created_at: string;
+  applicant_id?: string;
+  data?: any;
+  status: string;
+  reason?: string;
+  impact_analysis?: any;
+  original_data?: any;
 }

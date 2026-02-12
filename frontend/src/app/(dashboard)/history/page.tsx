@@ -5,18 +5,8 @@ import { approvalApi } from '@/lib/api';
 import ChangeTimeline from '@/components/history/ChangeTimeline';
 import ChangeDetail from '@/components/history/ChangeDetail';
 import RollbackDialog from '@/components/history/RollbackDialog';
-
-interface ChangeItem {
-  id: string;
-  type: string;
-  created_at: string;
-  applicant_id?: string;
-  data?: any;
-  status: string;
-  reason?: string;
-  impact_analysis?: any;
-  original_data?: any;
-}
+import { ChangeItem } from '@/lib/types';
+import { CHANGE_STATUS_MAP, CHANGE_TYPE_MAP } from '@/lib/constants';
 
 export default function HistoryPage() {
   const [history, setHistory] = useState<ChangeItem[]>([]);
@@ -81,12 +71,12 @@ export default function HistoryPage() {
       // Wait, `approvalApi.execute` is for executing a proposal.
       // Rollback usually involves creating a NEW proposal that reverses the change.
       
-      alert("Rollback functionality requires creating a reverse proposal. This feature is coming soon.");
+      alert("回滚功能需要创建反向提案。此功能即将推出。");
       setRollbackItem(null);
       setSelectedItem(null);
     } catch (error) {
       console.error('Rollback failed', error);
-      alert('Rollback failed');
+      alert('回滚失败');
     }
   };
 
@@ -103,40 +93,40 @@ export default function HistoryPage() {
   return (
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Change History</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">变更历史</h1>
         <button
           onClick={handleExport}
           className="px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:outline-none focus:ring-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
         >
-          Export JSON
+          导出 JSON
         </button>
       </div>
 
       {/* Filters */}
       <div className="flex gap-4 mb-8 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
         <div>
-          <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status</label>
+          <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">状态</label>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
             className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
           >
-            <option value="executed">Executed</option>
-            <option value="rolled_back">Rolled Back</option>
-            <option value="all">All History</option>
+            <option value="executed">已执行</option>
+            <option value="rolled_back">已回滚</option>
+            <option value="all">全部历史</option>
           </select>
         </div>
         <div>
-          <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Type</label>
+          <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">类型</label>
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
             className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
           >
-            <option value="all">All Types</option>
-            <option value="create_node">Create Node</option>
-            <option value="update_node">Update Node</option>
-            <option value="delete_node">Delete Node</option>
+            <option value="all">全部类型</option>
+            <option value="create_node">创建节点</option>
+            <option value="update_node">更新节点</option>
+            <option value="delete_node">删除节点</option>
           </select>
         </div>
       </div>
@@ -161,7 +151,7 @@ export default function HistoryPage() {
         isOpen={!!rollbackItem}
         onClose={() => setRollbackItem(null)}
         onConfirm={handleRollback}
-        title={rollbackItem?.type || 'Change'}
+        title={rollbackItem?.type ? (CHANGE_TYPE_MAP[rollbackItem.type] || rollbackItem.type) : '变更'}
       />
     </div>
   );
