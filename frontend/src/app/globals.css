@@ -1,26 +1,61 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Minimal & Swiss Style Palette */
+  --background: #FAFAFA; /* Neutral 50 - Cleaner than pure white for dashboard */
+  --foreground: #171717; /* Neutral 900 */
+  
+  /* Primary - Violet */
+  --primary: #7C3AED;
+  --primary-foreground: #FFFFFF;
+  
+  /* Secondary - Soft Violet */
+  --secondary: #A78BFA;
+  --secondary-foreground: #FFFFFF;
+  
+  /* Accent - Orange */
+  --accent: #F97316;
+  --accent-foreground: #FFFFFF;
+
+  /* UI Elements */
+  --card: #FFFFFF;
+  --card-foreground: #171717;
+  --border: #E5E7EB; /* Gray 200 */
+  --input: #E5E7EB;
+  --ring: #7C3AED;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --font-sans: 'Plus Jakarta Sans', 'PingFang SC', 'Microsoft YaHei', sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #0F172A; /* Slate 900 */
+    --foreground: #F8FAFC; /* Slate 50 */
+    --card: #1E293B; /* Slate 800 */
+    --card-foreground: #F8FAFC;
+    --border: #334155; /* Slate 700 */
+    --input: #334155;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
 }
