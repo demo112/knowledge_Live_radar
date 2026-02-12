@@ -58,16 +58,16 @@ gantt
 
     section 迭代 1: 骨架搭建
     环境搭建           :done,    des1, 2026-02-01, 2d
-    数据库设计与迁移    :active,  des2, 2026-02-03, 3d
-    金字塔后端API      :         des3, after des2, 4d
-    金字塔前端可视化    :         des4, after des3, 5d
-    审批流基础逻辑      :         des5, after des4, 3d
+    数据库设计与迁移    :done,    des2, 2026-02-03, 3d
+    金字塔后端API      :done,    des3, after des2, 4d
+    金字塔前端可视化    :done,    des4, after des3, 5d
+    审批流基础逻辑      :done,    des5, after des4, 3d
 
     section 迭代 2: 全源感知
-    抓取引擎框架       :         perc1, 2026-02-16, 5d
-    RSS/API/Web抓取器  :         perc2, after perc1, 5d
-    三层校验机制       :         perc3, after perc2, 4d
-    信息流前端界面      :         perc4, 2026-02-20, 5d
+    抓取引擎框架       :done,    perc1, 2026-02-16, 5d
+    RSS/API/Web抓取器  :done,    perc2, after perc1, 5d
+    三层校验机制       :done,    perc3, after perc2, 4d
+    信息流前端界面      :done,    perc4, 2026-02-20, 5d
 
     section 迭代 3: 认知进化
     AI服务集成         :         cog1, 2026-03-01, 3d
