@@ -22,7 +22,13 @@ async def db_session():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
         
-    TestingSessionLocal = async_sessionmaker(autocommit=False, autoflush=False, bind=engine, class_=AsyncSession)
+    TestingSessionLocal = async_sessionmaker(
+        autocommit=False, 
+        autoflush=False, 
+        bind=engine, 
+        class_=AsyncSession,
+        expire_on_commit=False
+    )
     
     async with TestingSessionLocal() as session:
         yield session

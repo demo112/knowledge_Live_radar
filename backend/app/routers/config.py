@@ -1,6 +1,6 @@
 from typing import List, Optional, Any, Dict
 from fastapi import APIRouter, Depends, HTTPException, Body
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 
 from app.services.config.configuration_service import configuration_service
@@ -14,8 +14,7 @@ class ConfigHistoryRead(BaseModel):
     changed_by: str
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class ConfigUpdate(BaseModel):
     value: Any

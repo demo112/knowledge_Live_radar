@@ -1,7 +1,7 @@
 import pytest
 import asyncio
 from hypothesis import given, strategies as st, settings
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 from app.services.batch_processor import BatchProcessor
 from app.models.batch_task import BatchTaskStatus
 
@@ -22,6 +22,7 @@ def async_test(coro):
 def test_create_task_properties(task_type, total_items, user_id):
     async def run_test():
         db = AsyncMock()
+        db.add = MagicMock() # Ensure add is synchronous
         processor = BatchProcessor(db)
         
         task = await processor.create_task(task_type, total_items, user_id)

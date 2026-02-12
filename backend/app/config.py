@@ -9,6 +9,9 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str = "sqlite+aiosqlite:///./ai_radar.db"
     
+    # Redis
+    REDIS_URL: Optional[str] = None
+    
     # Environment
     ENVIRONMENT: str = "development"
 

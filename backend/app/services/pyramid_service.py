@@ -18,13 +18,13 @@ class PyramidService:
 
     async def get_pyramid(self, id: UUID) -> Any:
         pyramid = await self.pyramid_repo.get(id)
-        if not pyramid:
+        if not pyramid or pyramid.is_deleted:
             raise HTTPException(status_code=404, detail="Pyramid not found")
         return pyramid
 
     async def get_pyramid_details(self, id: UUID) -> Any:
         pyramid = await self.pyramid_repo.get_with_nodes(id)
-        if not pyramid:
+        if not pyramid or pyramid.is_deleted:
             raise HTTPException(status_code=404, detail="Pyramid not found")
         return pyramid
 
@@ -117,7 +117,7 @@ class PyramidService:
         # Soft delete the node itself
         return await self.node_repo.soft_delete(node_id)
 
-    async def move_node(self, node_id: UUID, new_parent_id: Optional[UUID], new_sort_order: Optional[int]) -> Any:
+    async def move_node(self, node_id: UUID, new_parent_id: Optional[UUID] = None, new_sort_order: Optional[int] = None) -> Any:
         """
         Move a node to a new parent and/or update its sort order.
         """

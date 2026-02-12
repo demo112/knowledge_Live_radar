@@ -18,3 +18,12 @@ from .strategy_adjustment import StrategyAdjustment
 from .scheduled_task import ScheduledTask
 from .task_execution import TaskExecution
 from .config_history import ConfigHistory
+
+# Iteration 5 Models
+from .prompt_template import PromptTemplate
+from .prompt_version import PromptVersion
+from .ab_test import ABTest
+from .notification import Notification
+from .notification_preference import NotificationPreference
+from .api_metric import APIMetric
+from .error_record import ErrorRecord

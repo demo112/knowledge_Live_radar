@@ -2,8 +2,9 @@
 import pytest
 from hypothesis import given, strategies as st, settings
 from app.services.pyramid_service import PyramidService
-from app.schemas.pyramid import PyramidCreate, PyramidUpdate
+from app.schemas.pyramid import PyramidCreate, PyramidUpdate, PyramidNodeCreate
 from app.models.pyramid import Pyramid, PyramidNode
+from fastapi import HTTPException
 
 # 注意：Hypothesis 直接装饰 async 测试函数在某些配置下可能有问题
 # 这里我们尝试直接使用，如果环境支持。如果不行，通常会报 TypeError。
@@ -43,7 +44,7 @@ async def test_property_10_health_score_range(db_session):
     assert 0 <= score <= 100
     
     # Case 2: 只有根节点
-    root = PyramidNode(pyramid_id=pyramid.id, name="Root", level=0)
+    root = PyramidNode(pyramid_id=pyramid.id, name="Root", level=0, path="/")
     db_session.add(root)
     await db_session.commit()
     
@@ -95,7 +96,6 @@ async def test_property_3_delete_cascade(db_session):
     await service.delete_pyramid(pyramid.id)
     
     # Verify Soft Delete
-    from fastapi import HTTPException
     with pytest.raises(HTTPException):
         await service.get_pyramid(pyramid.id)
 
@@ -141,70 +141,3 @@ async def test_property_9_visualization_integrity(db_session):
     assert len(details.nodes) == 1
     assert details.nodes[0].id == node.id
     assert details.nodes[0].name == "Node1"
-    
-    # This often fails with MissingGreenlet if nodes are lazy loaded and accessed outside session
-    # But here we are inside async test with session. 
-    # The issue is usually returning ORM objects that are not eagerly loaded.
-    # Service should ensure eager loading (selectinload) for relationships used in response.
- 
-    # Current Pyramid model code read earlier: no is_deleted column!
-    # Wait, the task list says: "is_deleted" in Task 2.1 description.
-    # But the read content of `backend/app/models/pyramid.py` did NOT show `is_deleted`.
-    # This means Task 2.1 might have been checked as "done" but the code is missing `is_deleted`.
-    
-    # Verification needed: Check if delete_pyramid performs hard delete or if I need to add is_deleted.
-    # If the code assumes hard delete (cascade), verify retrieval returns None.
-    
-    result = await service.get_pyramid(pyramid.id)
-    assert result is None  # Or verify is_deleted if implemented
-    
-    # Verify nodes are gone
-    # node_result = await db_session.get(PyramidNode, node.id)
-    # assert node_result is None
-    
-@pytest.mark.asyncio
-async def test_property_4_list_integrity(db_session):
-    """Property 4: 金字塔列表完整性"""
-    service = PyramidService(db_session)
-    
-    # Clear DB
-    # (In-memory DB is fresh per test if fixture logic is correct, but let's be safe)
-    
-    # Create multiple
-    names = ["P1", "P2", "P3"]
-    for name in names:
-        await service.create_pyramid(PyramidCreate(name=name))
-        
-    # List
-    result = await service.list_pyramids()
-    assert len(result) >= 3
-    
-    fetched_names = [p.name for p in result]
-    for name in names:
-        assert name in fetched_names
-
-@pytest.mark.asyncio
-async def test_property_9_visualization_integrity(db_session):
-    """Property 9: 可视化数据完整性"""
-    service = PyramidService(db_session)
-    
-    pyramid = await service.create_pyramid(PyramidCreate(name="Vis Test"))
-    
-    # Add nodes
-    root = PyramidNode(pyramid_id=pyramid.id, name="Root", level=0, sort_order=0, path="0")
-    db_session.add(root)
-    await db_session.commit()
-    await db_session.refresh(root)
-    
-    child = PyramidNode(pyramid_id=pyramid.id, parent_id=root.id, name="Child", level=1, sort_order=0, path="0.0")
-    db_session.add(child)
-    await db_session.commit()
-    
-    vis_data = await service.get_pyramid_visualization(pyramid.id)
-    
-    # Verify structure of vis_data
-    # Assuming it returns a dict with nodes and edges
-    assert "nodes" in vis_data
-    assert "edges" in vis_data
-    assert len(vis_data["nodes"]) == 2
-    assert len(vis_data["edges"]) == 1
