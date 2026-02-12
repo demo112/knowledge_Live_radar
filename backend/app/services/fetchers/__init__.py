@@ -4,11 +4,12 @@ from .api import APIFetcher
 from .web import WebFetcher
 
 def get_fetcher(type: str) -> BaseFetcher:
-    if type == "rss":
+    type_lower = type.lower()
+    if type_lower == "rss":
         return RSSFetcher()
-    elif type == "api":
+    elif type_lower == "api":
         return APIFetcher()
-    elif type == "web":
+    elif type_lower == "web":
         return WebFetcher()
     else:
         # Default fallback or raise error

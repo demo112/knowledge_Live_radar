@@ -41,7 +41,11 @@ async def test_source_manual(
     if not source:
         raise HTTPException(status_code=404, detail="Source not found")
         
-    items = await crawl_engine.crawl_source(source)
+    try:
+        items = await crawl_engine.crawl_source(source)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Crawl failed: {str(e)}")
+        
     # Return limited items to avoid huge response
     return SuccessResponse(data={"items": items[:10], "count": len(items)})
 
