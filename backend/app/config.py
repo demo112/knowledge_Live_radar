@@ -11,6 +11,10 @@ class Settings(BaseSettings):
     
     # Environment
     ENVIRONMENT: str = "development"
+
+    # AI Service (SiliconFlow)
+    SILICONFLOW_API_KEY: Optional[str] = None
+    SILICONFLOW_BASE_URL: str = "https://api.siliconflow.cn/v1"
     
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
