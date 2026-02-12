@@ -54,9 +54,14 @@ export default function ApprovalList() {
       }
       
       fetchApprovals(); // Refresh list
-    } catch (error) {
-      console.error('Review failed', error);
-      alert('审批操作失败。');
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        alert('提案不存在或已被处理。');
+        fetchApprovals();
+      } else {
+        console.error('Review failed', error);
+        alert('审批操作失败。');
+      }
     }
   };
 

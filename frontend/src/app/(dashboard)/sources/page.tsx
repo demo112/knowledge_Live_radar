@@ -58,9 +58,14 @@ export default function SourcesPage() {
       if (response.success) {
         fetchSources();
       }
-    } catch (error) {
-      console.error('Failed to delete source:', error);
-      alert('删除失败');
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        // Already deleted, just refresh
+        fetchSources();
+      } else {
+        console.error('Failed to delete source:', error);
+        alert('删除失败');
+      }
     } finally {
       setDeleteConfirm({ open: false, id: null });
     }

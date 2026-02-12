@@ -82,9 +82,14 @@ function WhitelistTab() {
     try {
       await whitelistApi.remove(id);
       fetchItems();
-    } catch (error) {
-      console.error('Failed to remove domain:', error);
-      alert('移除失败');
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        // Already removed, just refresh
+        fetchItems();
+      } else {
+        console.error('Failed to remove domain:', error);
+        alert('移除失败');
+      }
     }
   };
 

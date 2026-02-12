@@ -60,9 +60,14 @@ export default function PyramidListPage() {
       if (response.success) {
         fetchPyramids();
       }
-    } catch (error) {
-      console.error('Failed to delete pyramid:', error);
-      alert('删除失败');
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        // Already deleted, just refresh
+        fetchPyramids();
+      } else {
+        console.error('Failed to delete pyramid:', error);
+        alert('删除失败');
+      }
     } finally {
       setDeleteConfirm({ open: false, id: null });
     }

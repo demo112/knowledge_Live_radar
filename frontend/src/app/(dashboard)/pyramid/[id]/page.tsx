@@ -19,8 +19,13 @@ export default function PyramidDetailPage({ params }: { params: Promise<{ id: st
         if (response.success) {
           setPyramid(response.data);
         }
-      } catch (error) {
-        console.error('Failed to fetch pyramid:', error);
+      } catch (error: any) {
+        if (error.response?.status === 404) {
+          // Ignore 404 errors as they are handled by the UI (pyramid is null)
+          setPyramid(null);
+        } else {
+          console.error('Failed to fetch pyramid:', error);
+        }
       } finally {
         setLoading(false);
       }
