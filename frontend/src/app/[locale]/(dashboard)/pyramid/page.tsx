@@ -98,6 +98,7 @@ export default function PyramidListPage() {
   const handleDelete = (e: React.MouseEvent, id: string) => {
     e.preventDefault();
     e.stopPropagation();
+    console.log('Delete button clicked for pyramid:', id);
     setDeleteConfirm({ open: true, id });
   };
 
@@ -105,17 +106,20 @@ export default function PyramidListPage() {
     if (!deleteConfirm.id) return;
     
     try {
+      console.log('Sending delete request for:', deleteConfirm.id);
       const response = await pyramidApi.delete(deleteConfirm.id);
+      console.log('Delete response:', response);
       if (response.success) {
         fetchPyramids();
       }
     } catch (error: any) {
+      console.error('Failed to delete pyramid:', error);
       if (error.response?.status === 404) {
         // Already deleted, just refresh
         fetchPyramids();
       } else {
-        console.error('Failed to delete pyramid:', error);
-        alert(t('alerts.delete_failed'));
+        const errorMessage = error.response?.data?.error?.message || error.message || '未知错误';
+        alert(`删除失败: ${errorMessage}`);
       }
     } finally {
       setDeleteConfirm({ open: false, id: null });
@@ -188,7 +192,7 @@ export default function PyramidListPage() {
                   {t('created_at', { date: format.dateTime(new Date(pyramid.created_at), 'short') })}
               </div>
             </Link>
-            <div className="absolute top-4 right-4 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+            <div className="absolute top-4 right-4 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
               <button
                 onClick={(e) => handleOpenEditModal(e, pyramid)}
                 className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
