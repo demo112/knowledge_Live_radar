@@ -55,7 +55,7 @@ graph LR
 
 ### 阶段1: 基础设施
 
-#### Task 1: Prompt 文件创建
+#### Task 1: Prompt 文件创建 (Completed)
 
 | 属性 | 值 |
 |------|-----|
@@ -67,7 +67,7 @@ graph LR
 | 预计 | 10 分钟 |
 | 依赖 | 无 |
 
-#### Task 2: 数据模型更新
+#### Task 2: 数据模型更新 (Completed)
 
 | 属性 | 值 |
 |------|-----|
@@ -81,7 +81,7 @@ graph LR
 
 ### 阶段2: 服务层
 
-#### Task 3: PromptLoader 实现
+#### Task 3: PromptLoader 实现 (Completed)
 
 | 属性 | 值 |
 |------|-----|
@@ -93,7 +93,7 @@ graph LR
 | 预计 | 15 分钟 |
 | 依赖 | Task 1, Task 2 (依赖 DB) |
 
-#### Task 4: AI Service 增强 JSON 支持
+#### Task 4: AI Service 增强 JSON 支持 (Completed)
 
 | 属性 | 值 |
 |------|-----|
@@ -107,7 +107,7 @@ graph LR
 
 ### 阶段3: 业务逻辑
 
-#### Task 5: AI 具体能力实现
+#### Task 5: AI 具体能力实现 (Completed)
 
 | 属性 | 值 |
 |------|-----|
@@ -119,7 +119,7 @@ graph LR
 | 预计 | 15 分钟 |
 | 依赖 | Task 4 |
 
-#### Task 6: SoftValidator 重构
+#### Task 6: SoftValidator 重构 (Completed)
 
 | 属性 | 值 |
 |------|-----|
@@ -133,7 +133,7 @@ graph LR
 
 ### 阶段4: 集成
 
-#### Task 7: 集成验证
+#### Task 7: 集成验证 (Completed)
 
 | 属性 | 值 |
 |------|-----|
