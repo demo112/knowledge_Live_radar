@@ -22,7 +22,37 @@
     "scheduler": "Scheduler",
     "settings": "Settings"
   },
-  "Pyramid": {
+  "Dashboard": {
+      "title": "System Overview",
+      "loading": "Loading...",
+      "cards": {
+        "sources": {
+          "title": "Information Sources",
+          "active": "/ {total} active"
+        },
+        "discovery": {
+          "title": "Discovery & Whitelist",
+          "discovered": "Discovered Domains",
+          "whitelisted": "Whitelisted Domains"
+        },
+        "contents": {
+          "title": "Collected Contents",
+          "items": "Items"
+        },
+        "quality": {
+          "title": "Content Quality Rate",
+          "passed": "Passed Validation"
+        }
+      },
+      "charts": {
+        "trend_title": "Quality Trend (Last 7 Days)",
+        "no_data": "No trend data",
+        "pass_rate": "Pass Rate",
+        "validation_count": "Validation Count",
+        "more_developing": "More dimensions (Under Development)"
+      }
+    },
+    "Pyramid": {
     "List": {
         "title": "Knowledge Pyramids",
         "loading": "Loading...",

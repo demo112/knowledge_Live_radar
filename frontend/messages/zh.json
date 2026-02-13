@@ -22,7 +22,37 @@
     "scheduler": "调度管理",
     "settings": "设置"
   },
-  "Pyramid": {
+  "Dashboard": {
+      "title": "系统概览",
+      "loading": "加载中...",
+      "cards": {
+        "sources": {
+          "title": "信息源",
+          "active": "/ {total} 活跃"
+        },
+        "discovery": {
+          "title": "发现 & 白名单",
+          "discovered": "新发现域名",
+          "whitelisted": "白名单域名"
+        },
+        "contents": {
+          "title": "已收录内容",
+          "items": "条目"
+        },
+        "quality": {
+          "title": "内容合格率",
+          "passed": "通过校验"
+        }
+      },
+      "charts": {
+        "trend_title": "质量趋势 (近7天)",
+        "no_data": "暂无趋势数据",
+        "pass_rate": "合格率",
+        "validation_count": "校验数量",
+        "more_developing": "更多统计维度 (开发中)"
+      }
+    },
+    "Pyramid": {
     "List": {
         "title": "知识金字塔",
         "loading": "加载中...",
