@@ -9,6 +9,7 @@ triggers:
   - 真的好了吗
 related_rules:
   - rules/14-definition-of-done
+  - rules/15-bug-fix-rules
 ---
 
 # 完成前验证

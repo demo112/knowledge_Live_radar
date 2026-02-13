@@ -1,6 +1,9 @@
 ---
 name: regression-check
 description: 修复后的回归验证，确保原问题解决且不破坏已有功能。
+related_rules:
+  - rules/15-bug-fix-rules
+  - rules/14-definition-of-done
 ---
 
 # 回归验证

@@ -352,7 +352,7 @@ next_skills:
 
 | 输出项 | 格式 | 位置 |
 |--------|------|------|
-| 需求文档 | Markdown | `.trae/specs/{feature}/requirements.md` |
+| 需求文档 | Markdown | `docs/features/{SPEC_ID}/requirements.md` |
 
 #### 质量门控
 
@@ -400,7 +400,7 @@ next_skills:
 
 | 输出项 | 类型 | 格式 | 位置 |
 |--------|------|------|------|
-| 需求文档 | 文档型 | Markdown | `.trae/specs/{feature}/requirements.md` |
+| 需求文档 | 文档型 | Markdown | `docs/features/{SPEC_ID}/requirements.md` |
 | 拆分方案（如需要） | 文档型 | Markdown | 临时输出，用户确认后拆分 |
 
 ### 输出模板

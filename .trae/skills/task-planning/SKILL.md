@@ -188,7 +188,7 @@ next_skills:
 
 | 输入项 | 来源 | 格式 | 必要性 |
 |--------|------|------|--------|
-| 设计文档 | `.trae/specs/{feature}/design.md` | Markdown | 必须 |
+| 设计文档 | `docs/features/{SPEC_ID}/design.md` | Markdown | 必须 |
 
 #### 执行步骤
 
@@ -397,7 +397,7 @@ next_skills:
 
 | 输出项 | 格式 | 位置 |
 |--------|------|------|
-| 任务清单 | Markdown | `.trae/specs/{feature}/tasks.md` |
+| 任务清单 | Markdown | `docs/features/{SPEC_ID}/tasks.md` |
 
 #### 质量门控
 
@@ -444,7 +444,7 @@ next_skills:
 
 | 输出项 | 类型 | 格式 | 位置 |
 |--------|------|------|------|
-| 任务清单（含依赖关系图） | 文档型 | Markdown + Mermaid | `.trae/specs/{feature}/tasks.md` |
+| 任务清单（含依赖关系图） | 文档型 | Markdown + Mermaid | `docs/features/{SPEC_ID}/tasks.md` |
 
 ### 输出模板
 
@@ -955,7 +955,7 @@ graph LR
 
 ## 前置条件
 
-- `.trae/specs/{feature}/design.md` 必须存在
+- `docs/features/{SPEC_ID}/design.md` 必须存在
 - 如不存在，提示先执行 technical-design
 
 ---

@@ -181,6 +181,8 @@ next_skills:
 
 ## 强制规则
 
+> 日志级别、格式、必须记录的场景等规范详见 `rules/06-logging`。以下为本 Skill 的执行规则。
+
 ### 禁止 console.log
 
 代码中**禁止**使用 `console.log`，必须使用项目统一的 Logger：

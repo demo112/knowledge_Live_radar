@@ -388,9 +388,11 @@ npx stryker run
 
 **目标**: 确保任务满足完成标准，不遗漏文档和规范要求
 
+> 详细 DoD 标准参见 `rules/14-definition-of-done`。以下为自动化检查步骤。
+
 ### 执行步骤（必须执行）
 
-#### 1. 代码规范检查
+#### 1. 代码规范检查（参照 Rule 06-logging、Rule 14-definition-of-done）
 
 ```bash
 # 检查是否有 console.log（禁止）
@@ -409,7 +411,7 @@ grep -r "raise Exception" backend/app --include="*.py"
 npm run lint:docs
 
 # 检查项：
-# - docs/feature/{SPEC_ID}/ 下存在 requirements.md、design.md、tasks.md
+# - docs/features/{SPEC_ID}/ 下存在 requirements.md、design.md、tasks.md
 # - 文件名无中文
 ```
 

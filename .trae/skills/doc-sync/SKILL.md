@@ -361,7 +361,7 @@ docs/
 ├── changelog.md             # 变更日志
 ├── deployment.md            # 部署文档
 ├── issues/                  # 问题记录
-└── feature/                 # 功能文档（按迭代编号）
+└── features/                # 功能文档（按迭代编号）
     └── {SPEC_ID}/
         ├── requirements.md  # 需求文档
         ├── design.md        # 设计文档

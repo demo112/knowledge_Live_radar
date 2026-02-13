@@ -193,7 +193,7 @@ next_skills:
 
 | 输入项 | 来源 | 格式 | 必要性 |
 |--------|------|------|--------|
-| 需求文档 | `.trae/specs/{feature}/requirements.md` | Markdown | 必须 |
+| 需求文档 | `docs/features/{SPEC_ID}/requirements.md` | Markdown | 必须 |
 
 #### 执行步骤
 
@@ -411,7 +411,7 @@ next_skills:
 
 | 输出项 | 格式 | 位置 |
 |--------|------|------|
-| 设计文档 | Markdown | `.trae/specs/{feature}/design.md` |
+| 设计文档 | Markdown | `docs/features/{SPEC_ID}/design.md` |
 
 #### 质量门控
 
@@ -460,7 +460,7 @@ next_skills:
 
 | 输出项 | 类型 | 格式 | 位置 |
 |--------|------|------|------|
-| 设计文档 | 文档型 | Markdown | `.trae/specs/{feature}/design.md` |
+| 设计文档 | 文档型 | Markdown | `docs/features/{SPEC_ID}/design.md` |
 
 ### 输出模板
 
@@ -650,7 +650,7 @@ interface {ResponseType} {
 
 ## 前置条件
 
-- `.trae/specs/{feature}/requirements.md` 必须存在
+- `docs/features/{SPEC_ID}/requirements.md` 必须存在
 - 如不存在，提示先执行 requirement-analysis
 
 ---

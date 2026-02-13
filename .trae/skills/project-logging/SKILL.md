@@ -312,8 +312,8 @@ related_rules:
 
 | 输出项 | 类型 | 格式 | 位置 |
 |--------|------|------|------|
-| 进度日志 | 文档型 | Markdown | docs/feature/*/tasks.md |
-| 决策日志 | 文档型 | Markdown | docs/feature/*/design.md |
+| 进度日志 | 文档型 | Markdown | docs/features/*/tasks.md |
+| 决策日志 | 文档型 | Markdown | docs/features/*/design.md |
 | 问题日志 | 文档型 | Markdown | docs/issues/*.md |
 | 变更日志 | 文档型 | Markdown | docs/changelog.md |
 
