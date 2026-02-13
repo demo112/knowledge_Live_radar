@@ -10,6 +10,8 @@ class ContentBase(BaseModel):
     content_text: Optional[str] = None
     publish_time: Optional[datetime] = None
     tags: Optional[List[str]] = None
+    concepts: Optional[List[Any]] = None
+    ai_processed: bool = False
 
 class ContentCreate(ContentBase):
     source_id: Optional[UUID] = None
@@ -20,12 +22,14 @@ class ContentUpdate(BaseModel):
     summary: Optional[str] = None
     status: Optional[str] = None
     tags: Optional[List[str]] = None
+    concepts: Optional[List[Any]] = None
+    ai_processed: Optional[bool] = None
 
 class ContentResponse(ContentBase):
     id: UUID
-    source_id: Optional[UUID]
+    source_id: Optional[UUID] = None
     status: str
-    content_hash: Optional[str]
+    content_hash: Optional[str] = None
     created_at: datetime
     
     model_config = {"from_attributes": True}

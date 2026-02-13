@@ -1,7 +1,10 @@
 from openai import AsyncOpenAI
 from app.config import settings
 import logging
+import json
+import re
 from typing import List, Dict, Any, Optional
+from app.services.prompt.prompt_manager import PromptManager
 
 logger = logging.getLogger(__name__)
 
@@ -15,18 +18,12 @@ class AIService:
             )
         else:
             logger.warning("SILICONFLOW_API_KEY not set. AI Service will not function.")
+        
+        self.prompt_manager = PromptManager()
 
     async def chat_completion(self, messages: List[Dict[str, str]], model: str = "deepseek-ai/DeepSeek-V3", temperature: float = 0.3) -> Optional[str]:
         """
         Send a chat completion request to the AI model.
-        
-        Args:
-            messages: List of message dictionaries (role, content)
-            model: Model name to use
-            temperature: Sampling temperature
-            
-        Returns:
-            The content of the response message, or None if failed
         """
         if not self.client:
             logger.error("AI Client not initialized. Cannot perform chat completion.")
@@ -44,26 +41,106 @@ class AIService:
             return content
         except Exception as e:
             logger.error(f"AI Service Error: {str(e)}")
-            # In production, might want to raise specific exceptions or handle retries
             return None
 
-    async def validate_content_soft(self, content: str, criteria: str) -> Dict[str, Any]:
-        """
-        Perform soft validation using AI.
-        """
-        system_prompt = "You are a content validator. Evaluate the content based on the criteria. Return JSON with 'valid' (bool) and 'reason' (str)."
-        user_prompt = f"Content: {content}\nCriteria: {criteria}"
-        
+    def _parse_json(self, text: str) -> Dict[str, Any]:
+        """Extract and parse JSON from text."""
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError:
+            # Try extracting from code blocks
+            match = re.search(r'```json\s*(.*?)\s*```', text, re.DOTALL)
+            if match:
+                try:
+                    return json.loads(match.group(1))
+                except json.JSONDecodeError:
+                    pass
+            # Try finding first { and last }
+            start = text.find('{')
+            end = text.rfind('}')
+            if start != -1 and end != -1:
+                try:
+                    return json.loads(text[start:end+1])
+                except json.JSONDecodeError:
+                    pass
+            
+            logger.error(f"Failed to parse JSON from AI response: {text[:100]}...")
+            return {}
+
+    async def validate_content_soft(self, title: str, content: str) -> Dict[str, Any]:
+        """Soft validation using prompt template."""
+        prompt = await self.prompt_manager.get_prompt_for_scene(
+            "soft_validation", 
+            {"title": title, "content": content}
+        )
+        if not prompt:
+            logger.error("Prompt template 'soft_validation' not found")
+            return {"score": 0, "reason": "System error: prompt missing"}
+
         response = await self.chat_completion(
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ],
-            model="deepseek-ai/DeepSeek-V3" # Or a smaller model for validation
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.1
         )
         
-        # Simple parsing for now, ideally use structured output or Pydantic validation
-        # This is a placeholder for actual implementation
-        return {"raw_response": response}
+        if not response:
+            return {"score": 0, "reason": "AI service failure"}
+            
+        result = self._parse_json(response)
+        if "score" not in result:
+            result["score"] = 0
+            result["reason"] = result.get("reason", "Failed to parse AI score")
+            
+        return result
+
+    async def generate_summary(self, title: str, content: str) -> Dict[str, Any]:
+        """Generate summary using prompt template."""
+        prompt = await self.prompt_manager.get_prompt_for_scene(
+            "summary_generation",
+            {"title": title, "content": content}
+        )
+        if not prompt:
+            return {"summary": "", "key_points": []}
+
+        response = await self.chat_completion(
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.3
+        )
+        
+        return self._parse_json(response) if response else {}
+
+    async def extract_concepts(self, title: str, content: str) -> List[Dict[str, str]]:
+        """Extract concepts using prompt template."""
+        prompt = await self.prompt_manager.get_prompt_for_scene(
+            "concept_extraction",
+            {"title": title, "content": content}
+        )
+        if not prompt:
+            return []
+
+        response = await self.chat_completion(
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.1
+        )
+        
+        result = self._parse_json(response) if response else {}
+        return result.get("concepts", [])
+
+    async def generate_tags(self, title: str, content: str) -> List[str]:
+        """Generate tags using prompt template."""
+        prompt = await self.prompt_manager.get_prompt_for_scene(
+            "tag_generation",
+            {"title": title, "content": content}
+        )
+        if not prompt:
+            return []
+
+        response = await self.chat_completion(
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.3
+        )
+        
+        result = self._parse_json(response) if response else {}
+        return result.get("tags", [])
+
 
 ai_service = AIService()

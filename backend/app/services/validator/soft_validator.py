@@ -14,16 +14,23 @@ class SoftValidator(BaseValidator):
             logger.warning("AI Service unavailable, skipping soft validation")
             return True, {"reason": "Skipped (AI unavailable)"}
 
-        text = (content.get("content", "") or "")[:1000]
+        text = (content.get("content", "") or "")[:3000]
         title = content.get("title", "") or ""
         
         try:
-            result = await ai_service.validate_content_soft(f"Title: {title}\nContent: {text}", self.criteria)
-            raw_response = result.get("raw_response", "")
+            result = await ai_service.validate_content_soft(title, text)
             
-            # Simple heuristic check for now
-            is_valid = "valid" in raw_response.lower() or "yes" in raw_response.lower() or "true" in raw_response.lower()
-            return is_valid, {"raw_response": raw_response}
+            score = result.get("score", 0)
+            reason = result.get("reason", "")
+            
+            # Pass if score >= 60
+            is_valid = score >= 60
+            
+            return is_valid, {
+                "score": score,
+                "reason": reason,
+                "dimensions": result.get("dimensions", {})
+            }
         except Exception as e:
             logger.error(f"Soft validation failed: {e}")
             return True, {"reason": "Skipped (Error)"}

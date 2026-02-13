@@ -11,20 +11,21 @@ from app.schemas.content_input import UrlInput, TextInput, AnalysisRequest
 from app.schemas.approval import ApprovalResponse
 from app.services.input_processor import InputProcessor
 from app.services.content_analyzer import ContentAnalyzer
-
+from app.schemas.content import ContentResponse
 from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 
-class ContentResponse(BaseModel):
-    id: UUID
-    title: str
-    url: str
-    summary: Optional[str] = None
-    publish_time: Optional[datetime] = None
-    status: str
-    created_at: datetime
-    
-    model_config = ConfigDict(from_attributes=True)
+# Remove local ContentResponse definition as we now import it
+# class ContentResponse(BaseModel):
+#     id: UUID
+#     title: str
+#     url: str
+#     summary: Optional[str] = None
+#     publish_time: Optional[datetime] = None
+#     status: str
+#     created_at: datetime
+#     
+#     model_config = ConfigDict(from_attributes=True)
 
 router = APIRouter(prefix="/contents", tags=["contents"])
 

@@ -1,6 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.services.crawl_engine import crawl_engine
 from app.services.validator import HardValidator, SoftValidator, CrossValidator
+from app.services.ai_service import ai_service
 from app.models.source import InformationSource
 from app.models.content import ContentItem, ValidationResult
 from app.models.crawl_job import CrawlJob
@@ -62,14 +63,26 @@ class ContentProcessor:
                     failed_count += 1
                     continue
                 
+                # 3. AI Enhancement
+                title = item_data.get("title", "")
+                text = item_data.get("content", "")[:3000]
+                
+                ai_summary_data = await ai_service.generate_summary(title, text)
+                ai_tags = await ai_service.generate_tags(title, text)
+                ai_concepts = await ai_service.extract_concepts(title, text)
+                
                 # 3. Save
                 content = ContentItem(
                     source_id=source.id,
                     url=item_data.get("url"),
-                    title=item_data.get("title"),
+                    title=title,
                     content_text=item_data.get("content"),
                     publish_time=item_data.get("published_at"),
-                    status="PROCESSED"
+                    status="PROCESSED",
+                    summary=ai_summary_data.get("summary", ""),
+                    tags=ai_tags,
+                    concepts=ai_concepts,
+                    ai_processed=True
                 )
                 session.add(content)
                 await session.flush() # Get ID
@@ -80,7 +93,7 @@ class ContentProcessor:
                     hard_result=hard_details,
                     soft_result=soft_details,
                     cross_result=cross_details,
-                    overall_score=80 # Placeholder score logic
+                    overall_score=soft_details.get("score", 80)
                 )
                 session.add(val_result)
                 

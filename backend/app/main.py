@@ -1,15 +1,25 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
+import logging
 from app.config import settings
 from app.routers import (
     pyramids, nodes, sources, contents, discovery, approvals, 
     input, whitelist, dashboard, health,
     hotspots, drift, strategy, scheduler, config
 )
+
+# Configure Logging
+logging.basicConfig(
+    level=logging.DEBUG if settings.ENVIRONMENT == "development" else logging.INFO,
+    format="%(asctime)s [%(levelname)s] [%(name)s] %(message)s",
+)
+logger = logging.getLogger(__name__)
+
 from app.services.scheduler.scheduler_service import scheduler_service
 from app.services.scheduler import tasks
 from app.services.scheduler.task_registry import TaskRegistry
+from app.services.prompt_loader import prompt_loader
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -23,6 +33,9 @@ async def lifespan(app: FastAPI):
 
     # Startup
     await scheduler_service.start()
+    
+    # Load AI Prompts
+    await prompt_loader.load_initial_prompts()
     
     # Register Scheduled Tasks (Create in DB if not exist)
     # 1. Content Crawl (Every 30 mins)
