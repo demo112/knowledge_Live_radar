@@ -54,6 +54,12 @@ export interface ContentItem {
   ai_processed?: boolean;
 }
 
+export interface ContentWithRelation extends ContentItem {
+  relation_source: string;
+  relation_confidence: number;
+  relation_created_at: string;
+}
+
 export interface PaginatedResponse<T> {
   success: boolean;
   data: {

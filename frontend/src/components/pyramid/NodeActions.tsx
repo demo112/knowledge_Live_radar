@@ -45,27 +45,27 @@ export const SplitNodeDialog: React.FC<SplitNodeDialogProps> = ({ open, onOpenCh
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Split Node</DialogTitle>
-          <DialogDescription>Split this node into multiple sub-nodes.</DialogDescription>
+          <DialogTitle>拆分节点</DialogTitle>
+          <DialogDescription>将此节点拆分为多个子节点。</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
           {subNodes.map((node, index) => (
             <div key={index} className="grid grid-cols-12 gap-2 items-end border-b pb-4">
               <div className="col-span-3">
-                <Label>Name</Label>
-                <Input value={node.name} onChange={(e) => handleChange(index, 'name', e.target.value)} placeholder="Sub-node name" />
+                <Label>名称</Label>
+                <Input value={node.name} onChange={(e) => handleChange(index, 'name', e.target.value)} placeholder="子节点名称" />
               </div>
               <div className="col-span-3">
-                 <Label>Type</Label>
+                 <Label>类型</Label>
                  <Select value={node.node_type} onChange={(e) => handleChange(index, 'node_type', e.target.value)}>
-                   <option value="concept">Concept</option>
-                   <option value="fact">Fact</option>
-                   <option value="principle">Principle</option>
+                   <option value="concept">概念</option>
+                   <option value="fact">事实</option>
+                   <option value="principle">原理</option>
                  </Select>
               </div>
               <div className="col-span-5">
-                <Label>Content</Label>
-                <Input value={node.content || ''} onChange={(e) => handleChange(index, 'content', e.target.value)} placeholder="Content" />
+                <Label>内容</Label>
+                <Input value={node.content || ''} onChange={(e) => handleChange(index, 'content', e.target.value)} placeholder="内容描述" />
               </div>
               <div className="col-span-1">
                 <Button variant="ghost" size="icon" onClick={() => handleRemoveNode(index)} disabled={subNodes.length <= 1}>
@@ -75,7 +75,7 @@ export const SplitNodeDialog: React.FC<SplitNodeDialogProps> = ({ open, onOpenCh
             </div>
           ))}
           <Button variant="outline" size="sm" onClick={handleAddNode} className="w-full">
-            <Plus className="h-4 w-4 mr-2" /> Add Sub-node
+            <Plus className="h-4 w-4 mr-2" /> 添加子节点
           </Button>
           <div className="flex items-center space-x-2 pt-2">
              <input
@@ -85,13 +85,13 @@ export const SplitNodeDialog: React.FC<SplitNodeDialogProps> = ({ open, onOpenCh
                onChange={(e) => setDeleteOriginal(e.target.checked)}
                className="h-4 w-4 rounded border-gray-300"
              />
-             <Label htmlFor="deleteOriginal">Archive original node after split</Label>
+             <Label htmlFor="deleteOriginal">拆分后归档原节点</Label>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>取消</Button>
           <Button onClick={handleSubmit} disabled={isLoading}>
-            {isLoading ? 'Splitting...' : 'Confirm Split'}
+            {isLoading ? '拆分中...' : '确认拆分'}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -128,36 +128,36 @@ export const MergeNodesDialog: React.FC<MergeNodesDialogProps> = ({ open, onOpen
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Merge Nodes</DialogTitle>
+          <DialogTitle>合并节点</DialogTitle>
           <DialogDescription>
-            Merging {selectedNodeNames.length} nodes: {selectedNodeNames.join(', ')}
+            合并 {selectedNodeNames.length} 个节点: {selectedNodeNames.join(', ')}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label>Merge Strategy</Label>
+            <Label>合并策略</Label>
             <Select value={strategy} onChange={(e) => setStrategy(e.target.value as any)}>
-              <option value="create_new">Create New Parent Node</option>
-              <option value="merge_to_first">Merge into First Selected</option>
+              <option value="create_new">创建新父节点</option>
+              <option value="merge_to_first">合并到第一个选中节点</option>
             </Select>
           </div>
           {strategy === 'create_new' && (
             <>
               <div className="space-y-2">
-                <Label>New Node Name</Label>
-                <Input value={targetName} onChange={(e) => setTargetName(e.target.value)} placeholder="Merged Node Name" />
+                <Label>新节点名称</Label>
+                <Input value={targetName} onChange={(e) => setTargetName(e.target.value)} placeholder="合并后的节点名称" />
               </div>
               <div className="space-y-2">
-                <Label>Content (Optional)</Label>
-                <Input value={targetContent} onChange={(e) => setTargetContent(e.target.value)} placeholder="Merged Content Summary" />
+                <Label>内容 (可选)</Label>
+                <Input value={targetContent} onChange={(e) => setTargetContent(e.target.value)} placeholder="合并后的内容摘要" />
               </div>
             </>
           )}
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>取消</Button>
           <Button onClick={handleSubmit} disabled={isLoading || (strategy === 'create_new' && !targetName)}>
-            {isLoading ? 'Merging...' : 'Confirm Merge'}
+            {isLoading ? '合并中...' : '确认合并'}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -186,29 +186,28 @@ export const LinkNodeDialog: React.FC<LinkNodeDialogProps> = ({ open, onOpenChan
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Link Node</DialogTitle>
-          <DialogDescription>Create a cross-reference to another node.</DialogDescription>
+          <DialogTitle>关联节点</DialogTitle>
+          <DialogDescription>创建对另一个节点的引用。</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label>Target Node ID</Label>
-            <Input value={targetNodeId} onChange={(e) => setTargetNodeId(e.target.value)} placeholder="UUID of target node" />
-            <p className="text-xs text-gray-500">Currently only supports linking by ID directly.</p>
+            <Label>目标节点 ID</Label>
+            <Input value={targetNodeId} onChange={(e) => setTargetNodeId(e.target.value)} placeholder="目标节点 UUID" />
+            <p className="text-xs text-gray-500">当前仅支持直接通过 ID 关联。</p>
           </div>
           <div className="space-y-2">
-            <Label>Relation Type</Label>
+            <Label>关系类型</Label>
             <Select value={relationType} onChange={(e) => setRelationType(e.target.value)}>
-              <option value="related">Related</option>
-              <option value="supports">Supports</option>
-              <option value="contradicts">Contradicts</option>
-              <option value="expands">Expands</option>
+              <option value="related">相关</option>
+              <option value="prerequisite">前置</option>
+              <option value="part_of">部分</option>
             </Select>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>取消</Button>
           <Button onClick={handleSubmit} disabled={isLoading || !targetNodeId}>
-            {isLoading ? 'Linking...' : 'Confirm Link'}
+            {isLoading ? '关联中...' : '确认关联'}
           </Button>
         </DialogFooter>
       </DialogContent>

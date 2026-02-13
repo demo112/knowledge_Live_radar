@@ -79,6 +79,18 @@ export const nodeApi = {
   delete: async (id: string) => {
     const response = await api.delete(`/nodes/${id}`);
     return response.data;
+  },
+  getContents: async (id: string) => {
+    const response = await api.get(`/nodes/${id}/contents`);
+    return response.data;
+  },
+  linkContent: async (id: string, contentId: string) => {
+    const response = await api.post(`/nodes/${id}/contents/${contentId}`);
+    return response.data;
+  },
+  unlinkContent: async (id: string, contentId: string) => {
+    const response = await api.delete(`/nodes/${id}/contents/${contentId}`);
+    return response.data;
   }
 };
 
@@ -116,6 +128,10 @@ export const contentApi = {
   },
   getById: async (id: string) => {
     const response = await api.get(`/contents/${id}`);
+    return response.data;
+  },
+  getNodes: async (id: string) => {
+    const response = await api.get(`/contents/${id}/nodes`);
     return response.data;
   },
   uploadFile: async (file: File, submitterId?: string) => {
@@ -254,6 +270,14 @@ export const hotspotApi = {
 export const evolutionApi = {
   triggerOptimization: async () => {
     const response = await api.post('/evolution/optimize');
+    return response.data;
+  },
+  classifyContent: async (contentId: string) => {
+    const response = await api.post(`/evolution/classify/${contentId}`);
+    return response.data;
+  },
+  batchClassify: async () => {
+    const response = await api.post('/evolution/classify/batch');
     return response.data;
   },
   getEvolution: async () => {

@@ -7,6 +7,7 @@ import HealthDashboard from '@/components/pyramid/HealthDashboard';
 import PyramidVisualizer from '@/components/pyramid/PyramidVisualizer';
 import { SplitNodeDialog, MergeNodesDialog, LinkNodeDialog } from '@/components/pyramid/NodeActions';
 import PyramidHistory from '@/components/pyramid/PyramidHistory';
+import { NodeContents } from '@/components/pyramid/NodeContents';
 import { Button } from '@/components/ui/button';
 import { Node } from 'reactflow';
 import { GitMerge } from 'lucide-react';
@@ -107,8 +108,8 @@ export default function PyramidDetailPage({ params }: { params: Promise<{ id: st
     if (action === 'link') setLinkOpen(true);
   };
 
-  if (loading && !pyramid) return <div className="p-8">Loading...</div>;
-  if (!pyramid) return <div className="p-8">Pyramid not found</div>;
+  if (loading && !pyramid) return <div className="p-8">加载中...</div>;
+  if (!pyramid) return <div className="p-8">未找到金字塔</div>;
 
   return (
     <div className="p-6 h-screen flex flex-col space-y-4" onClick={closeContextMenu}>
@@ -125,13 +126,13 @@ export default function PyramidDetailPage({ params }: { params: Promise<{ id: st
             onClick={() => setActiveTab('view')}
             className={`${activeTab === 'view' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500'} whitespace-nowrap py-2 px-1 border-b-2 font-medium`}
           >
-            Visualization & Health
+            可视化与健康度
           </button>
           <button
             onClick={() => setActiveTab('history')}
             className={`${activeTab === 'history' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500'} whitespace-nowrap py-2 px-1 border-b-2 font-medium`}
           >
-            History
+            历史记录
           </button>
         </nav>
       </div>
@@ -159,7 +160,7 @@ export default function PyramidDetailPage({ params }: { params: Promise<{ id: st
                 <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10">
                   <Button onClick={() => setMergeOpen(true)} className="shadow-lg">
                     <GitMerge className="mr-2 h-4 w-4" />
-                    Merge {selectedNodes.length} Nodes
+                    合并 {selectedNodes.length} 个节点
                   </Button>
                 </div>
               )}
@@ -174,17 +175,28 @@ export default function PyramidDetailPage({ params }: { params: Promise<{ id: st
                     className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
                     onClick={() => handleMenuAction('split')}
                   >
-                    Split Node
+                    拆分节点
                   </button>
                   <button
                     className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
                     onClick={() => handleMenuAction('link')}
                   >
-                    Link Node
+                    关联节点
                   </button>
                 </div>
               )}
             </div>
+
+            {/* Selected Node Details */}
+            {selectedNodes.length === 1 && (
+              <div className="border rounded-lg p-4 bg-card text-card-foreground shadow-sm animate-in slide-in-from-bottom-5">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-semibold text-lg">节点: {selectedNodes[0].data.label}</h3>
+                  <span className="text-xs text-muted-foreground font-mono">{selectedNodes[0].id}</span>
+                </div>
+                <NodeContents nodeId={selectedNodes[0].id} />
+              </div>
+            )}
           </>
         ) : (
           <PyramidHistory pyramidId={pyramid.id} />

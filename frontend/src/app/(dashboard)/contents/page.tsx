@@ -75,9 +75,9 @@ export default function ContentsPage() {
             <li key={content.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-medium text-gray-900 truncate max-w-2xl">
-                  <a href={content.url} target="_blank" rel="noopener noreferrer" className="hover:text-primary hover:underline">
+                  <Link href={`/contents/${content.id}`} className="hover:text-primary hover:underline">
                     {content.title}
-                  </a>
+                  </Link>
                 </h3>
                 <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                   content.status === 'PROCESSED' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
