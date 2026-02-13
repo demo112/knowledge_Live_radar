@@ -35,7 +35,7 @@ export default function HistoryPage() {
         // For 'Change History' page, we usually care about what *happened*.
         let data = response.data;
         if (statusFilter === 'all') {
-             data = data.filter((item: ChangeItem) => ['executed', 'rolled_back'].includes(item.status));
+          data = data.filter((item: ChangeItem) => ['executed', 'rolled_back'].includes(item.status));
         }
         setHistory(data);
         setFilteredHistory(data);

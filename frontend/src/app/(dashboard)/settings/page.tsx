@@ -50,7 +50,7 @@ export default function SettingsPage() {
       alert(`Updated ${key}`);
     } catch (error) {
       console.error("Failed to save setting", error);
-      alert("Failed to save setting");
+      alert("保存配置失败");
     } finally {
       setSaving(false);
     }
@@ -73,32 +73,32 @@ export default function SettingsPage() {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold flex items-center gap-2 text-gray-900 dark:text-white">
           <Settings className="w-6 h-6 text-blue-600" />
-          系统配置 (Settings)
+          系统配置
         </h1>
         <div className="flex space-x-2">
            <button
              onClick={() => setActiveTab('general')}
              className={`px-3 py-2 rounded-md text-sm font-medium ${activeTab === 'general' ? 'bg-blue-100 text-blue-700' : 'text-gray-500 hover:text-gray-700'}`}
            >
-             General
+             通用配置
            </button>
            <button
              onClick={() => setActiveTab('history')}
              className={`px-3 py-2 rounded-md text-sm font-medium ${activeTab === 'history' ? 'bg-blue-100 text-blue-700' : 'text-gray-500 hover:text-gray-700'}`}
            >
-             History
+             变更历史
            </button>
         </div>
       </div>
 
       {loading ? (
-        <div>Loading settings...</div>
+        <div>加载配置中...</div>
       ) : activeTab === 'general' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {Object.entries(configGroups).map(([group, items]) => (
             <div key={group} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white capitalize mb-4 border-b pb-2">
-                {group} Configuration
+                {group} 配置
               </h2>
               <div className="space-y-4">
                 {Object.entries(items).map(([key, value]) => (
@@ -130,11 +130,11 @@ export default function SettingsPage() {
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-700/50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Key</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Old Value</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">New Value</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">时间</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">配置项</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">旧值</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">新值</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作人</th>
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">

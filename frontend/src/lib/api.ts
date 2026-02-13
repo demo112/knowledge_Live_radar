@@ -239,7 +239,7 @@ export const dashboardApi = {
 
 export const healthApi = {
   triggerDetection: async () => {
-    const response = await api.post('/health/detection');
+    const response = await api.post('/health/detect');
     return response.data;
   },
   getReport: async () => {
@@ -269,7 +269,7 @@ export const hotspotApi = {
 
 export const evolutionApi = {
   triggerOptimization: async () => {
-    const response = await api.post('/evolution/optimize');
+    const response = await api.post('/strategy/optimize');
     return response.data;
   },
   classifyContent: async (contentId: string) => {
