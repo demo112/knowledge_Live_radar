@@ -113,11 +113,11 @@ export default function PyramidListPage() {
         fetchPyramids();
       }
     } catch (error: any) {
-      console.error('Failed to delete pyramid:', error);
       if (error.response?.status === 404) {
         // Already deleted, just refresh
         fetchPyramids();
       } else {
+        console.error('Failed to delete pyramid:', error);
         const errorMessage = error.response?.data?.error?.message || error.message || '未知错误';
         alert(`删除失败: ${errorMessage}`);
       }
@@ -189,7 +189,7 @@ export default function PyramidListPage() {
               <h5 className="mb-2 text-xl font-bold tracking-tight text-gray-900 group-hover:text-primary pr-16">{pyramid.name}</h5>
               <p className="font-normal text-gray-700 line-clamp-2">{pyramid.description || t('no_description')}</p>
               <div className="mt-4 text-sm text-gray-500">
-                  {t('created_at', { date: format.dateTime(new Date(pyramid.created_at), 'short') })}
+                  {t('created_at', { date: format.dateTime(new Date(pyramid.created_at), {dateStyle: 'short'}) })}
               </div>
             </Link>
             <div className="absolute top-4 right-4 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
