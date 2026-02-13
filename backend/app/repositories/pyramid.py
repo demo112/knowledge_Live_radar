@@ -20,12 +20,18 @@ class PyramidNodeRepository(BaseRepository[PyramidNode]):
         super().__init__(PyramidNode, db)
     
     async def get_by_pyramid(self, pyramid_id: UUID) -> List[PyramidNode]:
-        query = select(PyramidNode).where(PyramidNode.pyramid_id == pyramid_id)
+        query = select(PyramidNode).where(
+            PyramidNode.pyramid_id == pyramid_id,
+            PyramidNode.is_deleted == False
+        )
         result = await self.db.execute(query)
         return result.scalars().all()
     
     async def get_children(self, parent_id: UUID) -> List[PyramidNode]:
-        query = select(PyramidNode).where(PyramidNode.parent_id == parent_id)
+        query = select(PyramidNode).where(
+            PyramidNode.parent_id == parent_id,
+            PyramidNode.is_deleted == False
+        )
         result = await self.db.execute(query)
         return result.scalars().all()
 

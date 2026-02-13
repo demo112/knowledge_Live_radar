@@ -17,7 +17,10 @@ class BaseRepository(Generic[ModelType]):
         return result.scalar_one_or_none()
 
     async def get_all(self, skip: int = 0, limit: int = 100) -> List[ModelType]:
-        query = select(self.model).offset(skip).limit(limit)
+        query = select(self.model)
+        if hasattr(self.model, "is_deleted"):
+            query = query.where(self.model.is_deleted == False)
+        query = query.offset(skip).limit(limit)
         result = await self.db.execute(query)
         return result.scalars().all()
 
