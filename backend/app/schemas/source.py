@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 
 class InformationSourceBase(BaseModel):
     name: str = Field(..., max_length=100)
-    type: str = Field(..., pattern="^(RSS|API|WEB|USER)$")
+    type: str = Field(..., pattern="^(RSS|API|WEB|USER|WECHAT_MP|BILIBILI_USER|JUEJIN_COLUMN)$")
     url: str
     config: Optional[dict[str, Any]] = None
     check_interval: int = 3600

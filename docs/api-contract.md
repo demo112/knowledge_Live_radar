@@ -113,7 +113,7 @@
 
 ### 创建信息源
 - **POST** `/sources`
-- **Body**: `{ name: string, type: 'RSS'|'API'|'WEB', url: string, config: object }`
+- **Body**: `{ name: string, type: 'RSS'|'API'|'WEB'|'USER'|'WECHAT_MP'|'BILIBILI_USER'|'JUEJIN_COLUMN'|'YOUTUBE_CHANNEL', url: string, config: object }`
 - **Response**: `InformationSource`
 
 ### 更新信息源

@@ -23,6 +23,7 @@ export default function SourcesPage() {
 
   const fetchSources = async () => {
     try {
+      setError(null);
       const response = await sourceApi.getAll();
       if (response.success) {
         setSources(response.data.items);
@@ -191,7 +192,7 @@ export default function SourcesPage() {
                       {source.type}
                     </span>
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full font-medium ${source.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                      {source.status}
+                      {source.status === 'ACTIVE' ? '正常' : '停用'}
                     </span>
                     <span>上次抓取: {source.last_crawled_at ? new Date(source.last_crawled_at).toLocaleString('zh-CN') : '从未'}</span>
                   </div>
@@ -272,15 +273,20 @@ export default function SourcesPage() {
             <h2 className="text-xl font-bold mb-4">{editingSource ? '编辑信息源' : '添加新信息源'}</h2>
             <form onSubmit={handleSubmit}>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">URL</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">URL / ID</label>
                 <div className="flex gap-2">
                     <input 
-                    type="url" 
+                    type="text" 
                     required
                     className="flex-1 border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-primary/50 outline-none"
                     value={formData.url}
                     onChange={(e) => setFormData({...formData, url: e.target.value})}
-                    placeholder="https://example.com/rss"
+                    placeholder={
+                      formData.type === 'WECHAT_MP' ? '输入公众号ID' :
+                      formData.type === 'BILIBILI_USER' ? '输入用户ID或主页链接' :
+                      formData.type === 'JUEJIN_COLUMN' ? '输入专栏ID' :
+                      'https://example.com/rss'
+                    }
                     />
                     <button 
                         type="button"
@@ -310,9 +316,13 @@ export default function SourcesPage() {
                   value={formData.type}
                   onChange={(e) => setFormData({...formData, type: e.target.value})}
                 >
-                  <option value="RSS">RSS</option>
+                  <option value="RSS">RSS Feed</option>
                   <option value="SITEMAP">Sitemap</option>
-                  <option value="WEB">Website</option>
+                  <option value="WEB">Website Crawl</option>
+                  <option value="WECHAT_MP">微信公众号 (ID/URL)</option>
+                  <option value="BILIBILI_USER">Bilibili UP主 (ID/URL)</option>
+                  <option value="JUEJIN_COLUMN">掘金专栏 (ID/URL)</option>
+                  <option value="YOUTUBE_CHANNEL">YouTube 频道 (ID/URL)</option>
                 </select>
               </div>
               <div className="flex justify-end gap-3">

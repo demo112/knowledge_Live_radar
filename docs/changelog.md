@@ -5,6 +5,7 @@
 ## [Unreleased]
 
 ### Added
+- 扩展信息源类型: 支持微信公众号 (WECHAT_MP)、B站UP主 (BILIBILI_USER)、掘金专栏 (JUEJIN_COLUMN) 等，集成 RSSHub 适配器
 - 核心管理增强: 知识金字塔节点拆分 (Split)、合并 (Merge) 和跨金字塔关联 (Link) 功能
 - 核心管理增强: 多维度金字塔健康度评估 (Health Evaluation)
 - 核心管理增强: ReactFlow 兼容的金字塔可视化数据接口 (Visualization)
