@@ -11,10 +11,13 @@ import { NodeContents } from '@/components/pyramid/NodeContents';
 import { Button } from '@/components/ui/button';
 import { Node } from 'reactflow';
 import { GitMerge, Download } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export default function PyramidDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const unwrappedParams = use(params);
   const pyramidId = unwrappedParams.id;
+  const t = useTranslations('Pyramid.Detail');
+  const tCommon = useTranslations('Common');
   
   const [pyramid, setPyramid] = useState<PyramidDetail | null>(null);
   const [healthReport, setHealthReport] = useState<HealthReport | null>(null);
@@ -64,7 +67,7 @@ export default function PyramidDetailPage({ params }: { params: Promise<{ id: st
       fetchData(); // Refresh all
     } catch (error) {
       console.error('Split failed:', error);
-      alert('Split failed');
+      alert(t('split_failed'));
     }
   };
 
@@ -78,7 +81,7 @@ export default function PyramidDetailPage({ params }: { params: Promise<{ id: st
       fetchData();
     } catch (error) {
       console.error('Merge failed:', error);
-      alert('Merge failed');
+      alert(t('merge_failed'));
     }
   };
 
@@ -90,7 +93,7 @@ export default function PyramidDetailPage({ params }: { params: Promise<{ id: st
       fetchData();
     } catch (error) {
       console.error('Link failed:', error);
-      alert('Link failed');
+      alert(t('link_failed'));
     }
   };
 
@@ -122,12 +125,12 @@ export default function PyramidDetailPage({ params }: { params: Promise<{ id: st
       }
     } catch (error) {
       console.error('Failed to export:', error);
-      alert('导出失败');
+      alert(t('export_failed'));
     }
   };
 
-  if (loading && !pyramid) return <div className="p-8">加载中...</div>;
-  if (!pyramid) return <div className="p-8">未找到金字塔</div>;
+  if (loading && !pyramid) return <div className="p-8">{tCommon('loading')}</div>;
+  if (!pyramid) return <div className="p-8">{t('not_found')}</div>;
 
   return (
     <div className="p-6 h-screen flex flex-col space-y-4" onClick={closeContextMenu}>
@@ -139,7 +142,7 @@ export default function PyramidDetailPage({ params }: { params: Promise<{ id: st
         </div>
         <Button variant="outline" size="sm" onClick={handleExport}>
             <Download className="mr-2 h-4 w-4" />
-            导出模板
+            {t('export_template')}
         </Button>
       </div>
 
@@ -150,13 +153,13 @@ export default function PyramidDetailPage({ params }: { params: Promise<{ id: st
             onClick={() => setActiveTab('view')}
             className={`${activeTab === 'view' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500'} whitespace-nowrap py-2 px-1 border-b-2 font-medium`}
           >
-            可视化与健康度
+            {t('tabs.view')}
           </button>
           <button
             onClick={() => setActiveTab('history')}
             className={`${activeTab === 'history' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500'} whitespace-nowrap py-2 px-1 border-b-2 font-medium`}
           >
-            历史记录
+            {t('tabs.history')}
           </button>
         </nav>
       </div>
@@ -184,7 +187,7 @@ export default function PyramidDetailPage({ params }: { params: Promise<{ id: st
                 <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10">
                   <Button onClick={() => setMergeOpen(true)} className="shadow-lg">
                     <GitMerge className="mr-2 h-4 w-4" />
-                    合并 {selectedNodes.length} 个节点
+                    {t('actions.merge_nodes', { count: selectedNodes.length })}
                   </Button>
                 </div>
               )}
@@ -199,13 +202,13 @@ export default function PyramidDetailPage({ params }: { params: Promise<{ id: st
                     className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
                     onClick={() => handleMenuAction('split')}
                   >
-                    拆分节点
+                    {t('actions.split_node')}
                   </button>
                   <button
                     className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
                     onClick={() => handleMenuAction('link')}
                   >
-                    关联节点
+                    {t('actions.link_node')}
                   </button>
                 </div>
               )}
@@ -215,7 +218,7 @@ export default function PyramidDetailPage({ params }: { params: Promise<{ id: st
             {selectedNodes.length === 1 && (
               <div className="border rounded-lg p-4 bg-card text-card-foreground shadow-sm animate-in slide-in-from-bottom-5">
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-semibold text-lg">节点: {selectedNodes[0].data.label}</h3>
+                  <h3 className="font-semibold text-lg">{t('node_info.title', { label: selectedNodes[0].data.label })}</h3>
                   <span className="text-xs text-muted-foreground font-mono">{selectedNodes[0].id}</span>
                 </div>
                 <NodeContents nodeId={selectedNodes[0].id} />

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { pyramidApi } from '@/lib/api';
+import { useTranslations, useFormatter } from 'next-intl';
 
 interface Snapshot {
   id: string;
@@ -15,6 +16,8 @@ interface PyramidHistoryProps {
 }
 
 export default function PyramidHistory({ pyramidId }: PyramidHistoryProps) {
+  const t = useTranslations('Pyramid.Detail.History');
+  const format = useFormatter();
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -35,11 +38,11 @@ export default function PyramidHistory({ pyramidId }: PyramidHistoryProps) {
     }
   };
 
-  if (loading) return <div>加载历史记录中...</div>;
+  if (loading) return <div>{t('loading')}</div>;
 
   return (
     <div className="mt-8">
-      <h3 className="text-lg font-medium text-gray-900 mb-4">变更历史</h3>
+      <h3 className="text-lg font-medium text-gray-900 mb-4">{t('title')}</h3>
       <div className="flow-root">
         <ul className="-mb-8">
           {snapshots.map((snapshot, eventIdx) => (
@@ -77,7 +80,14 @@ export default function PyramidHistory({ pyramidId }: PyramidHistoryProps) {
                     </div>
                     <div className="text-right text-sm whitespace-nowrap text-gray-500">
                       <time dateTime={snapshot.created_at}>
-                        {new Date(snapshot.created_at).toLocaleString('zh-CN')}
+                        {format.dateTime(new Date(snapshot.created_at), {
+                          year: 'numeric',
+                          month: 'numeric',
+                          day: 'numeric',
+                          hour: 'numeric',
+                          minute: 'numeric',
+                          second: 'numeric'
+                        })}
                       </time>
                     </div>
                   </div>
@@ -86,7 +96,7 @@ export default function PyramidHistory({ pyramidId }: PyramidHistoryProps) {
             </li>
           ))}
           {snapshots.length === 0 && (
-            <li className="text-sm text-gray-500">暂无历史记录。</li>
+            <li className="text-sm text-gray-500">{t('empty')}</li>
           )}
         </ul>
       </div>

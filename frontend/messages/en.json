@@ -23,7 +23,45 @@
     "settings": "Settings"
   },
   "Pyramid": {
-    "Health": {
+    "List": {
+        "title": "Knowledge Pyramids",
+        "loading": "Loading...",
+        "import": "Import",
+        "new_pyramid": "New Pyramid",
+        "no_description": "No description",
+        "created_at": "Created at: {date}",
+        "edit": "Edit",
+        "delete": "Delete",
+        "empty": "No pyramids found. Please create one to start.",
+        "delete_confirm": {
+            "title": "Confirm Delete",
+            "message": "Are you sure you want to delete this pyramid? This action cannot be undone.",
+            "confirm": "Delete",
+            "cancel": "Cancel"
+        },
+        "modal": {
+            "title_create": "New Pyramid",
+            "title_edit": "Edit Pyramid",
+            "create_blank": "Create Blank",
+            "create_template": "Create from Template",
+            "select_template": "Select Template",
+            "select_template_placeholder": "Please select a template...",
+            "name_label": "Name",
+            "name_placeholder": "e.g., AI Knowledge Graph",
+            "description_label": "Description",
+            "description_placeholder": "Briefly describe the goal of this pyramid...",
+            "save": "Save",
+            "saving": "Saving...",
+            "cancel": "Cancel"
+        },
+        "alerts": {
+            "import_success": "Import successful",
+            "import_failed": "Import failed, please check file format",
+            "delete_failed": "Delete failed",
+            "save_failed": "Save failed"
+        }
+      },
+      "Health": {
       "overall": "Overall Health",
       "depth_balance": "Depth Balance",
       "content_coverage": "Content Coverage",
@@ -39,7 +77,85 @@
     "Visualizer": {
       "right_click_actions": "Right-click node for actions (Split, Link)",
       "shift_click_select": "Shift+Click to select multiple for Merge"
-    }
+    },
+    "Detail": {
+        "export_template": "Export Template",
+        "tabs": {
+          "view": "Visualization & Health",
+          "history": "History"
+        },
+        "History": {
+            "loading": "Loading history...",
+            "title": "Change History",
+            "empty": "No history records."
+        },
+        "actions": {
+          "merge_nodes": "Merge {count} Nodes",
+          "split_node": "Split Node",
+          "link_node": "Link Node"
+        },
+        "node_info": {
+          "title": "Node: {label}"
+        },
+        "not_found": "Pyramid not found",
+        "export_failed": "Export failed",
+        "split_failed": "Split failed",
+        "merge_failed": "Merge failed",
+        "link_failed": "Link failed"
+      },
+      "NodeActions": {
+        "common": {
+          "cancel": "Cancel"
+        },
+        "Split": {
+          "title": "Split Node",
+          "description": "Split this node into multiple sub-nodes.",
+          "name_label": "Name",
+          "name_placeholder": "Sub-node Name",
+          "type_label": "Type",
+          "types": {
+            "concept": "Concept",
+            "fact": "Fact",
+            "principle": "Principle"
+          },
+          "content_label": "Content",
+          "content_placeholder": "Content Description",
+          "add_sub_node": "Add Sub-node",
+          "archive_original": "Archive original node after split",
+          "confirm": "Confirm Split",
+          "processing": "Splitting..."
+        },
+        "Merge": {
+          "title": "Merge Nodes",
+          "description": "Merge {count} nodes: {names}",
+          "strategy_label": "Merge Strategy",
+          "strategies": {
+            "create_new": "Create New Parent Node",
+            "merge_to_first": "Merge to First Selected Node"
+          },
+          "new_name_label": "New Node Name",
+          "new_name_placeholder": "Merged Node Name",
+          "content_label": "Content (Optional)",
+          "content_placeholder": "Merged Content Summary",
+          "confirm": "Confirm Merge",
+          "processing": "Merging..."
+        },
+        "Link": {
+          "title": "Link Node",
+          "description": "Create a reference to another node.",
+          "target_id_label": "Target Node ID",
+          "target_id_placeholder": "Target Node UUID",
+          "target_id_hint": "Currently only supports linking by ID directly.",
+          "relation_label": "Relation Type",
+          "relations": {
+            "related": "Related",
+            "prerequisite": "Prerequisite",
+            "part_of": "Part Of"
+          },
+          "confirm": "Confirm Link",
+          "processing": "Linking..."
+        }
+      }
   },
   "Status": {
     "active": "Active",

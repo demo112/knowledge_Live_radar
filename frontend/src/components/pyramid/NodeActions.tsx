@@ -1,4 +1,7 @@
+'use client';
+
 import React, { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,6 +20,7 @@ interface SplitNodeDialogProps {
 }
 
 export const SplitNodeDialog: React.FC<SplitNodeDialogProps> = ({ open, onOpenChange, onConfirm, isLoading }) => {
+  const t = useTranslations('Pyramid.Detail.NodeActions');
   const [subNodes, setSubNodes] = useState<NodeCreate[]>([
     { name: '', content: '', node_type: 'concept' },
     { name: '', content: '', node_type: 'concept' }
@@ -45,27 +49,27 @@ export const SplitNodeDialog: React.FC<SplitNodeDialogProps> = ({ open, onOpenCh
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>拆分节点</DialogTitle>
-          <DialogDescription>将此节点拆分为多个子节点。</DialogDescription>
+          <DialogTitle>{t('Split.title')}</DialogTitle>
+          <DialogDescription>{t('Split.description')}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
           {subNodes.map((node, index) => (
             <div key={index} className="grid grid-cols-12 gap-2 items-end border-b pb-4">
               <div className="col-span-3">
-                <Label>名称</Label>
-                <Input value={node.name} onChange={(e) => handleChange(index, 'name', e.target.value)} placeholder="子节点名称" />
+                <Label>{t('Split.name_label')}</Label>
+                <Input value={node.name} onChange={(e) => handleChange(index, 'name', e.target.value)} placeholder={t('Split.name_placeholder')} />
               </div>
               <div className="col-span-3">
-                 <Label>类型</Label>
+                 <Label>{t('Split.type_label')}</Label>
                  <Select value={node.node_type} onChange={(e) => handleChange(index, 'node_type', e.target.value)}>
-                   <option value="concept">概念</option>
-                   <option value="fact">事实</option>
-                   <option value="principle">原理</option>
+                   <option value="concept">{t('Split.types.concept')}</option>
+                   <option value="fact">{t('Split.types.fact')}</option>
+                   <option value="principle">{t('Split.types.principle')}</option>
                  </Select>
               </div>
               <div className="col-span-5">
-                <Label>内容</Label>
-                <Input value={node.content || ''} onChange={(e) => handleChange(index, 'content', e.target.value)} placeholder="内容描述" />
+                <Label>{t('Split.content_label')}</Label>
+                <Input value={node.content || ''} onChange={(e) => handleChange(index, 'content', e.target.value)} placeholder={t('Split.content_placeholder')} />
               </div>
               <div className="col-span-1">
                 <Button variant="ghost" size="icon" onClick={() => handleRemoveNode(index)} disabled={subNodes.length <= 1}>
@@ -75,7 +79,7 @@ export const SplitNodeDialog: React.FC<SplitNodeDialogProps> = ({ open, onOpenCh
             </div>
           ))}
           <Button variant="outline" size="sm" onClick={handleAddNode} className="w-full">
-            <Plus className="h-4 w-4 mr-2" /> 添加子节点
+            <Plus className="h-4 w-4 mr-2" /> {t('Split.add_sub_node')}
           </Button>
           <div className="flex items-center space-x-2 pt-2">
              <input
@@ -85,13 +89,13 @@ export const SplitNodeDialog: React.FC<SplitNodeDialogProps> = ({ open, onOpenCh
                onChange={(e) => setDeleteOriginal(e.target.checked)}
                className="h-4 w-4 rounded border-gray-300"
              />
-             <Label htmlFor="deleteOriginal">拆分后归档原节点</Label>
+             <Label htmlFor="deleteOriginal">{t('Split.archive_original')}</Label>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>取消</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t('common.cancel')}</Button>
           <Button onClick={handleSubmit} disabled={isLoading}>
-            {isLoading ? '拆分中...' : '确认拆分'}
+            {isLoading ? t('Split.processing') : t('Split.confirm')}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -110,6 +114,7 @@ interface MergeNodesDialogProps {
 }
 
 export const MergeNodesDialog: React.FC<MergeNodesDialogProps> = ({ open, onOpenChange, selectedNodeNames, onConfirm, isLoading }) => {
+  const t = useTranslations('Pyramid.Detail.NodeActions');
   const [targetName, setTargetName] = useState('');
   const [targetContent, setTargetContent] = useState('');
   const [strategy, setStrategy] = useState<'create_new' | 'merge_to_first'>('create_new');
@@ -128,36 +133,36 @@ export const MergeNodesDialog: React.FC<MergeNodesDialogProps> = ({ open, onOpen
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>合并节点</DialogTitle>
+          <DialogTitle>{t('Merge.title')}</DialogTitle>
           <DialogDescription>
-            合并 {selectedNodeNames.length} 个节点: {selectedNodeNames.join(', ')}
+            {t('Merge.description', { count: selectedNodeNames.length, names: selectedNodeNames.join(', ') })}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label>合并策略</Label>
+            <Label>{t('Merge.strategy_label')}</Label>
             <Select value={strategy} onChange={(e) => setStrategy(e.target.value as any)}>
-              <option value="create_new">创建新父节点</option>
-              <option value="merge_to_first">合并到第一个选中节点</option>
+              <option value="create_new">{t('Merge.strategies.create_new')}</option>
+              <option value="merge_to_first">{t('Merge.strategies.merge_to_first')}</option>
             </Select>
           </div>
           {strategy === 'create_new' && (
             <>
               <div className="space-y-2">
-                <Label>新节点名称</Label>
-                <Input value={targetName} onChange={(e) => setTargetName(e.target.value)} placeholder="合并后的节点名称" />
+                <Label>{t('Merge.new_name_label')}</Label>
+                <Input value={targetName} onChange={(e) => setTargetName(e.target.value)} placeholder={t('Merge.new_name_placeholder')} />
               </div>
               <div className="space-y-2">
-                <Label>内容 (可选)</Label>
-                <Input value={targetContent} onChange={(e) => setTargetContent(e.target.value)} placeholder="合并后的内容摘要" />
+                <Label>{t('Merge.content_label')}</Label>
+                <Input value={targetContent} onChange={(e) => setTargetContent(e.target.value)} placeholder={t('Merge.content_placeholder')} />
               </div>
             </>
           )}
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>取消</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t('common.cancel')}</Button>
           <Button onClick={handleSubmit} disabled={isLoading || (strategy === 'create_new' && !targetName)}>
-            {isLoading ? '合并中...' : '确认合并'}
+            {isLoading ? t('Merge.processing') : t('Merge.confirm')}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -175,6 +180,7 @@ interface LinkNodeDialogProps {
 }
 
 export const LinkNodeDialog: React.FC<LinkNodeDialogProps> = ({ open, onOpenChange, onConfirm, isLoading }) => {
+  const t = useTranslations('Pyramid.Detail.NodeActions');
   const [targetNodeId, setTargetNodeId] = useState('');
   const [relationType, setRelationType] = useState('related');
 
@@ -186,28 +192,28 @@ export const LinkNodeDialog: React.FC<LinkNodeDialogProps> = ({ open, onOpenChan
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>关联节点</DialogTitle>
-          <DialogDescription>创建对另一个节点的引用。</DialogDescription>
+          <DialogTitle>{t('Link.title')}</DialogTitle>
+          <DialogDescription>{t('Link.description')}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label>目标节点 ID</Label>
-            <Input value={targetNodeId} onChange={(e) => setTargetNodeId(e.target.value)} placeholder="目标节点 UUID" />
-            <p className="text-xs text-gray-500">当前仅支持直接通过 ID 关联。</p>
+            <Label>{t('Link.target_id_label')}</Label>
+            <Input value={targetNodeId} onChange={(e) => setTargetNodeId(e.target.value)} placeholder={t('Link.target_id_placeholder')} />
+            <p className="text-xs text-gray-500">{t('Link.target_id_hint')}</p>
           </div>
           <div className="space-y-2">
-            <Label>关系类型</Label>
+            <Label>{t('Link.relation_label')}</Label>
             <Select value={relationType} onChange={(e) => setRelationType(e.target.value)}>
-              <option value="related">相关</option>
-              <option value="prerequisite">前置</option>
-              <option value="part_of">部分</option>
+              <option value="related">{t('Link.relations.related')}</option>
+              <option value="prerequisite">{t('Link.relations.prerequisite')}</option>
+              <option value="part_of">{t('Link.relations.part_of')}</option>
             </Select>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>取消</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t('common.cancel')}</Button>
           <Button onClick={handleSubmit} disabled={isLoading || !targetNodeId}>
-            {isLoading ? '关联中...' : '确认关联'}
+            {isLoading ? t('Link.processing') : t('Link.confirm')}
           </Button>
         </DialogFooter>
       </DialogContent>

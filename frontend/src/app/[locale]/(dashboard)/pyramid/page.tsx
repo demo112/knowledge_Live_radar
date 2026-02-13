@@ -5,8 +5,11 @@ import {Link} from '@/i18n/routing';
 import { pyramidApi } from '@/lib/api';
 import { Pyramid } from '@/types';
 import { Upload } from 'lucide-react';
+import { useTranslations, useFormatter } from 'next-intl';
 
 export default function PyramidListPage() {
+  const t = useTranslations('Pyramid.List');
+  const format = useFormatter();
   const [pyramids, setPyramids] = useState<Pyramid[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -60,10 +63,10 @@ export default function PyramidListPage() {
             const json = JSON.parse(event.target?.result as string);
             await pyramidApi.importTemplate(json);
             fetchPyramids();
-            alert('导入成功');
+            alert(t('alerts.import_success'));
         } catch (error) {
             console.error('Import failed:', error);
-            alert('导入失败，请检查文件格式');
+            alert(t('alerts.import_failed'));
         }
     };
     reader.readAsText(file);
@@ -112,7 +115,7 @@ export default function PyramidListPage() {
         fetchPyramids();
       } else {
         console.error('Failed to delete pyramid:', error);
-        alert('删除失败');
+        alert(t('alerts.delete_failed'));
       }
     } finally {
       setDeleteConfirm({ open: false, id: null });
@@ -136,18 +139,18 @@ export default function PyramidListPage() {
       fetchPyramids();
     } catch (error) {
       console.error('Failed to save pyramid:', error);
-      alert('保存失败');
+      alert(t('alerts.save_failed'));
     } finally {
       setSubmitting(false);
     }
   };
 
-  if (loading && pyramids.length === 0) return <div className="p-8">加载中...</div>;
+  if (loading && pyramids.length === 0) return <div className="p-8">{t('loading')}</div>;
 
   return (
     <div className="p-8">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">知识金字塔</h1>
+        <h1 className="text-2xl font-bold">{t('title')}</h1>
         <div className="flex gap-2">
             <input 
                 type="file" 
@@ -161,13 +164,13 @@ export default function PyramidListPage() {
                 onClick={handleImportClick}
             >
                 <Upload className="w-4 h-4" />
-                导入
+                {t('import')}
             </button>
             <button 
               className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded shadow-sm transition-colors"
               onClick={handleOpenCreateModal}
             >
-              新建金字塔
+              {t('new_pyramid')}
             </button>
         </div>
       </div>
@@ -180,16 +183,16 @@ export default function PyramidListPage() {
               className="block p-6 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md hover:border-primary/50 transition duration-200 h-full"
             >
               <h5 className="mb-2 text-xl font-bold tracking-tight text-gray-900 group-hover:text-primary pr-16">{pyramid.name}</h5>
-              <p className="font-normal text-gray-700 line-clamp-2">{pyramid.description || '暂无描述'}</p>
+              <p className="font-normal text-gray-700 line-clamp-2">{pyramid.description || t('no_description')}</p>
               <div className="mt-4 text-sm text-gray-500">
-                  创建时间: {new Date(pyramid.created_at).toLocaleDateString('zh-CN')}
+                  {t('created_at', { date: format.dateTime(new Date(pyramid.created_at), 'short') })}
               </div>
             </Link>
             <div className="absolute top-4 right-4 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
               <button
                 onClick={(e) => handleOpenEditModal(e, pyramid)}
                 className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                title="编辑"
+                title={t('edit')}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -198,7 +201,7 @@ export default function PyramidListPage() {
               <button
                 onClick={(e) => handleDelete(e, pyramid.id)}
                 className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
-                title="删除"
+                title={t('delete')}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -209,7 +212,7 @@ export default function PyramidListPage() {
         ))}
         {pyramids.length === 0 && (
             <div className="col-span-3 text-center text-gray-500 py-10 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-                暂无金字塔。请创建一个开始。
+                {t('empty')}
             </div>
         )}
       </div>
@@ -218,20 +221,20 @@ export default function PyramidListPage() {
       {deleteConfirm.open && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-sm shadow-xl">
-            <h3 className="text-lg font-bold mb-2">确认删除</h3>
-            <p className="text-gray-600 mb-6">确定要删除这个金字塔吗？此操作不可撤销。</p>
+            <h3 className="text-lg font-bold mb-2">{t('delete_confirm.title')}</h3>
+            <p className="text-gray-600 mb-6">{t('delete_confirm.message')}</p>
             <div className="flex justify-end space-x-3">
               <button
                 onClick={() => setDeleteConfirm({ open: false, id: null })}
                 className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded transition-colors"
               >
-                取消
+                {t('delete_confirm.cancel')}
               </button>
               <button
                 onClick={handleConfirmDelete}
                 className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
               >
-                删除
+                {t('delete_confirm.confirm')}
               </button>
             </div>
           </div>
@@ -242,7 +245,7 @@ export default function PyramidListPage() {
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl">
-            <h2 className="text-xl font-bold mb-4">{editingPyramid ? '编辑金字塔' : '新建金字塔'}</h2>
+            <h2 className="text-xl font-bold mb-4">{editingPyramid ? t('modal.title_edit') : t('modal.title_create')}</h2>
             <form onSubmit={handleSubmit}>
               {!editingPyramid && (
                 <div className="flex mb-6 border-b">
@@ -251,21 +254,21 @@ export default function PyramidListPage() {
                     className={`pb-2 px-4 ${creationMode === 'blank' ? 'border-b-2 border-primary text-primary font-medium' : 'text-gray-500'}`}
                     onClick={() => setCreationMode('blank')}
                   >
-                    空白创建
+                    {t('modal.create_blank')}
                   </button>
                   <button
                     type="button"
                     className={`pb-2 px-4 ${creationMode === 'template' ? 'border-b-2 border-primary text-primary font-medium' : 'text-gray-500'}`}
                     onClick={() => setCreationMode('template')}
                   >
-                    从模板创建
+                    {t('modal.create_template')}
                   </button>
                 </div>
               )}
 
               {creationMode === 'template' && !editingPyramid && (
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">选择模板</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('modal.select_template')}</label>
                   <select
                     required={creationMode === 'template'}
                     className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/50"
@@ -279,7 +282,7 @@ export default function PyramidListPage() {
                         }
                     }}
                   >
-                    <option value="">请选择模板...</option>
+                    <option value="">{t('modal.select_template_placeholder')}</option>
                     {templates.map(t => (
                         <option key={t.id} value={t.id}>{t.name}</option>
                     ))}
@@ -288,24 +291,24 @@ export default function PyramidListPage() {
               )}
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">名称</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('modal.name_label')}</label>
                 <input
                   type="text"
                   required
                   className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/50"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="例如：AI 知识图谱"
+                  placeholder={t('modal.name_placeholder')}
                 />
               </div>
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-1">描述</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('modal.description_label')}</label>
                 <textarea
                   className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/50"
                   rows={3}
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="简要描述这个金字塔的目标..."
+                  placeholder={t('modal.description_placeholder')}
                 />
               </div>
               <div className="flex justify-end space-x-3">
@@ -315,14 +318,14 @@ export default function PyramidListPage() {
                   className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded transition-colors"
                   disabled={submitting}
                 >
-                  取消
+                  {t('modal.cancel')}
                 </button>
                 <button
                   type="submit"
                   className="px-4 py-2 bg-primary text-white rounded hover:bg-primary/90 transition-colors disabled:opacity-50"
                   disabled={submitting}
                 >
-                  {submitting ? '保存中...' : '保存'}
+                  {submitting ? t('modal.saving') : t('modal.save')}
                 </button>
               </div>
             </form>

@@ -23,7 +23,45 @@
     "settings": "设置"
   },
   "Pyramid": {
-    "Health": {
+    "List": {
+        "title": "知识金字塔",
+        "loading": "加载中...",
+        "import": "导入",
+        "new_pyramid": "新建金字塔",
+        "no_description": "暂无描述",
+        "created_at": "创建时间: {date}",
+        "edit": "编辑",
+        "delete": "删除",
+        "empty": "暂无金字塔。请创建一个开始。",
+        "delete_confirm": {
+            "title": "确认删除",
+            "message": "确定要删除这个金字塔吗？此操作不可撤销。",
+            "confirm": "删除",
+            "cancel": "取消"
+        },
+        "modal": {
+            "title_create": "新建金字塔",
+            "title_edit": "编辑金字塔",
+            "create_blank": "空白创建",
+            "create_template": "从模板创建",
+            "select_template": "选择模板",
+            "select_template_placeholder": "请选择模板...",
+            "name_label": "名称",
+            "name_placeholder": "例如：AI 知识图谱",
+            "description_label": "描述",
+            "description_placeholder": "简要描述这个金字塔的目标...",
+            "save": "保存",
+            "saving": "保存中...",
+            "cancel": "取消"
+        },
+        "alerts": {
+            "import_success": "导入成功",
+            "import_failed": "导入失败，请检查文件格式",
+            "delete_failed": "删除失败",
+            "save_failed": "保存失败"
+        }
+      },
+      "Health": {
       "overall": "整体健康度",
       "depth_balance": "深度平衡",
       "content_coverage": "内容覆盖率",
@@ -39,7 +77,85 @@
     "Visualizer": {
       "right_click_actions": "右键点击节点进行操作（拆分、链接）",
       "shift_click_select": "Shift+点击可多选以合并"
-    }
+    },
+    "Detail": {
+        "export_template": "导出模板",
+        "tabs": {
+          "view": "可视化与健康度",
+          "history": "历史记录"
+        },
+        "History": {
+            "loading": "加载历史记录中...",
+            "title": "变更历史",
+            "empty": "暂无历史记录。"
+        },
+        "actions": {
+          "merge_nodes": "合并 {count} 个节点",
+          "split_node": "拆分节点",
+          "link_node": "关联节点"
+        },
+        "node_info": {
+          "title": "节点: {label}"
+        },
+        "not_found": "未找到金字塔",
+        "export_failed": "导出失败",
+        "split_failed": "拆分失败",
+        "merge_failed": "合并失败",
+        "link_failed": "关联失败"
+      },
+      "NodeActions": {
+        "common": {
+          "cancel": "取消"
+        },
+        "Split": {
+          "title": "拆分节点",
+          "description": "将此节点拆分为多个子节点。",
+          "name_label": "名称",
+          "name_placeholder": "子节点名称",
+          "type_label": "类型",
+          "types": {
+            "concept": "概念",
+            "fact": "事实",
+            "principle": "原理"
+          },
+          "content_label": "内容",
+          "content_placeholder": "内容描述",
+          "add_sub_node": "添加子节点",
+          "archive_original": "拆分后归档原节点",
+          "confirm": "确认拆分",
+          "processing": "拆分中..."
+        },
+        "Merge": {
+          "title": "合并节点",
+          "description": "合并 {count} 个节点: {names}",
+          "strategy_label": "合并策略",
+          "strategies": {
+            "create_new": "创建新父节点",
+            "merge_to_first": "合并到第一个选中节点"
+          },
+          "new_name_label": "新节点名称",
+          "new_name_placeholder": "合并后的节点名称",
+          "content_label": "内容 (可选)",
+          "content_placeholder": "合并后的内容摘要",
+          "confirm": "确认合并",
+          "processing": "合并中..."
+        },
+        "Link": {
+          "title": "关联节点",
+          "description": "创建对另一个节点的引用。",
+          "target_id_label": "目标节点 ID",
+          "target_id_placeholder": "目标节点 UUID",
+          "target_id_hint": "当前仅支持直接通过 ID 关联。",
+          "relation_label": "关系类型",
+          "relations": {
+            "related": "相关",
+            "prerequisite": "前置",
+            "part_of": "部分"
+          },
+          "confirm": "确认关联",
+          "processing": "关联中..."
+        }
+      }
   },
   "Status": {
     "active": "活跃",
