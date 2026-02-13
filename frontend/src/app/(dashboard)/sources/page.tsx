@@ -23,7 +23,6 @@ export default function SourcesPage() {
 
   const fetchSources = async () => {
     try {
-      setError(null);
       const response = await sourceApi.getAll();
       if (response.success) {
         setSources(response.data.items);

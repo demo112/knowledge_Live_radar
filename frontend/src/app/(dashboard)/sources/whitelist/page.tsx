@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { whitelistApi } from '@/lib/api';
+import { whitelistApi, discoveryApi } from '@/lib/api';
 import { DomainWhitelist, DiscoveredDomain } from '@/types';
 
 export default function WhitelistPage() {
@@ -67,7 +67,11 @@ function WhitelistTab() {
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await whitelistApi.add(formData.domain, formData.credibility, formData.reason);
+      await whitelistApi.add({
+        domain: formData.domain,
+        credibility: formData.credibility,
+        reason: formData.reason
+      });
       setShowModal(false);
       fetchItems();
       setFormData({ domain: '', credibility: 50, reason: '' });
@@ -185,8 +189,12 @@ function DiscoveredTab() {
 
   const fetchItems = async () => {
     try {
-      const response = await whitelistApi.getDiscovered();
-      setItems(response.items);
+      const response = await discoveryApi.getDiscoveredDomains();
+      if (response.success && response.data) {
+        setItems(response.data);
+      } else if (response.items) {
+        setItems(response.items);
+      }
     } catch (error) {
       console.error('Failed to fetch discovered domains:', error);
     } finally {
@@ -196,7 +204,11 @@ function DiscoveredTab() {
 
   const addToWhitelist = async (domain: string) => {
     try {
-      await whitelistApi.add(domain, 50, "Added from discovered list");
+      await whitelistApi.add({
+        domain,
+        credibility: 50,
+        reason: "Added from discovered list"
+      });
       alert('已添加到白名单');
       fetchItems();
     } catch (error) {

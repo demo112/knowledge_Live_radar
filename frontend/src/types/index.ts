@@ -11,7 +11,9 @@ export interface PyramidNode {
   pyramid_id: string;
   parent_id?: string;
   name: string;
+  content?: string;
   description?: string;
+  node_type: string;
   level: number;
   path: string;
   health_score: number;
@@ -82,4 +84,118 @@ export interface DiscoveredDomain {
   evaluation_status: string;
   has_rss: boolean;
   proposal_id?: string;
+}
+
+// --- New Types for Core Management Enhancement ---
+
+export interface NodeRelation {
+  id: string;
+  source_node_id: string;
+  target_node_id: string;
+  relation_type: string;
+  created_at: string;
+}
+
+export interface HealthMetrics {
+  depth_score: number;
+  coverage_score: number;
+  activity_score: number;
+}
+
+export interface HealthReport {
+  score: number;
+  details: HealthMetrics;
+  suggestions: string[];
+}
+
+export interface ReactFlowNode {
+  id: string;
+  type?: string;
+  data: { label: string; [key: string]: any };
+  position: { x: number; y: number };
+  style?: any;
+}
+
+export interface ReactFlowEdge {
+  id: string;
+  source: string;
+  target: string;
+  label?: string;
+  type?: string;
+  animated?: boolean;
+}
+
+export interface VisualizationData {
+  nodes: ReactFlowNode[];
+  edges: ReactFlowEdge[];
+}
+
+export interface NodeCreate {
+  name: string;
+  content?: string;
+  node_type: string;
+}
+
+export interface SplitRequest {
+  sub_nodes: NodeCreate[];
+  delete_original: boolean;
+}
+
+export interface MergeRequest {
+  source_node_ids: string[];
+  target_node_name: string;
+  target_node_content?: string;
+  strategy: 'create_new' | 'merge_to_first';
+}
+
+export interface LinkRequest {
+  target_node_id: string;
+  relation_type: string;
+}
+
+export interface Hotspot {
+  id: string;
+  title: string;
+  summary?: string;
+  score: number;
+  keywords: string[];
+  created_at: string;
+  status: string;
+}
+
+export interface ScheduledTask {
+  id: string;
+  name: string;
+  task_type: string;
+  cron_expression: string;
+  is_active: boolean;
+  last_run_at?: string;
+  next_run_at?: string;
+}
+
+export interface TaskExecution {
+  id: string;
+  task_id: string;
+  status: string;
+  start_time: string;
+  end_time?: string;
+  result?: string;
+  error?: string;
+}
+
+export interface ConfigHistory {
+  id: string;
+  key: string;
+  old_value: any;
+  new_value: any;
+  changed_by: string;
+  changed_at: string;
+}
+
+export interface DriftProposal {
+  id: string;
+  type: string;
+  status: string;
+  data: any;
+  created_at: string;
 }
