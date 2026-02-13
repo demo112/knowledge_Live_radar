@@ -21,7 +21,7 @@ async def test_property_12_source_url_uniqueness(db_session):
         await service.create_source(SourceCreate(name="Source 2", url=url, type="RSS"))
     
     assert excinfo.value.status_code == 400
-    assert "already exists" in excinfo.value.detail
+    assert "已存在" in excinfo.value.detail
 
 @pytest.mark.asyncio
 async def test_property_13_source_update_isolation(db_session):

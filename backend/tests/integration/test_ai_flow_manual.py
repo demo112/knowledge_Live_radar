@@ -76,58 +76,57 @@ async def test_ai_content_flow(db_session):
     with patch("app.services.content_processor.crawl_engine") as mock_crawl:
         mock_crawl.crawl_source = AsyncMock(return_value=[MOCK_CONTENT])
         
-        # We need to mock the AIService methods or the client
-        # Since we modified AIService to use prompt_manager, we can mock the client response
-        # BUT, to test the FULL flow including PromptManager, we should mock at the network level (client.chat.completions.create)
-        # However, for simplicity and reliability, we'll mock the AIService methods directly 
-        # to focus on ContentProcessor -> AIService integration.
-        
-        with patch("app.services.ai_service.ai_service.client") as mock_client:
-            # Setup mock client response behavior
-            mock_create = AsyncMock()
-            mock_client.chat.completions.create = mock_create
+        # Mock Validators
+        with patch("app.services.content_processor.HardValidator") as MockHard, \
+             patch("app.services.content_processor.SoftValidator") as MockSoft, \
+             patch("app.services.content_processor.CrossValidator") as MockCross, \
+             patch("app.services.content_processor.ai_service") as mock_ai_service:
             
-            # Helper to return different responses based on prompt content (simplified)
-            # Or just return a generic valid JSON that covers all cases if possible, 
-            # but our parsing logic expects specific keys.
+            # Setup Validator instances
+            mock_hard_instance = MockHard.return_value
+            mock_hard_instance.validate = AsyncMock(return_value=(True, {"hard": "pass"}))
             
-            # Let's mock the higher level methods of ai_service to ensure stable outputs
-            with patch("app.services.content_processor.ai_service") as mock_ai_service:
-                # We need to mock: validate_content_soft, generate_summary, generate_tags, extract_concepts
-                
-                mock_ai_service.validate_content_soft = AsyncMock(return_value={
-                    "score": 85, 
-                    "reason": "Good",
-                    "dimensions": {"info": 8}
-                })
-                mock_ai_service.generate_summary = AsyncMock(return_value={
-                    "summary": "AI Agents summary",
-                    "key_points": ["Point 1"]
-                })
-                mock_ai_service.generate_tags = AsyncMock(return_value=["AI", "Tech"])
-                mock_ai_service.extract_concepts = AsyncMock(return_value=[{"name": "Agent", "type": "Concept"}])
-                
-                # Also need client for the check `if not ai_service.client` in soft_validator
-                mock_ai_service.client = True 
+            mock_soft_instance = MockSoft.return_value
+            mock_soft_instance.validate = AsyncMock(return_value=(True, {"soft": "pass", "score": 85}))
+            
+            mock_cross_instance = MockCross.return_value
+            mock_cross_instance.validate = AsyncMock(return_value=(True, {"cross": "pass"}))
 
-                # 3. Action
-                processor = ContentProcessor()
-                job = await processor.process_source(source, db_session)
+            # We need to mock: validate_content_soft, generate_summary, generate_tags, extract_concepts
+            
+            mock_ai_service.validate_content_soft = AsyncMock(return_value={
+                "score": 85, 
+                "reason": "Good",
+                "dimensions": {"info": 8}
+            })
+            mock_ai_service.generate_summary = AsyncMock(return_value={
+                "summary": "AI Agents summary",
+                "key_points": ["Point 1"]
+            })
+            mock_ai_service.generate_tags = AsyncMock(return_value=["AI", "Tech"])
+            mock_ai_service.extract_concepts = AsyncMock(return_value=[{"name": "Agent", "type": "Concept"}])
+            
+            # Also need client for the check `if not ai_service.client` in soft_validator
+            mock_ai_service.client = True 
+
+            # 3. Action
+            processor = ContentProcessor()
+            job = await processor.process_source(source, db_session)
+            
+            # 4. Verify Job Status
+            assert job.status == "COMPLETED"
+            assert job.items_new == 1
                 
-                # 4. Verify Job Status
-                assert job.status == "COMPLETED"
-                assert job.items_new == 1
-                
-                # 5. Verify Content Item
-                from sqlalchemy import select
-                stmt = select(ContentItem).where(ContentItem.source_id == source.id)
-                result = await db_session.execute(stmt)
-                content = result.scalar_one()
-                
-                assert content.title == "The Future of AI Agents"
-                assert content.ai_processed is True
-                assert content.summary == "AI Agents summary"
-                assert "AI" in content.tags
-                assert content.concepts[0]["name"] == "Agent"
-                
-                print("\n✅ Integration Test Passed: Content successfully processed with AI fields.")
+            # 5. Verify Content Item
+            from sqlalchemy import select
+            stmt = select(ContentItem).where(ContentItem.source_id == source.id)
+            result = await db_session.execute(stmt)
+            content = result.scalar_one()
+            
+            assert content.title == "The Future of AI Agents"
+            assert content.ai_processed is True
+            assert content.summary == "AI Agents summary"
+            assert "AI" in content.tags
+            assert content.concepts[0]["name"] == "Agent"
+            
+            print("\n✅ Integration Test Passed: Content successfully processed with AI fields.")

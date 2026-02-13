@@ -20,4 +20,4 @@ async def test_notify_approval_status_change():
         # Verify logger was called
         assert mock_logger.info.call_count >= 1
         call_args = mock_logger.info.call_args_list[0][0][0]
-        assert "status changed from pending to approved" in call_args
+        assert "Approval status: pending → approved" in call_args

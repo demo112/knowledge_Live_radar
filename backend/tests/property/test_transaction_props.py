@@ -21,7 +21,7 @@ async def test_property_14_transaction_atomicity(db_session):
         await service.move_node(node.id, new_parent_id=node.id, new_sort_order=999)
         
     assert excinfo.value.status_code == 400
-    assert "Cannot move node to itself" in excinfo.value.detail
+    assert "不能移动节点到自身" in excinfo.value.detail
     
     # Verify DB state
     # We need to expire the object or clear session to ensure we fetch from DB
