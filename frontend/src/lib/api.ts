@@ -2,7 +2,11 @@ import axios from 'axios';
 import { HealthReport, Hotspot, ScheduledTask, TaskExecution, ConfigHistory, DriftProposal } from './types';
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1',
+  // Use relative path to leverage Next.js rewrites in development
+  // In production, prioritize environment variable, fallback to relative path if same-origin
+  baseURL: process.env.NODE_ENV === 'production' 
+    ? (process.env.NEXT_PUBLIC_API_URL || '/api/v1')
+    : '/api/v1',
   headers: {
     'Content-Type': 'application/json',
   },
