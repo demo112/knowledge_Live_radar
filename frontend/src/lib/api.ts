@@ -1,12 +1,15 @@
 import axios from 'axios';
 import { HealthReport, Hotspot, ScheduledTask, TaskExecution, ConfigHistory, DriftProposal, VisualizationData, MergeRequest, SplitRequest, LinkRequest, NodeRelation, PyramidNode } from '../types';
 
+const isServer = typeof window === 'undefined';
+// Server-side calls should go directly to the backend
+// Client-side calls should go through Next.js proxy (/api/v1 -> http://127.0.0.1:8000/api/v1)
+const baseURL = isServer 
+  ? (process.env.INTERNAL_API_URL || 'http://127.0.0.1:8000/api/v1') 
+  : '/api/v1';
+
 const api = axios.create({
-  // Use relative path to leverage Next.js rewrites in development
-  // In production, prioritize environment variable, fallback to relative path if same-origin
-  baseURL: process.env.NODE_ENV === 'production' 
-    ? (process.env.NEXT_PUBLIC_API_URL || '/api/v1')
-    : '/api/v1',
+  baseURL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -266,6 +269,10 @@ export const dashboardApi = {
   getStats: async () => {
     const response = await api.get('/dashboard/stats');
     return response.data;
+  },
+  getTrend: async (days: number = 7) => {
+    const response = await api.get(`/dashboard/trend?days=${days}`);
+    return response.data;
   }
 };
 
@@ -275,15 +282,53 @@ export const healthApi = {
     return response.data;
   },
   getReport: async () => {
-    const response = await api.get('/health/report');
+    const response = await api.get('/health/report/latest');
     return response.data;
   },
   getSystemHealth: async () => {
-    const response = await api.get('/health/system');
+    const response = await api.get('/health/report/latest');
     return response.data;
   },
   getPyramidHealth: async (id: string) => {
     const response = await api.get(`/health/pyramids/${id}`);
+    return response.data;
+  }
+};
+
+export const contributionApi = {
+  getAll: async (params?: { skip?: number; limit?: number; user_id?: string }) => {
+    const response = await api.get('/contributions', { params });
+    return response.data;
+  },
+  getById: async (id: string) => {
+    const response = await api.get(`/contributions/${id}`);
+    return response.data;
+  },
+  getStats: async (days: number = 30) => {
+    const response = await api.get('/contributions/stats', { params: { days } });
+    return response.data;
+  }
+};
+
+export const synonymApi = {
+  getAll: async (params?: { skip?: number; limit?: number }) => {
+    const response = await api.get('/synonyms', { params });
+    return response.data;
+  },
+  create: async (data: any) => {
+    const response = await api.post('/synonyms', data);
+    return response.data;
+  },
+  bulkCreate: async (data: any) => {
+    const response = await api.post('/synonyms/bulk', data);
+    return response.data;
+  },
+  delete: async (synonym: string) => {
+    const response = await api.delete(`/synonyms/${synonym}`);
+    return response.data;
+  },
+  getCanonical: async (term: string) => {
+    const response = await api.get(`/synonyms/canonical/${term}`);
     return response.data;
   }
 };

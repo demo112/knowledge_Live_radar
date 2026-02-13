@@ -37,7 +37,9 @@ async def get_contents(
     source_id: Optional[UUID] = None,
     db: AsyncSession = Depends(get_db)
 ):
-    stmt = select(ContentItem).order_by(desc(ContentItem.created_at)).offset(skip).limit(limit)
+    stmt = select(ContentItem).options(
+        selectinload(ContentItem.validation_result)
+    ).order_by(desc(ContentItem.created_at)).offset(skip).limit(limit)
     if source_id:
         stmt = stmt.where(ContentItem.source_id == source_id)
         
