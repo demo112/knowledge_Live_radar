@@ -22,6 +22,25 @@
     "scheduler": "Scheduler",
     "settings": "Settings"
   },
+  "Pyramid": {
+    "Health": {
+      "overall": "Overall Health",
+      "depth_balance": "Depth Balance",
+      "content_coverage": "Content Coverage",
+      "activity": "Activity",
+      "suggestions": "Suggestions",
+      "out_of_100": "out of 100",
+      "structural_balance": "Structural balance",
+      "nodes_with_content": "Nodes with content",
+      "recent_updates": "Recent updates",
+      "empty_nodes_desc": "Fill in descriptions for empty nodes.",
+      "low_activity_desc": "Pyramid has low update activity. Consider adding more sources or checking crawl health."
+    },
+    "Visualizer": {
+      "right_click_actions": "Right-click node for actions (Split, Link)",
+      "shift_click_select": "Shift+Click to select multiple for Merge"
+    }
+  },
   "Status": {
     "active": "Active",
     "paused": "Paused",

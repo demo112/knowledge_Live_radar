@@ -2,6 +2,7 @@ import React from 'react';
 import { HealthReport } from '@/types';
 import { Activity, Layers, AlertTriangle, CheckCircle, Info } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useTranslations } from 'next-intl';
 
 interface HealthDashboardProps {
   report: HealthReport;
@@ -9,6 +10,9 @@ interface HealthDashboardProps {
 }
 
 const HealthDashboard: React.FC<HealthDashboardProps> = ({ report, isLoading }) => {
+  const t = useTranslations('Pyramid.Health');
+  const tCommon = useTranslations('Common');
+
   if (isLoading) {
     return <div className="animate-pulse h-32 bg-gray-100 rounded-lg"></div>;
   }
@@ -31,47 +35,47 @@ const HealthDashboard: React.FC<HealthDashboardProps> = ({ report, isLoading }) 
         {/* Overall Score */}
         <Card className="col-span-1 md:col-span-1">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Overall Health</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500">{t('overall')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className={`text-4xl font-bold ${getScoreColor(score)}`}>{score}</div>
-            <p className="text-xs text-gray-400 mt-1">out of 100</p>
+            <p className="text-xs text-gray-400 mt-1">{t('out_of_100')}</p>
           </CardContent>
         </Card>
 
         {/* Depth Balance */}
         <Card>
           <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-            <CardTitle className="text-sm font-medium text-gray-500">Depth Balance</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500">{t('depth_balance')}</CardTitle>
             <Layers className="h-4 w-4 text-gray-400" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{details.depth_score}</div>
-            <p className="text-xs text-gray-400 mt-1">Structural balance</p>
+            <p className="text-xs text-gray-400 mt-1">{t('structural_balance')}</p>
           </CardContent>
         </Card>
 
         {/* Node Coverage */}
         <Card>
           <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-            <CardTitle className="text-sm font-medium text-gray-500">Content Coverage</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500">{t('content_coverage')}</CardTitle>
             <CheckCircle className="h-4 w-4 text-gray-400" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{details.coverage_score}%</div>
-            <p className="text-xs text-gray-400 mt-1">Nodes with content</p>
+            <p className="text-xs text-gray-400 mt-1">{t('nodes_with_content')}</p>
           </CardContent>
         </Card>
 
         {/* Activity */}
         <Card>
           <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-            <CardTitle className="text-sm font-medium text-gray-500">Activity</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500">{t('activity')}</CardTitle>
             <Activity className="h-4 w-4 text-gray-400" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{details.activity_score}</div>
-            <p className="text-xs text-gray-400 mt-1">Recent updates</p>
+            <p className="text-xs text-gray-400 mt-1">{t('recent_updates')}</p>
           </CardContent>
         </Card>
       </div>
@@ -82,7 +86,7 @@ const HealthDashboard: React.FC<HealthDashboardProps> = ({ report, isLoading }) 
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
               <Info className="h-4 w-4 text-blue-500" />
-              Suggestions
+              {t('suggestions')}
             </CardTitle>
           </CardHeader>
           <CardContent>

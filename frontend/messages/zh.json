@@ -22,6 +22,25 @@
     "scheduler": "调度管理",
     "settings": "设置"
   },
+  "Pyramid": {
+    "Health": {
+      "overall": "整体健康度",
+      "depth_balance": "深度平衡",
+      "content_coverage": "内容覆盖率",
+      "activity": "近期活跃度",
+      "suggestions": "优化建议",
+      "out_of_100": "满分 100",
+      "structural_balance": "结构平衡",
+      "nodes_with_content": "节点有内容",
+      "recent_updates": "近期更新",
+      "empty_nodes_desc": "为通过空节点补充描述。",
+      "low_activity_desc": "金字塔更新活跃度低。建议增加信息源或检查抓取健康度。"
+    },
+    "Visualizer": {
+      "right_click_actions": "右键点击节点进行操作（拆分、链接）",
+      "shift_click_select": "Shift+点击可多选以合并"
+    }
+  },
   "Status": {
     "active": "活跃",
     "paused": "暂停",

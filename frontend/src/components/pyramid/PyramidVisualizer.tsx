@@ -14,6 +14,7 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import { Button } from '@/components/ui/button';
 import { Maximize, Minimize } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface PyramidVisualizerProps {
   initialNodes: Node[];
@@ -28,6 +29,7 @@ const PyramidVisualizer: React.FC<PyramidVisualizerProps> = ({
   onNodeContextMenu,
   onSelectionChange,
 }) => {
+  const t = useTranslations('Pyramid.Visualizer');
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
@@ -69,8 +71,8 @@ const PyramidVisualizer: React.FC<PyramidVisualizerProps> = ({
         <MiniMap />
         <Background gap={12} size={1} />
         <Panel position="top-right" className="bg-white p-2 rounded shadow-sm border text-xs text-gray-500">
-          <p>Right-click node for actions (Split, Link)</p>
-          <p>Shift+Click to select multiple for Merge</p>
+          <p>{t('right_click_actions')}</p>
+          <p>{t('shift_click_select')}</p>
         </Panel>
       </ReactFlow>
     </div>
