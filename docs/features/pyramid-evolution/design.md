@@ -133,16 +133,40 @@ class EvolutionEngine:
 
 ### 5.1 进化操作
 
-- `POST /api/v1/evolution/classify`: 触发全量或增量自动归类任务。
-- `POST /api/v1/evolution/clusters/{pyramid_id}`: 触发聚类发现任务。
+- `POST /api/v1/evolution/classify/{content_id}`: 触发单条内容的自动归类。
+- `POST /api/v1/evolution/classify/batch`: 触发批量自动归类。
 
 ### 5.2 节点内容管理
 
 - `GET /api/v1/nodes/{id}/contents`: 获取节点关联的内容列表。
-- `POST /api/v1/nodes/{id}/contents`: 手动关联内容。
+- `POST /api/v1/nodes/{id}/contents/{content_id}`: 手动关联内容。
 - `DELETE /api/v1/nodes/{id}/contents/{content_id}`: 解除关联。
 
-## 6. 数据流与同步机制
+## 6. 前端设计
+
+### 6.1 节点详情页增强 (`frontend/src/app/(dashboard)/pyramid/[id]/page.tsx`)
+
+- **功能**: 展示节点关联的内容列表。
+- **组件**: 新增 `NodeContents` 组件。
+- **交互**:
+  - 列表展示关联的内容（标题、摘要、关联来源、置信度）。
+  - 支持解除关联操作。
+  - 支持手动关联内容（弹窗选择）。
+
+### 6.2 内容详情页增强 (`frontend/src/app/(dashboard)/contents/[id]/page.tsx`)
+
+- **功能**: 展示内容关联的节点，支持触发自动归类。
+- **交互**:
+  - 显示 "关联节点" 区域。
+  - 提供 "AI 自动归类" 按钮，调用 `/api/v1/evolution/classify/{id}`。
+  - 显示归类结果（关联了哪些节点）。
+
+### 6.3 API Client 更新 (`frontend/src/lib/api.ts`)
+
+- 新增 `evolutionApi` 模块。
+- 扩展 `nodeApi` 支持内容管理。
+
+## 7. 数据流与同步机制
 
 1.  **AI 归类**:
     - `CrawlService` -> `ContentItem` (Stored) -> `VectorService.upsert` -> `EvolutionEngine.auto_classify_content` -> `NodeService.link_content` -> DB Update (Relation + Node Stats).
@@ -156,18 +180,26 @@ class EvolutionEngine:
     - **级联删除**: 数据库外键配置 `ON DELETE CASCADE`。
     - **向量同步**: 节点或内容更新时，需异步更新向量库。
 
-## 7. 文件变更清单
+## 8. 文件变更清单
 
-- `backend/requirements.txt`: 新增 `chromadb`, `sentence-transformers` (可选，或使用 API 向量化)。
-- `backend/app/models/pyramid.py`: 新增统计字段。
-- `backend/app/models/content.py`: 优化 Relation 模型。
-- `backend/app/services/vector_service.py`: 新建，封装 ChromaDB。
-- `backend/app/services/node_service.py`: 新增内容关联逻辑。
-- `backend/app/services/evolution_engine.py`: 新建，实现归类和聚类逻辑。
-- `backend/app/routers/evolution.py`: 新建 API 路由。
-- `backend/app/routers/nodes.py`: 新增内容管理接口。
+### 后端 (已完成)
+- `backend/requirements.txt`
+- `backend/app/models/pyramid.py`
+- `backend/app/models/content.py`
+- `backend/app/services/vector_service.py`
+- `backend/app/services/node_service.py`
+- `backend/app/services/evolution_engine.py`
+- `backend/app/routers/evolution.py`
+- `backend/app/routers/nodes.py`
 
-## 8. 配置项
+### 前端 (待实现)
+- `frontend/src/lib/api.ts`: 新增接口。
+- `frontend/src/types/index.ts`: 新增类型定义。
+- `frontend/src/components/pyramid/NodeContents.tsx`: 新增组件。
+- `frontend/src/app/(dashboard)/pyramid/[id]/page.tsx`: 集成内容列表。
+- `frontend/src/app/(dashboard)/contents/[id]/page.tsx`: 集成自动归类按钮。
+
+## 9. 配置项
 
 - `VECTOR_DB_PATH`: 向量数据库持久化路径。
-- `AUTO_CLASSIFY_THRESHOLD`: 自动归类阈值，默认 **0.8**。
+- `AUTO_CLASSIFY_THRESHOLD`: 自动归类阈值，默认 **0.5**。

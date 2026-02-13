@@ -5,6 +5,8 @@
 ## [Unreleased]
 
 ### Added
+- **金字塔进化**: 实现基于向量相似度的内容自动归类 (Auto-Classification) 和聚类发现 (Clustering)。
+- **E2E测试**: 增加 Playwright 自动化测试覆盖进化流程。
 - **AI 核心能力**: 集成硅基流动 API，实现基于 Prompt 的智能内容处理。
 - **AI 质量评估**: 使用 SoftValidator 对内容进行多维度打分（信息密度、逻辑性等）。
 - **智能内容增强**: 自动生成内容摘要 (Summary)、提取关键标签 (Tags) 和核心概念 (Concepts)。

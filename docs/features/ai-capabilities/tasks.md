@@ -180,6 +180,18 @@ graph LR
 | 预计 | 15 分钟 |
 | 依赖 | Task 5 |
 
+#### Task 8: 执行集成测试 (Completed)
+
+| 属性 | 值 |
+|------|-----|
+| 文件 | `backend/tests/integration/test_ai_flow_manual.py` |
+| 操作 | 新增 |
+| 内容 | 编写手动集成测试脚本，Mock 外部依赖，验证 ContentProcessor -> AIService -> Database 的完整数据流。 |
+| 验证 | 命令: `cd backend && python -m pytest tests/integration/test_ai_flow_manual.py` |
+|      | 预期: 测试通过 |
+| 预计 | 10 分钟 |
+| 依赖 | Task 7 |
+
 ## 检查点策略
 
 | 时机 | 操作 |

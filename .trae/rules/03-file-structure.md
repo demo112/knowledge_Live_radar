@@ -71,8 +71,14 @@ ai-radar/
 │   ├── progress/
 │   └── bug_fix/
 │
+├── e2e/                         # 端到端测试
+│   ├── fixtures/                # 测试固件
+│   ├── pages/                   # 页面对象模型 (POM)
+│   ├── tests/                   # 测试用例
+│   └── playwright.config.ts     # Playwright 配置
+│
 ├── docker-compose.yml
 └── README.md
 ```
 
-**重要**：前后端代码独立维护。frontend 和 backend 各自管理自己的类型和工具函数。
+**重要**：前后端代码独立维护。frontend 和 backend 各自管理自己的类型和工具函数。E2E 测试统一在根目录 `e2e/` 下管理。

@@ -34,6 +34,15 @@
 | 工具函数 | 85% |
 | 前端组件 | 80% |
 
+## 测试执行规范
+
+### 禁止启动阻塞式服务
+- 运行测试或生成覆盖率报告时，**禁止**启动任何本地 HTTP 服务器（如 `python -m http.server`、`coverage serve` 等）来展示报告
+- 覆盖率报告只允许生成静态文件（`coverage html` 或 `pytest --cov-report=html`），不得自动打开浏览器或启动服务
+- 测试命令必须是非交互式的，执行完毕后立即退出，不得阻塞终端
+- 正确示例：`pytest --cov=backend --cov-report=html --cov-report=term`
+- 错误示例：生成报告后执行 `python -m http.server 9323` 或任何 `Serving HTML report at http://localhost:xxxx` 的命令
+
 ## AI 服务测试
 - 使用 Mock 替代真实 AI 调用
 - 测试 Prompt 模板的格式正确性

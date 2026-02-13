@@ -19,6 +19,11 @@ async def test_hard_validator():
     valid, _ = await validator.validate({"title": "Test", "content": "This is bad"})
     assert not valid
 
+    # Scunthorpe problem (should pass now)
+    # "bad" is banned, but "badminton" should be allowed
+    valid, _ = await validator.validate({"title": "Sport", "content": "I like badminton"})
+    assert valid
+
 @pytest.mark.asyncio
 async def test_soft_validator():
     # Patch the ai_service instance in soft_validator module
@@ -28,15 +33,43 @@ async def test_soft_validator():
         
         validator = SoftValidator()
         
-        # AI says valid
-        mock_service.validate_content_soft.return_value = {"raw_response": "This content is valid."}
-        valid, _ = await validator.validate({"title": "Tech", "content": "AI is great"})
+        # AI says valid (Score 80)
+        mock_service.validate_content_soft.return_value = {
+            "score": 80,
+            "reason": "This content is valid.",
+            "dimensions": {}
+        }
+        valid, result = await validator.validate({"title": "Tech", "content": "AI is great"})
         assert valid
+        assert result["score"] == 80
         
-        # AI says invalid
-        mock_service.validate_content_soft.return_value = {"raw_response": "No, this is unrelated."}
-        valid, _ = await validator.validate({"title": "Cooking", "content": "Pasta recipe"})
+        # AI says invalid (Score 40)
+        mock_service.validate_content_soft.return_value = {
+            "score": 40,
+            "reason": "No, this is unrelated.",
+            "dimensions": {}
+        }
+        valid, result = await validator.validate({"title": "Cooking", "content": "Pasta recipe"})
         assert not valid
+        assert result["score"] == 40
+
+        # Boundary Test: Score 59 (Fail)
+        mock_service.validate_content_soft.return_value = {
+            "score": 59,
+            "reason": "Almost there",
+            "dimensions": {}
+        }
+        valid, _ = await validator.validate({"title": "Border", "content": "Test"})
+        assert not valid
+
+        # Boundary Test: Score 60 (Pass)
+        mock_service.validate_content_soft.return_value = {
+            "score": 60,
+            "reason": "Just passed",
+            "dimensions": {}
+        }
+        valid, _ = await validator.validate({"title": "Border", "content": "Test"})
+        assert valid
 
 @pytest.mark.asyncio
 async def test_cross_validator():

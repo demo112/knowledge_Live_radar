@@ -34,7 +34,7 @@ export class SourcesPage extends BasePage {
     this.nameInput = page.locator('input[type="text"]');
     this.typeSelect = page.locator('select');
     this.discoverButton = page.getByRole('button', { name: '发现' });
-    this.modalAddButton = page.getByRole('button', { name: '添加', exact: true });
+    this.modalAddButton = page.getByRole('button', { name: '立即添加', exact: true });
     this.modalCancelButton = page.getByRole('button', { name: '取消' });
   }
 
@@ -58,9 +58,13 @@ export class SourcesPage extends BasePage {
 
   async crawlSource(name: string) {
     const sourceItem = this.page.locator('li').filter({ hasText: name });
+    
+    // Handle alert dialog
+    this.page.once('dialog', async dialog => {
+      console.log(`Dialog message: ${dialog.message()}`);
+      await dialog.accept();
+    });
+
     await sourceItem.getByRole('button', { name: '抓取' }).click();
-    // Wait for crawl to start/finish - in the UI it shows an alert
-    // Handling dialogs in Playwright:
-    // page.on('dialog', dialog => dialog.accept());
   }
 }
