@@ -1,5 +1,5 @@
 from openai import AsyncOpenAI
-from app.config import settings
+from app.services.config.configuration_service import configuration_service
 import logging
 import json
 import re
@@ -10,23 +10,66 @@ logger = logging.getLogger(__name__)
 
 class AIService:
     def __init__(self):
-        self.client = None
-        if settings.SILICONFLOW_API_KEY:
-            self.client = AsyncOpenAI(
-                api_key=settings.SILICONFLOW_API_KEY,
-                base_url=settings.SILICONFLOW_BASE_URL
-            )
-        else:
-            logger.warning("SILICONFLOW_API_KEY not set. AI Service will not function.")
-        
+        self._client = None
+        self._last_config = {}
+        self._initialize_client()
         self.prompt_manager = PromptManager()
 
-    async def chat_completion(self, messages: List[Dict[str, str]], model: str = "deepseek-ai/DeepSeek-V3", temperature: float = 0.3, max_retries: int = 3) -> Optional[str]:
+    def _initialize_client(self):
+        enabled = configuration_service.get("ai.enabled")
+        api_key = configuration_service.get("ai.api_key")
+        base_url = configuration_service.get("ai.base_url")
+        
+        current_config = {
+            "enabled": enabled,
+            "api_key": api_key,
+            "base_url": base_url
+        }
+        
+        # Only re-initialize if config changed
+        if current_config == self._last_config and self._client is not None:
+            return
+
+        self._last_config = current_config
+        
+        if not enabled:
+            self._client = None
+            return
+
+        if api_key:
+            try:
+                self._client = AsyncOpenAI(
+                    api_key=api_key,
+                    base_url=base_url
+                )
+            except Exception as e:
+                logger.error(f"Failed to initialize AI client: {e}")
+                self._client = None
+        else:
+            # Only warn if enabled but no key
+            if enabled:
+                logger.warning("AI enabled but API Key not set. AI Service will not function.")
+            self._client = None
+
+    @property
+    def client(self):
+        self._initialize_client()
+        return self._client
+
+    async def chat_completion(self, messages: List[Dict[str, str]], model: Optional[str] = None, temperature: Optional[float] = None, max_retries: Optional[int] = None) -> Optional[str]:
         """
         Send a chat completion request with exponential backoff retry.
         """
+        # Load defaults from config if not provided
+        model = model or configuration_service.get("ai.model")
+        temperature = temperature if temperature is not None else configuration_service.get("ai.temperature")
+        max_retries = max_retries if max_retries is not None else configuration_service.get("ai.max_retries")
+
         if not self.client:
-            logger.error("AI Client not initialized. Cannot perform chat completion.")
+            if not configuration_service.get("ai.enabled"):
+                logger.debug("AI Service is disabled. Skipping chat completion.")
+            else:
+                logger.error("AI Client not initialized. Cannot perform chat completion.")
             return None
         
         import asyncio
@@ -83,6 +126,9 @@ class AIService:
 
     async def validate_content_soft(self, title: str, content: str) -> Dict[str, Any]:
         """Soft validation using prompt template."""
+        if not self.client and not configuration_service.get("ai.enabled"):
+            return {"score": 100, "reason": "Skipped (AI disabled)"}
+
         prompt = await self.prompt_manager.get_prompt_for_scene(
             "soft_validation", 
             {"title": title, "content": content}
@@ -108,6 +154,9 @@ class AIService:
 
     async def generate_summary(self, title: str, content: str) -> Dict[str, Any]:
         """Generate summary using prompt template."""
+        if not self.client and not configuration_service.get("ai.enabled"):
+            return {"summary": "", "key_points": []}
+
         prompt = await self.prompt_manager.get_prompt_for_scene(
             "summary_generation",
             {"title": title, "content": content}
@@ -124,6 +173,9 @@ class AIService:
 
     async def extract_concepts(self, title: str, content: str) -> List[Dict[str, str]]:
         """Extract concepts using prompt template."""
+        if not self.client and not configuration_service.get("ai.enabled"):
+            return []
+
         prompt = await self.prompt_manager.get_prompt_for_scene(
             "concept_extraction",
             {"title": title, "content": content}
@@ -141,6 +193,9 @@ class AIService:
 
     async def generate_tags(self, title: str, content: str) -> List[str]:
         """Generate tags using prompt template."""
+        if not self.client and not configuration_service.get("ai.enabled"):
+            return []
+
         prompt = await self.prompt_manager.get_prompt_for_scene(
             "tag_generation",
             {"title": title, "content": content}

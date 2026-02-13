@@ -4,39 +4,49 @@ from app.services.ai_service import AIService
 
 @pytest.mark.asyncio
 async def test_chat_completion_success():
-    # Mock settings to ensure API key is present
-    with patch("app.services.ai_service.settings") as mock_settings:
-        mock_settings.SILICONFLOW_API_KEY = "test_key"
-        mock_settings.SILICONFLOW_BASE_URL = "https://api.test"
+    # Mock configuration_service
+    with patch("app.services.ai_service.configuration_service") as mock_config:
+        def get_side_effect(key):
+            if key == "ai.enabled": return True
+            if key == "ai.api_key": return "test_key"
+            if key == "ai.base_url": return "https://api.test"
+            if key == "ai.max_retries": return 3
+            if key == "ai.model": return "test-model"
+            if key == "ai.temperature": return 0.7
+            return None
+        mock_config.get.side_effect = get_side_effect
         
-        # Initialize service with mocked settings
-        service = AIService()
-        
-        # Mock the client
-        mock_response = MagicMock()
-        mock_message = MagicMock()
-        mock_message.content = "Test response"
-        mock_choice = MagicMock()
-        mock_choice.message = mock_message
-        mock_response.choices = [mock_choice]
-        
-        service.client = AsyncMock()
-        service.client.chat.completions.create.return_value = mock_response
-        
-        response = await service.chat_completion([{"role": "user", "content": "Hello"}])
-        
-        assert response == "Test response"
-        service.client.chat.completions.create.assert_called_once()
+        # Initialize service
+        with patch("app.services.ai_service.AsyncOpenAI") as mock_openai_cls:
+            mock_client_instance = AsyncMock()
+            mock_openai_cls.return_value = mock_client_instance
+            
+            service = AIService()
+            
+            # Setup mock response
+            mock_response = MagicMock()
+            mock_message = MagicMock()
+            mock_message.content = "Test response"
+            mock_choice = MagicMock()
+            mock_choice.message = mock_message
+            mock_response.choices = [mock_choice]
+            
+            mock_client_instance.chat.completions.create.return_value = mock_response
+            
+            response = await service.chat_completion([{"role": "user", "content": "Hello"}])
+            
+            assert response == "Test response"
+            mock_client_instance.chat.completions.create.assert_called_once()
 
 @pytest.mark.asyncio
 async def test_chat_completion_no_client():
-    # Mock settings to simulate missing API key
-    with patch("app.services.ai_service.settings") as mock_settings:
-        mock_settings.SILICONFLOW_API_KEY = None
+    # Mock configuration to simulate disabled
+    with patch("app.services.ai_service.configuration_service") as mock_config:
+        mock_config.get.side_effect = lambda k: False if k == "ai.enabled" else None
         
         service = AIService()
         
-        # Since client is None, it should return None and log error
+        # Since client is None, it should return None
         response = await service.chat_completion([{"role": "user", "content": "Hello"}])
         
         assert response is None
