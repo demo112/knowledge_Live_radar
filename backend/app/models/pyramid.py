@@ -38,6 +38,8 @@ class PyramidNode(Base):
     path: Mapped[str] = mapped_column(String(255), index=True) # Materialized path
     health_score: Mapped[int] = mapped_column(Integer, default=100)
     status: Mapped[str] = mapped_column(String(20), default="pending") # pending, completed
+    content_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0") # Count of associated contents
+    last_content_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True) # Timestamp of last associated content
     is_deleted: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
     
     # Relationships

@@ -18,6 +18,10 @@ class Settings(BaseSettings):
     # AI Service (SiliconFlow)
     SILICONFLOW_API_KEY: Optional[str] = None
     SILICONFLOW_BASE_URL: str = "https://api.siliconflow.cn/v1"
+
+    # Vector DB
+    VECTOR_DB_PATH: str = "./chroma_db"
+    EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"
     
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 

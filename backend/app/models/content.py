@@ -43,17 +43,19 @@ class ContentItem(Base):
 class ContentNodeRelation(Base):
     __tablename__ = "content_node_relations"
 
-    content_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("content_items.id"), primary_key=True)
-    node_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("pyramid_nodes.id"), primary_key=True)
-    confidence: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    is_manual: Mapped[bool] = mapped_column(Boolean, default=False)
+    content_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("content_items.id", ondelete="CASCADE"), primary_key=True)
+    node_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("pyramid_nodes.id", ondelete="CASCADE"), primary_key=True)
+    confidence: Mapped[float] = mapped_column(Float, default=1.0, server_default="1.0")
+    source: Mapped[str] = mapped_column(String(20), default="manual", server_default="manual") # manual, ai_auto, ai_confirm
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    is_manual: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true") # Deprecated, use source instead
 
     # Relationships
     content: Mapped["ContentItem"] = relationship("ContentItem")
     node: Mapped["PyramidNode"] = relationship("app.models.pyramid.PyramidNode")
 
     def __repr__(self):
-        return f"<ContentNodeRelation(content_id={self.content_id}, node_id={self.node_id})>"
+        return f"<ContentNodeRelation(content_id={self.content_id}, node_id={self.node_id}, source={self.source})>"
 
 
 class ValidationResult(Base):

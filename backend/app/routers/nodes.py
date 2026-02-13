@@ -70,3 +70,23 @@ async def delete_node(
 ):
     node = await service.delete_node(id)
     return SuccessResponse(data=node)
+
+@router.post("/{id}/contents/{content_id}", response_model=SuccessResponse)
+async def link_content(
+    id: UUID,
+    content_id: UUID,
+    node_service: NodeService = Depends(get_node_service)
+):
+    """Link content to node"""
+    await node_service.link_content(id, content_id, source="manual")
+    return SuccessResponse(data={"message": "Content linked"})
+
+@router.delete("/{id}/contents/{content_id}", response_model=SuccessResponse)
+async def unlink_content(
+    id: UUID,
+    content_id: UUID,
+    node_service: NodeService = Depends(get_node_service)
+):
+    """Unlink content from node"""
+    await node_service.unlink_content(id, content_id)
+    return SuccessResponse(data={"message": "Content unlinked"})

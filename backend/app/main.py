@@ -6,7 +6,7 @@ from app.config import settings
 from app.routers import (
     pyramids, nodes, sources, contents, discovery, approvals, 
     input, whitelist, dashboard, health,
-    hotspots, drift, strategy, scheduler, config
+    hotspots, drift, strategy, scheduler, config, evolution
 )
 
 # Configure Logging
@@ -103,6 +103,7 @@ app.include_router(drift.router, prefix=settings.API_V1_STR)
 app.include_router(strategy.router, prefix=settings.API_V1_STR)
 app.include_router(scheduler.router, prefix=settings.API_V1_STR)
 app.include_router(config.router, prefix=settings.API_V1_STR)
+app.include_router(evolution.router, prefix=settings.API_V1_STR)
 
 @app.get("/")
 async def root():
