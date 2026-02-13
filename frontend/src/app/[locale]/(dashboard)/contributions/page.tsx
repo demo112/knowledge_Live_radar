@@ -62,6 +62,11 @@ export default function ContributionsPage() {
                     <p className="text-sm text-gray-500">
                       {contribution.reason || '未提供原因'}
                     </p>
+                    {contribution.confidence_score !== undefined && (
+                      <p className="text-xs text-gray-400 mt-1">
+                        置信度: {contribution.confidence_score}
+                      </p>
+                    )}
                     <p className="text-xs text-gray-400 mt-1">
                         应用时间: {new Date(contribution.created_at).toLocaleString('zh-CN')}
                     </p>

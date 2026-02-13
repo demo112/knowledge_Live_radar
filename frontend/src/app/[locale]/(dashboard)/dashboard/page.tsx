@@ -46,8 +46,8 @@ export default function DashboardPage() {
             <Globe className="w-5 h-5 text-blue-500" />
           </div>
           <div className="flex items-baseline">
-            <span className="text-3xl font-bold text-gray-900">{stats?.active_sources}</span>
-            <span className="ml-2 text-sm text-gray-500">/ {stats?.total_sources} 活跃</span>
+            <span className="text-3xl font-bold text-gray-900">{stats?.active_sources || 0}</span>
+            <span className="ml-2 text-sm text-gray-500">/ {stats?.total_sources || 0} 活跃</span>
           </div>
         </div>
 
@@ -60,11 +60,11 @@ export default function DashboardPage() {
           <div className="space-y-1">
              <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-500">新发现域名</span>
-                <span className="text-lg font-bold text-gray-900">{stats?.discovered_domains}</span>
+                <span className="text-lg font-bold text-gray-900">{stats?.discovered_domains || 0}</span>
              </div>
              <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-500">白名单域名</span>
-                <span className="text-lg font-bold text-gray-900">{stats?.whitelisted_domains}</span>
+                <span className="text-lg font-bold text-gray-900">{stats?.whitelisted_domains || 0}</span>
              </div>
           </div>
         </div>
@@ -76,7 +76,7 @@ export default function DashboardPage() {
             <Database className="w-5 h-5 text-purple-500" />
           </div>
           <div className="flex items-baseline">
-            <span className="text-3xl font-bold text-gray-900">{stats?.total_contents}</span>
+            <span className="text-3xl font-bold text-gray-900">{stats?.total_contents || 0}</span>
             <span className="ml-2 text-sm text-gray-500">条目</span>
           </div>
         </div>
@@ -88,7 +88,7 @@ export default function DashboardPage() {
             <CheckCircle className="w-5 h-5 text-orange-500" />
           </div>
           <div className="flex items-baseline">
-            <span className="text-3xl font-bold text-gray-900">{stats?.validation_pass_rate}%</span>
+            <span className="text-3xl font-bold text-gray-900">{stats?.validation_pass_rate || 0}%</span>
             <span className="ml-2 text-sm text-gray-500">通过校验</span>
           </div>
         </div>

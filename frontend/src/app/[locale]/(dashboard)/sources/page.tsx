@@ -3,7 +3,9 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { sourceApi, discoveryApi } from '@/lib/api';
-import { InformationSource } from '@/types';
+import { InformationSource, SourceTemplate } from '@/types';
+import SourceTemplateSelector from '@/components/sources/SourceTemplateSelector';
+import CrawlHistoryDialog from '@/components/sources/CrawlHistoryDialog';
 
 export default function SourcesPage() {
   const [sources, setSources] = useState<InformationSource[]>([]);
@@ -11,11 +13,15 @@ export default function SourcesPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingSource, setEditingSource] = useState<InformationSource | null>(null);
   const [formData, setFormData] = useState({ name: '', url: '', type: 'RSS' });
+  const [useTemplate, setUseTemplate] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<SourceTemplate | null>(null);
+  const [templateConfig, setTemplateConfig] = useState<any>(null);
   const [discovering, setDiscovering] = useState(false);
   const [crawling, setCrawling] = useState<string | null>(null);
   const [testing, setTesting] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; id: string | null }>({ open: false, id: null });
+  const [historyDialog, setHistoryDialog] = useState<{ open: boolean; id: string | null }>({ open: false, id: null });
 
   useEffect(() => {
     fetchSources();
@@ -37,12 +43,16 @@ export default function SourcesPage() {
   const handleOpenCreateModal = () => {
     setEditingSource(null);
     setFormData({ name: '', url: '', type: 'RSS' });
+    setUseTemplate(false);
+    setSelectedTemplate(null);
+    setTemplateConfig(null);
     setShowModal(true);
   };
 
   const handleOpenEditModal = (source: InformationSource) => {
     setEditingSource(source);
     setFormData({ name: source.name, url: source.url, type: source.type });
+    setUseTemplate(false); // Currently not supporting switching to template mode on edit
     setShowModal(true);
   };
 
@@ -75,16 +85,27 @@ export default function SourcesPage() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      if (editingSource) {
-        await sourceApi.update(editingSource.id, {
-          ...formData,
-          config: { feed_url: formData.url }
-        });
+      let finalData: any = { ...formData };
+      
+      if (useTemplate && selectedTemplate && templateConfig) {
+        finalData.type = selectedTemplate.source_type;
+        finalData.config = templateConfig;
+        finalData.template_id = selectedTemplate.id;
+        
+        // Try to determine URL from config if not provided
+        if (!finalData.url || finalData.url.trim() === '') {
+             if (templateConfig.feed_url) finalData.url = templateConfig.feed_url;
+             else if (templateConfig.url) finalData.url = templateConfig.url;
+             else finalData.url = `template://${selectedTemplate.id}`;
+        }
       } else {
-        await sourceApi.create({
-          ...formData,
-          config: { feed_url: formData.url }
-        });
+        finalData.config = { feed_url: formData.url };
+      }
+
+      if (editingSource) {
+        await sourceApi.update(editingSource.id, finalData);
+      } else {
+        await sourceApi.create(finalData);
       }
       setShowModal(false);
       fetchSources();
@@ -190,9 +211,22 @@ export default function SourcesPage() {
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full font-medium bg-blue-100 text-blue-800">
                       {source.type}
                     </span>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full font-medium ${source.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                      {source.status === 'ACTIVE' ? '正常' : '停用'}
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full font-medium ${
+                      source.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 
+                      source.status === 'MONITORING' ? 'bg-yellow-100 text-yellow-800' :
+                      source.status === 'ADJUSTING' ? 'bg-orange-100 text-orange-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {source.status === 'ACTIVE' ? '正常' : 
+                       source.status === 'MONITORING' ? '监控中' :
+                       source.status === 'ADJUSTING' ? '需调整' :
+                       source.status}
                     </span>
+                    {source.template_id && (
+                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full font-medium bg-purple-100 text-purple-800">
+                         模板
+                       </span>
+                    )}
                     <span>上次抓取: {source.last_crawled_at ? new Date(source.last_crawled_at).toLocaleString('zh-CN') : '从未'}</span>
                   </div>
                 </div>
@@ -212,6 +246,13 @@ export default function SourcesPage() {
                     title="测试连接"
                    >
                      {testing === source.id ? '测试中...' : '测试'}
+                   </button>
+                   <button 
+                    onClick={() => setHistoryDialog({ open: true, id: source.id })}
+                    className="text-gray-600 hover:text-gray-900 font-medium"
+                    title="抓取历史"
+                   >
+                     历史
                    </button>
                    <div className="h-4 w-px bg-gray-300 mx-1"></div>
                    <button
@@ -267,36 +308,34 @@ export default function SourcesPage() {
       )}
 
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl shadow-xl my-8">
             <h2 className="text-xl font-bold mb-4">{editingSource ? '编辑信息源' : '添加新信息源'}</h2>
-            <form onSubmit={handleSubmit}>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">URL / ID</label>
-                <div className="flex gap-2">
-                    <input 
-                    type="text" 
-                    required
-                    className="flex-1 border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-primary/50 outline-none"
-                    value={formData.url}
-                    onChange={(e) => setFormData({...formData, url: e.target.value})}
-                    placeholder={
-                      formData.type === 'WECHAT_MP' ? '输入公众号ID' :
-                      formData.type === 'BILIBILI_USER' ? '输入用户ID或主页链接' :
-                      formData.type === 'JUEJIN_COLUMN' ? '输入专栏ID' :
-                      'https://example.com/rss'
-                    }
-                    />
-                    <button 
-                        type="button"
-                        onClick={handleDiscover}
-                        disabled={discovering || !formData.url}
-                        className="bg-secondary hover:bg-secondary/90 text-white px-3 py-2 rounded text-sm disabled:opacity-50"
-                    >
-                        {discovering ? '发现中' : '发现'}
-                    </button>
-                </div>
+            
+            {!editingSource && (
+              <div className="flex border-b border-gray-200 mb-6">
+                <button
+                  className={`px-4 py-2 font-medium text-sm transition-colors relative ${
+                    !useTemplate ? 'text-primary' : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                  onClick={() => setUseTemplate(false)}
+                >
+                  自定义添加
+                  {!useTemplate && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-primary"></span>}
+                </button>
+                <button
+                  className={`px-4 py-2 font-medium text-sm transition-colors relative ${
+                    useTemplate ? 'text-primary' : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                  onClick={() => setUseTemplate(true)}
+                >
+                  使用模板添加
+                  {useTemplate && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-primary"></span>}
+                </button>
               </div>
+            )}
+
+            <form onSubmit={handleSubmit}>
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">名称</label>
                 <input 
@@ -308,23 +347,70 @@ export default function SourcesPage() {
                   placeholder="例如：技术博客"
                 />
               </div>
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-1">类型</label>
-                <select 
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-primary/50 outline-none"
-                  value={formData.type}
-                  onChange={(e) => setFormData({...formData, type: e.target.value})}
-                >
-                  <option value="RSS">RSS Feed</option>
-                  <option value="SITEMAP">Sitemap</option>
-                  <option value="WEB">Website Crawl</option>
-                  <option value="WECHAT_MP">微信公众号 (ID/URL)</option>
-                  <option value="BILIBILI_USER">Bilibili UP主 (ID/URL)</option>
-                  <option value="JUEJIN_COLUMN">掘金专栏 (ID/URL)</option>
-                  <option value="YOUTUBE_CHANNEL">YouTube 频道 (ID/URL)</option>
-                </select>
-              </div>
-              <div className="flex justify-end gap-3">
+
+              {useTemplate ? (
+                <div className="mb-6">
+                  <SourceTemplateSelector 
+                    onTemplateSelect={(template) => {
+                      setSelectedTemplate(template);
+                      // Auto-fill name if empty
+                      if (!formData.name) {
+                        setFormData(prev => ({ ...prev, name: template.name }));
+                      }
+                    }}
+                    onConfigChange={(config) => setTemplateConfig(config)}
+                    selectedTemplateId={selectedTemplate?.id}
+                  />
+                </div>
+              ) : (
+                <>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">URL / ID</label>
+                    <div className="flex gap-2">
+                        <input 
+                        type="text" 
+                        required
+                        className="flex-1 border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-primary/50 outline-none"
+                        value={formData.url}
+                        onChange={(e) => setFormData({...formData, url: e.target.value})}
+                        placeholder={
+                          formData.type === 'WECHAT_MP' ? '输入公众号ID' :
+                          formData.type === 'BILIBILI_USER' ? '输入用户ID或主页链接' :
+                          formData.type === 'JUEJIN_COLUMN' ? '输入专栏ID' :
+                          'https://example.com/rss'
+                        }
+                        />
+                        <button 
+                            type="button"
+                            onClick={handleDiscover}
+                            disabled={discovering || !formData.url}
+                            className="bg-secondary hover:bg-secondary/90 text-white px-3 py-2 rounded text-sm disabled:opacity-50"
+                        >
+                            {discovering ? '发现中' : '发现'}
+                        </button>
+                    </div>
+                  </div>
+                  
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">类型</label>
+                    <select 
+                      className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-primary/50 outline-none"
+                      value={formData.type}
+                      onChange={(e) => setFormData({...formData, type: e.target.value})}
+                    >
+                      <option value="RSS">RSS Feed</option>
+                      <option value="SITEMAP">Sitemap</option>
+                      <option value="WEB">Website Crawl</option>
+                      <option value="WECHAT_MP">微信公众号 (ID/URL)</option>
+                      <option value="BILIBILI_USER">Bilibili UP主 (ID/URL)</option>
+                      <option value="JUEJIN_COLUMN">掘金专栏 (ID/URL)</option>
+                      <option value="YOUTUBE_CHANNEL">YouTube 频道 (ID/URL)</option>
+                    </select>
+                  </div>
+                </>
+              )}
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
                 <button 
                   type="button"
                   onClick={() => setShowModal(false)}

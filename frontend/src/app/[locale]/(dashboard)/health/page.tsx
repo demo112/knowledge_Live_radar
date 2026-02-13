@@ -51,13 +51,14 @@ export default function HealthPage() {
   const handleOptimize = async () => {
       try {
           await evolutionApi.triggerOptimization();
-          alert("Optimization triggered");
+          alert("优化已触发");
       } catch (error) {
           console.error("Optimization failed", error);
+          alert("优化触发失败");
       }
   };
 
-  if (loading && !report) return <div className="p-8">Loading health data...</div>;
+  if (loading && !report) return <div className="p-8">加载健康数据中...</div>;
 
   return (
     <div className="space-y-6">
@@ -95,7 +96,7 @@ export default function HealthPage() {
                 <span className="ml-2 text-sm text-gray-500">/ 100</span>
             </div>
             <p className="text-xs text-gray-400 mt-1">
-                上次检测: {report?.created_at ? new Date(report.created_at).toLocaleString() : 'Never'}
+                上次检测: {report?.created_at ? new Date(report.created_at).toLocaleString() : '从未'}
             </p>
         </div>
         

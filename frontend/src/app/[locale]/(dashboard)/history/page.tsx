@@ -63,17 +63,11 @@ export default function HistoryPage() {
     if (!rollbackItem) return;
     
     try {
-      // In a real implementation, we would call a rollback API.
-      // Currently, we might not have a direct rollback API, or we use a new proposal.
-      // For iteration 3, let's assume we create a rollback proposal or execute rollback.
-      // The design doc mentions "Snapshot Manager" and "Rollback execution".
-      // But we don't have a direct rollback endpoint in `approvalApi` yet?
-      // Wait, `approvalApi.execute` is for executing a proposal.
-      // Rollback usually involves creating a NEW proposal that reverses the change.
-      
-      alert("回滚功能需要创建反向提案。此功能即将推出。");
+      await approvalApi.rollback(rollbackItem.id);
       setRollbackItem(null);
       setSelectedItem(null);
+      await fetchHistory();
+      alert("回滚请求已提交");
     } catch (error) {
       console.error('Rollback failed', error);
       alert('回滚失败');
@@ -124,9 +118,9 @@ export default function HistoryPage() {
             className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
           >
             <option value="all">全部类型</option>
-            <option value="create_node">创建节点</option>
-            <option value="update_node">更新节点</option>
-            <option value="delete_node">删除节点</option>
+            {Object.entries(CHANGE_TYPE_MAP).map(([key, label]) => (
+              <option key={key} value={key}>{label}</option>
+            ))}
           </select>
         </div>
       </div>

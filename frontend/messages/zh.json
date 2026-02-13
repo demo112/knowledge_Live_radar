@@ -1,0 +1,38 @@
+{
+  "Common": {
+    "loading": "加载中...",
+    "save": "保存",
+    "cancel": "取消",
+    "delete": "删除",
+    "edit": "编辑",
+    "create": "创建",
+    "back": "返回",
+    "submit": "提交",
+    "confirm": "确认"
+  },
+  "Navigation": {
+    "dashboard": "仪表板",
+    "pyramid": "知识金字塔",
+    "sources": "信息源",
+    "contents": "内容库",
+    "feed": "信息流",
+    "approval": "审批中心",
+    "history": "变更历史",
+    "health": "健康报告",
+    "scheduler": "调度管理",
+    "settings": "设置"
+  },
+  "Status": {
+    "active": "活跃",
+    "paused": "暂停",
+    "pending": "待处理",
+    "completed": "已完成",
+    "failed": "失败",
+    "running": "运行中"
+  },
+  "Errors": {
+    "network_error": "网络错误，请稍后重试",
+    "not_found": "未找到资源",
+    "unknown_error": "发生未知错误"
+  }
+}

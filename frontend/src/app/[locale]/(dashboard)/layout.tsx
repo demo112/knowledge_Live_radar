@@ -1,5 +1,6 @@
 import React from 'react';
-import Link from 'next/link';
+import {Link} from '@/i18n/routing';
+import {useTranslations} from 'next-intl';
 import { 
   LayoutDashboard,
   Layers, 
@@ -10,16 +11,17 @@ import {
   HeartPulse,
   History
 } from 'lucide-react';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 const NAV_ITEMS = [
-  { href: '/dashboard', label: '仪表板', icon: LayoutDashboard },
-  { href: '/pyramid', label: '知识金字塔', icon: Layers },
-  { href: '/sources', label: '信息源', icon: Globe },
-  { href: '/contents', label: '内容库', icon: FileText },
-  { href: '/feed', label: '动态流', icon: Activity },
-  { href: '/approval', label: '审批中心', icon: ClipboardCheck },
-  { href: '/history', label: '变更历史', icon: History },
-  { href: '/health', label: '健康报告', icon: HeartPulse },
+  { href: '/dashboard', labelKey: 'dashboard', icon: LayoutDashboard },
+  { href: '/pyramid', labelKey: 'pyramid', icon: Layers },
+  { href: '/sources', labelKey: 'sources', icon: Globe },
+  { href: '/contents', labelKey: 'contents', icon: FileText },
+  { href: '/feed', labelKey: 'feed', icon: Activity },
+  { href: '/approval', labelKey: 'approval', icon: ClipboardCheck },
+  { href: '/history', labelKey: 'history', icon: History },
+  { href: '/health', labelKey: 'health', icon: HeartPulse },
 ];
 
 export default function DashboardLayout({
@@ -27,6 +29,8 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const t = useTranslations('Navigation');
+
   return (
     <div className="flex h-screen bg-background text-foreground font-sans">
       {/* Sidebar */}
@@ -45,11 +49,12 @@ export default function DashboardLayout({
               className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-foreground hover:bg-primary/10 hover:text-primary transition-colors duration-200"
             >
               <item.icon className="w-5 h-5" />
-              {item.label}
+              {t(item.labelKey)}
             </Link>
           ))}
         </nav>
-        <div className="p-4 border-t border-border">
+        <div className="p-4 border-t border-border space-y-4">
+          <LanguageSwitcher />
           <p className="text-xs text-muted-foreground text-center">
             v0.4.0 Iteration 4
           </p>

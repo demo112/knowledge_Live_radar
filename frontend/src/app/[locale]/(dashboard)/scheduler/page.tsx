@@ -39,6 +39,7 @@ export default function SchedulerPage() {
       fetchData(); // Refresh to show running
     } catch (error) {
       console.error("Failed to trigger task", error);
+      alert("触发任务失败");
     }
   };
 
@@ -52,6 +53,7 @@ export default function SchedulerPage() {
       fetchData();
     } catch (error) {
       console.error("Failed to toggle task", error);
+      alert("切换任务状态失败");
     }
   };
 
@@ -78,11 +80,11 @@ export default function SchedulerPage() {
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-700/50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">任务名</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cron</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">上次运行</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">任务名</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cron</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">状态</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">上次运行</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">操作</th>
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -99,7 +101,7 @@ export default function SchedulerPage() {
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                         task.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
                       }`}>
-                        {task.is_active ? 'Active' : 'Paused'}
+                        {task.is_active ? '活跃' : '暂停'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -113,14 +115,14 @@ export default function SchedulerPage() {
                             ? 'text-yellow-600 hover:bg-yellow-50' 
                             : 'text-green-600 hover:bg-green-50'
                         }`}
-                        title={task.is_active ? "Pause" : "Resume"}
+                        title={task.is_active ? "暂停" : "恢复"}
                       >
                         {task.is_active ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                       </button>
                       <button 
                         onClick={() => handleTrigger(task.id)}
                         className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-md"
-                        title="Run Now"
+                        title="立即运行"
                       >
                         <RotateCw className="w-4 h-4" />
                       </button>
@@ -146,7 +148,7 @@ export default function SchedulerPage() {
                     <div key={exec.id} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50">
                       <div className="flex justify-between items-start mb-1">
                         <span className="font-medium text-sm text-gray-900 dark:text-white">
-                          {task?.task_name || 'Unknown Task'}
+                          {task?.task_name || '未知任务'}
                         </span>
                         <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium flex items-center gap-1 ${
                           exec.status === 'success' ? 'bg-green-100 text-green-800' :
@@ -164,7 +166,7 @@ export default function SchedulerPage() {
                         <span>{exec.duration_seconds ? `${exec.duration_seconds.toFixed(2)}s` : '-'}</span>
                       </div>
                       {exec.error_message && (
-                        <div className="mt-2 text-xs text-red-600 bg-red-50 p-2 rounded">
+                        <div className="mt-2 text-xs text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400 p-2 rounded">
                           {exec.error_message}
                         </div>
                       )}

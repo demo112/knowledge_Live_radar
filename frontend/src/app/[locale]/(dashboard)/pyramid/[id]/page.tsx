@@ -10,7 +10,7 @@ import PyramidHistory from '@/components/pyramid/PyramidHistory';
 import { NodeContents } from '@/components/pyramid/NodeContents';
 import { Button } from '@/components/ui/button';
 import { Node } from 'reactflow';
-import { GitMerge } from 'lucide-react';
+import { GitMerge, Download } from 'lucide-react';
 
 export default function PyramidDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const unwrappedParams = use(params);
@@ -108,15 +108,39 @@ export default function PyramidDetailPage({ params }: { params: Promise<{ id: st
     if (action === 'link') setLinkOpen(true);
   };
 
+  const handleExport = async () => {
+    try {
+      const response = await pyramidApi.exportTemplate(pyramidId);
+      if (response.success) {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(response.data, null, 2));
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href", dataStr);
+        downloadAnchorNode.setAttribute("download", `${pyramid?.name || 'pyramid'}_template.json`);
+        document.body.appendChild(downloadAnchorNode);
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
+      }
+    } catch (error) {
+      console.error('Failed to export:', error);
+      alert('导出失败');
+    }
+  };
+
   if (loading && !pyramid) return <div className="p-8">加载中...</div>;
   if (!pyramid) return <div className="p-8">未找到金字塔</div>;
 
   return (
     <div className="p-6 h-screen flex flex-col space-y-4" onClick={closeContextMenu}>
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold">{pyramid.name}</h1>
-        <p className="text-gray-600">{pyramid.description}</p>
+      <div className="flex justify-between items-start">
+        <div>
+            <h1 className="text-2xl font-bold">{pyramid.name}</h1>
+            <p className="text-gray-600">{pyramid.description}</p>
+        </div>
+        <Button variant="outline" size="sm" onClick={handleExport}>
+            <Download className="mr-2 h-4 w-4" />
+            导出模板
+        </Button>
       </div>
 
       {/* Tabs */}

@@ -1,0 +1,38 @@
+{
+  "Common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "back": "Back",
+    "submit": "Submit",
+    "confirm": "Confirm"
+  },
+  "Navigation": {
+    "dashboard": "Dashboard",
+    "pyramid": "Pyramid",
+    "sources": "Sources",
+    "contents": "Contents",
+    "feed": "Feed",
+    "approval": "Approval",
+    "history": "History",
+    "health": "Health",
+    "scheduler": "Scheduler",
+    "settings": "Settings"
+  },
+  "Status": {
+    "active": "Active",
+    "paused": "Paused",
+    "pending": "Pending",
+    "completed": "Completed",
+    "failed": "Failed",
+    "running": "Running"
+  },
+  "Errors": {
+    "network_error": "Network error, please try again later",
+    "not_found": "Resource not found",
+    "unknown_error": "Unknown error occurred"
+  }
+}

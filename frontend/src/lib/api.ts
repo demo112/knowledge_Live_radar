@@ -25,6 +25,22 @@ export const pyramidApi = {
     const response = await api.post('/pyramids', data);
     return response.data;
   },
+  getTemplates: async () => {
+    const response = await api.get('/pyramids/templates');
+    return response.data;
+  },
+  createFromTemplate: async (templateId: string, name?: string) => {
+    const response = await api.post(`/pyramids/from-template/${templateId}`, null, { params: { name } });
+    return response.data;
+  },
+  exportTemplate: async (id: string) => {
+    const response = await api.get(`/pyramids/${id}/export`);
+    return response.data;
+  },
+  importTemplate: async (data: any) => {
+    const response = await api.post('/pyramids/import', data);
+    return response.data;
+  },
   update: async (id: string, data: any) => {
     const response = await api.put(`/pyramids/${id}`, data);
     return response.data;
@@ -115,8 +131,20 @@ export const sourceApi = {
     const response = await api.post(`/sources/${id}/crawl`);
     return response.data;
   },
+  getCrawlHistory: async (id: string) => {
+    const response = await api.get(`/sources/${id}/history`);
+    return response.data;
+  },
   test: async (id: string) => {
     const response = await api.post(`/sources/${id}/test`);
+    return response.data;
+  },
+  getTemplates: async () => {
+    const response = await api.get('/sources/templates');
+    return response.data;
+  },
+  renderTemplate: async (id: string, params: any) => {
+    const response = await api.post(`/sources/templates/${id}/render`, params);
     return response.data;
   }
 };
@@ -188,6 +216,10 @@ export const approvalApi = {
   },
   getImpact: async (id: string) => {
     const response = await api.get(`/approvals/${id}/impact`);
+    return response.data;
+  },
+  rollback: async (id: string) => {
+    const response = await api.post(`/approvals/${id}/rollback`);
     return response.data;
   }
 };

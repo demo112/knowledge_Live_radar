@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { pyramidApi } from '@/lib/api';
 import { Pyramid } from '@/types';
+import { Upload } from 'lucide-react';
 
 export default function PyramidListPage() {
   const [pyramids, setPyramids] = useState<Pyramid[]>([]);
@@ -13,6 +14,12 @@ export default function PyramidListPage() {
   const [formData, setFormData] = useState({ name: '', description: '' });
   const [submitting, setSubmitting] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; id: string | null }>({ open: false, id: null });
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Template support
+  const [templates, setTemplates] = useState<any[]>([]);
+  const [creationMode, setCreationMode] = useState<'blank' | 'template'>('blank');
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
 
   const fetchPyramids = async () => {
     setLoading(true);
@@ -27,6 +34,42 @@ export default function PyramidListPage() {
       setLoading(false);
     }
   };
+  
+  const fetchTemplates = async () => {
+    try {
+      const response = await pyramidApi.getTemplates();
+      if (response.success) {
+        setTemplates(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch templates:', error);
+    }
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+        try {
+            const json = JSON.parse(event.target?.result as string);
+            await pyramidApi.importTemplate(json);
+            fetchPyramids();
+            alert('导入成功');
+        } catch (error) {
+            console.error('Import failed:', error);
+            alert('导入失败，请检查文件格式');
+        }
+    };
+    reader.readAsText(file);
+    // Reset input
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   useEffect(() => {
     fetchPyramids();
@@ -35,7 +78,10 @@ export default function PyramidListPage() {
   const handleOpenCreateModal = () => {
     setEditingPyramid(null);
     setFormData({ name: '', description: '' });
+    setCreationMode('blank');
+    setSelectedTemplateId('');
     setIsModalOpen(true);
+    fetchTemplates();
   };
 
   const handleOpenEditModal = (e: React.MouseEvent, pyramid: Pyramid) => {
@@ -80,7 +126,11 @@ export default function PyramidListPage() {
       if (editingPyramid) {
         await pyramidApi.update(editingPyramid.id, formData);
       } else {
-        await pyramidApi.create(formData);
+        if (creationMode === 'template' && selectedTemplateId) {
+           await pyramidApi.createFromTemplate(selectedTemplateId, formData.name);
+        } else {
+           await pyramidApi.create(formData);
+        }
       }
       setIsModalOpen(false);
       fetchPyramids();
@@ -98,12 +148,28 @@ export default function PyramidListPage() {
     <div className="p-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">知识金字塔</h1>
-        <button 
-          className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded shadow-sm transition-colors"
-          onClick={handleOpenCreateModal}
-        >
-          新建金字塔
-        </button>
+        <div className="flex gap-2">
+            <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={handleFileChange} 
+                className="hidden" 
+                accept=".json"
+            />
+            <button 
+                className="flex items-center gap-2 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded shadow-sm transition-colors"
+                onClick={handleImportClick}
+            >
+                <Upload className="w-4 h-4" />
+                导入
+            </button>
+            <button 
+              className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded shadow-sm transition-colors"
+              onClick={handleOpenCreateModal}
+            >
+              新建金字塔
+            </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -178,6 +244,49 @@ export default function PyramidListPage() {
           <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl">
             <h2 className="text-xl font-bold mb-4">{editingPyramid ? '编辑金字塔' : '新建金字塔'}</h2>
             <form onSubmit={handleSubmit}>
+              {!editingPyramid && (
+                <div className="flex mb-6 border-b">
+                  <button
+                    type="button"
+                    className={`pb-2 px-4 ${creationMode === 'blank' ? 'border-b-2 border-primary text-primary font-medium' : 'text-gray-500'}`}
+                    onClick={() => setCreationMode('blank')}
+                  >
+                    空白创建
+                  </button>
+                  <button
+                    type="button"
+                    className={`pb-2 px-4 ${creationMode === 'template' ? 'border-b-2 border-primary text-primary font-medium' : 'text-gray-500'}`}
+                    onClick={() => setCreationMode('template')}
+                  >
+                    从模板创建
+                  </button>
+                </div>
+              )}
+
+              {creationMode === 'template' && !editingPyramid && (
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">选择模板</label>
+                  <select
+                    required={creationMode === 'template'}
+                    className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    value={selectedTemplateId}
+                    onChange={(e) => {
+                        const tId = e.target.value;
+                        setSelectedTemplateId(tId);
+                        const tmpl = templates.find(t => t.id === tId);
+                        if (tmpl) {
+                            setFormData(prev => ({ ...prev, description: tmpl.description }));
+                        }
+                    }}
+                  >
+                    <option value="">请选择模板...</option>
+                    {templates.map(t => (
+                        <option key={t.id} value={t.id}>{t.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">名称</label>
                 <input
