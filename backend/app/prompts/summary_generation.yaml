@@ -1,0 +1,14 @@
+scene: summary_generation
+name: 智能摘要生成
+description: 生成内容的简短摘要。
+version: "1.0.0"
+input_variables:
+  - content
+template_content: |
+  请为以下技术内容生成一个简短的摘要（200字以内）。
+  摘要应包含文章的核心观点、主要技术点和结论。
+
+  内容:
+  {content}
+
+  请直接返回摘要文本。

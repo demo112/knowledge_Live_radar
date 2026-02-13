@@ -22,9 +22,11 @@ class ContentItem(Base):
     content_hash: Mapped[Optional[str]] = mapped_column(String(64), index=True)
     status: Mapped[str] = mapped_column(String(20), default="PENDING")
     tags: Mapped[Optional[List[str]]] = mapped_column(JSON, nullable=True) # Using JSON for SQLite compatibility
+    concepts: Mapped[Optional[List[str]]] = mapped_column(JSON, nullable=True) # AI extracted concepts
     
     submitter_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True) # User ID who submitted this
     input_type: Mapped[str] = mapped_column(String(20), default="url", server_default="url") # url, pdf, word, markdown, image, text
+    ai_processed: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
     is_deleted: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
     
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

@@ -10,7 +10,7 @@ from app.database import AsyncSessionLocal
 from app.models.prompt_template import PromptTemplate
 from app.models.prompt_version import PromptVersion
 from app.models.ab_test import ABTest
-from app.services.ai_service import ai_service # Assuming existing AI service
+# from app.services.ai_service import ai_service # Avoid circular import
 
 logger = logging.getLogger(__name__)
 
@@ -67,11 +67,8 @@ class PromptManager:
             # Call AI
             start_time = datetime.now()
             try:
-                # Use a generic completion method from ai_service
-                # Assuming ai_service.generate_content or similar exists
-                # Or direct call if needed.
-                # Here assuming simple text generation
-                response = await ai_service.generate_text(formatted_prompt) # Hypothetical method
+                from app.services.ai_service import ai_service
+                response = await ai_service.chat_completion([{"role": "user", "content": formatted_prompt}])
                 latency = (datetime.now() - start_time).total_seconds() * 1000
                 
                 return {
@@ -98,6 +95,69 @@ class PromptManager:
             
             # Check for active A/B test
             # ...
+            # Get current version content
+            current_version = await session.get(PromptVersion, template.current_version_id)
+            if not current_version:
+                 return ""
+            
+            try:
+                return current_version.content.format(**variables)
+            except KeyError as e:
+                logger.error(f"Missing variable for scene {scene}: {e}")
+                return current_version.content # Return raw content or raise
+
+    async def sync_template(self, scene: str, name: str, description: str, content: str, variables: List[str]) -> PromptTemplate:
+        """Sync template from file to database. Create or update if content changed."""
+        async with AsyncSessionLocal() as session:
+            # 1. Check template
+            stmt = select(PromptTemplate).where(PromptTemplate.scene == scene)
+            template = await session.scalar(stmt)
+            
+            if not template:
+                template = PromptTemplate(scene=scene, name=name, description=description)
+                session.add(template)
+                await session.commit()
+                await session.refresh(template)
+                logger.info(f"Created new prompt template: {scene}")
+            else:
+                # Update metadata if changed
+                if template.name != name or template.description != description:
+                    template.name = name
+                    template.description = description
+                    session.add(template)
+                    await session.commit()
+            
+            # 2. Check version
+            need_new_version = True
+            if template.current_version_id:
+                current_version = await session.get(PromptVersion, template.current_version_id)
+                # Simple comparison. In production, might want more robust check (e.g. hash)
+                # Note: variables list comparison depends on order, so we sort it
+                if current_version and current_version.content == content and sorted(current_version.variables or []) == sorted(variables):
+                    need_new_version = False
+            
+            if need_new_version:
+                # Calculate version number (integer)
+                stmt = select(PromptVersion.version).where(PromptVersion.template_id == template.id).order_by(desc(PromptVersion.version)).limit(1)
+                last_version = await session.scalar(stmt) or 0
+                
+                new_version = PromptVersion(
+                    template_id=template.id,
+                    version=last_version + 1,
+                    content=content,
+                    variables=variables,
+                    created_by="system_init"
+                )
+                session.add(new_version)
+                await session.commit()
+                await session.refresh(new_version)
+                
+                template.current_version_id = new_version.id
+                session.add(template)
+                await session.commit()
+                logger.info(f"Updated prompt template version: {scene} -> v{new_version.version}")
+            
+            return template
             
             version = await session.get(PromptVersion, template.current_version_id)
             if version:

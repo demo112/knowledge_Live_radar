@@ -1,0 +1,16 @@
+scene: concept_extraction
+name: 关键概念提取
+description: 提取内容中的核心技术概念。
+version: "1.0.0"
+input_variables:
+  - content
+template_content: |
+  请从以下内容中提取核心技术概念（Keywords/Concepts）。
+  只提取最重要的 3-5 个概念，例如具体的库名、算法名、架构模式等。
+  不要提取过于宽泛的词（如"编程"、"计算机"）。
+
+  内容:
+  {content}
+
+  请以 JSON 格式返回字符串列表：
+  ["概念1", "概念2", "概念3"]
