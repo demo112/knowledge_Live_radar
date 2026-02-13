@@ -5,6 +5,11 @@
 ## [Unreleased]
 
 ### Added
+- **AI 核心能力**: 集成硅基流动 API，实现基于 Prompt 的智能内容处理。
+- **AI 质量评估**: 使用 SoftValidator 对内容进行多维度打分（信息密度、逻辑性等）。
+- **智能内容增强**: 自动生成内容摘要 (Summary)、提取关键标签 (Tags) 和核心概念 (Concepts)。
+- **前端智能展示**: 信息流卡片展示 AI 摘要、标签和概念；审批流展示 AI 置信度。
+- **Prompt 管理**: 支持 YAML 格式的 Prompt 模板管理和自动同步。
 - 扩展信息源类型: 支持微信公众号 (WECHAT_MP)、B站UP主 (BILIBILI_USER)、掘金专栏 (JUEJIN_COLUMN) 等，集成 RSSHub 适配器
 - 核心管理增强: 知识金字塔节点拆分 (Split)、合并 (Merge) 和跨金字塔关联 (Link) 功能
 - 核心管理增强: 多维度金字塔健康度评估 (Health Evaluation)
