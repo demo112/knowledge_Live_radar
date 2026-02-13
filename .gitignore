@@ -51,6 +51,8 @@ env/
 venv/
 *.db
 *.sqlite3
+.coverage
+chroma_db/
 
 # ide
 .idea/
