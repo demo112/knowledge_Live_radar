@@ -3,17 +3,8 @@
 import { useState, useEffect } from 'react';
 import { approvalApi } from '@/lib/api';
 import { useRouter } from 'next/navigation';
-
-interface Approval {
-  id: string;
-  type: string;
-  status: string;
-  data: any;
-  created_at: string;
-  applicant_id?: string;
-  reason?: string;
-  confidence_score?: number;
-}
+import { Approval } from '@/types';
+import { BrainCircuit } from 'lucide-react';
 
 export default function ApprovalList() {
   const [approvals, setApprovals] = useState<Approval[]>([]);
@@ -81,18 +72,34 @@ export default function ApprovalList() {
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
                       {approval.type}
                     </span>
-                    {approval.confidence_score && (
-                      <span className="text-xs text-muted-foreground">
-                        AI 置信度: {(approval.confidence_score * 100).toFixed(1)}%
+                    {approval.confidence_score !== undefined && (
+                      <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border ${
+                        (approval.confidence_score || 0) >= 0.8 
+                          ? 'bg-green-50 text-green-700 border-green-200' 
+                          : (approval.confidence_score || 0) >= 0.6
+                          ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                          : 'bg-red-50 text-red-700 border-red-200'
+                      }`}>
+                        <BrainCircuit className="w-3 h-3" />
+                        AI 置信度: {Math.round((approval.confidence_score || 0) * 100)}%
                       </span>
                     )}
                   </div>
                   <p className="mt-2 text-sm text-foreground font-medium">
                     {approval.reason || '未提供原因'}
                   </p>
-                   <pre className="mt-2 text-xs bg-muted p-3 rounded-md overflow-auto max-w-2xl font-mono text-muted-foreground">
-                      {JSON.stringify(approval.data, null, 2)}
-                   </pre>
+                   <div className="mt-2 text-xs bg-muted p-3 rounded-md overflow-auto max-w-2xl font-mono text-muted-foreground">
+                      {/* Better formatting for Proposal Data */}
+                      {approval.type === 'ADD_NODE' ? (
+                        <div>
+                          <div><strong>节点名称:</strong> {approval.data.name}</div>
+                          <div><strong>父节点ID:</strong> {approval.data.parent_id}</div>
+                          <div><strong>描述:</strong> {approval.data.description}</div>
+                        </div>
+                      ) : (
+                        <pre>{JSON.stringify(approval.data, null, 2)}</pre>
+                      )}
+                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <button

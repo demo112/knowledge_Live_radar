@@ -145,6 +145,41 @@ graph LR
 | 预计 | 10 分钟 |
 | 依赖 | Task 5, Task 6 |
 
+### 阶段5: 前端展示
+
+#### Task 5: 前端类型定义更新 (Completed)
+
+| 属性 | 值 |
+|------|-----|
+| 文件 | `frontend/src/types/index.ts` |
+| 操作 | 修改 |
+| 内容 | 更新 `ContentItem` 和 `Approval` 接口，增加 AI 相关字段。 |
+| 验证 | 代码检查 |
+| 预计 | 5 分钟 |
+| 依赖 | Task 2, Task 4 |
+
+#### Task 6: 信息流卡片组件升级 (Completed)
+
+| 属性 | 值 |
+|------|-----|
+| 文件 | `frontend/src/app/(dashboard)/feed/page.tsx` |
+| 操作 | 修改 |
+| 内容 | 在信息流卡片中展示 AI 摘要、标签、概念预览、AI 处理状态徽章。 |
+| 验证 | 前端编译通过 |
+| 预计 | 15 分钟 |
+| 依赖 | Task 5 |
+
+#### Task 7: 内容详情/审批页展示 AI 分析结果 (Completed)
+
+| 属性 | 值 |
+|------|-----|
+| 文件 | `frontend/src/components/approval/ApprovalList.tsx` |
+| 操作 | 修改 |
+| 内容 | 在审批列表中展示 AI 置信度（颜色区分）和更清晰的提案数据展示。 |
+| 验证 | 前端编译通过 |
+| 预计 | 15 分钟 |
+| 依赖 | Task 5 |
+
 ## 检查点策略
 
 | 时机 | 操作 |

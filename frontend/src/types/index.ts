@@ -49,6 +49,9 @@ export interface ContentItem {
   publish_time?: string;
   status: string;
   created_at: string;
+  tags?: string[];
+  concepts?: Array<{ name: string; type: string }>;
+  ai_processed?: boolean;
 }
 
 export interface PaginatedResponse<T> {
@@ -198,4 +201,19 @@ export interface DriftProposal {
   status: string;
   data: any;
   created_at: string;
+}
+
+export interface Approval {
+  id: string;
+  type: string;
+  status: string;
+  data: any;
+  created_at: string;
+  applicant_id?: string;
+  reason?: string;
+  confidence_score?: number;
+  review_comment?: string;
+  reviewer_id?: string;
+  reviewed_at?: string;
+  executed_at?: string;
 }
