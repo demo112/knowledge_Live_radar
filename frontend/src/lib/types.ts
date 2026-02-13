@@ -72,7 +72,7 @@ export interface TaskExecution {
 }
 
 export interface ConfigHistory {
-  id: number;
+  id: string;
   config_key: string;
   old_value?: any;
   new_value?: any;

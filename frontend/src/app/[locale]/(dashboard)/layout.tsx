@@ -9,7 +9,9 @@ import {
   Activity, 
   ClipboardCheck, 
   HeartPulse,
-  History
+  History,
+  Repeat,
+  Settings
 } from 'lucide-react';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
@@ -20,8 +22,10 @@ const NAV_ITEMS = [
   { href: '/contents', labelKey: 'contents', icon: FileText },
   { href: '/feed', labelKey: 'feed', icon: Activity },
   { href: '/approval', labelKey: 'approval', icon: ClipboardCheck },
+  { href: '/synonyms', labelKey: 'synonyms', icon: Repeat },
   { href: '/history', labelKey: 'history', icon: History },
   { href: '/health', labelKey: 'health', icon: HeartPulse },
+  { href: '/settings', labelKey: 'settings', icon: Settings },
 ];
 
 export default function DashboardLayout({

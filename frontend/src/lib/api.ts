@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { HealthReport, Hotspot, ScheduledTask, TaskExecution, ConfigHistory, DriftProposal, VisualizationData, MergeRequest, SplitRequest, LinkRequest, NodeRelation, PyramidNode } from '../types';
+import { HealthReport, Hotspot, ScheduledTask, TaskExecution, ConfigHistory, DriftProposal, VisualizationData, MergeRequest, SplitRequest, LinkRequest, NodeRelation, PyramidNode, Synonym, SynonymCreate } from '../types';
 
 const isServer = typeof window === 'undefined';
 // Server-side calls should go directly to the backend
@@ -315,7 +315,7 @@ export const synonymApi = {
     const response = await api.get('/synonyms', { params });
     return response.data;
   },
-  create: async (data: any) => {
+  create: async (data: SynonymCreate) => {
     const response = await api.post('/synonyms', data);
     return response.data;
   },
@@ -324,11 +324,11 @@ export const synonymApi = {
     return response.data;
   },
   delete: async (synonym: string) => {
-    const response = await api.delete(`/synonyms/${synonym}`);
+    const response = await api.delete(`/synonyms/${encodeURIComponent(synonym)}`);
     return response.data;
   },
   getCanonical: async (term: string) => {
-    const response = await api.get(`/synonyms/canonical/${term}`);
+    const response = await api.get(`/synonyms/canonical/${encodeURIComponent(term)}`);
     return response.data;
   }
 };
@@ -404,6 +404,10 @@ export const configApi = {
   },
   update: async (key: string, value: any) => {
     const response = await api.put(`/config/${key}`, { value });
+    return response.data;
+  },
+  testAIConnection: async () => {
+    const response = await api.post('/config/ai/test');
     return response.data;
   }
 };

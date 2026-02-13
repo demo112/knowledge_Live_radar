@@ -79,17 +79,6 @@ async def update_config(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/history", response_model=List[ConfigHistoryRead])
-async def get_config_history(
-    key: Optional[str] = None,
-    limit: int = 50
-):
-    """
-    Get configuration change history.
-    """
-    history = await configuration_service.get_history(key, limit)
-    return history
-
 @router.post("/ai/test")
 async def test_ai_connection():
     """

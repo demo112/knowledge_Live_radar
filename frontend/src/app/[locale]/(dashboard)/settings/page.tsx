@@ -3,23 +3,26 @@
 import React, { useEffect, useState } from 'react';
 import { configApi } from '@/lib/api';
 import { ConfigHistory } from '@/lib/types';
-import { Settings, Save, RotateCcw, History } from 'lucide-react';
+import { Settings, Save, RotateCcw, History, Cpu } from 'lucide-react';
+import AIConfigForm from '@/components/settings/ai-config-form';
 
 export default function SettingsPage() {
   const [configs, setConfigs] = useState<Record<string, any>>({});
   const [history, setHistory] = useState<ConfigHistory[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'general' | 'history'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'ai' | 'history'>('general');
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const configData = await configApi.getAll();
-      setConfigs(configData);
-      
-      const historyData = await configApi.getHistory();
-      setHistory(historyData);
+      if (activeTab === 'general') {
+        const configData = await configApi.getAll();
+        setConfigs(configData);
+      } else if (activeTab === 'history') {
+        const historyData = await configApi.getHistory();
+        setHistory(historyData);
+      }
     } catch (error) {
       console.error("Failed to fetch settings", error);
     } finally {
@@ -29,7 +32,7 @@ export default function SettingsPage() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [activeTab]);
 
   const handleSave = async (key: string, value: any) => {
     setSaving(true);
@@ -83,6 +86,13 @@ export default function SettingsPage() {
              通用配置
            </button>
            <button
+             onClick={() => setActiveTab('ai')}
+             className={`px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2 ${activeTab === 'ai' ? 'bg-blue-100 text-blue-700' : 'text-gray-500 hover:text-gray-700'}`}
+           >
+             <Cpu className="w-4 h-4" />
+             AI 模型
+           </button>
+           <button
              onClick={() => setActiveTab('history')}
              className={`px-3 py-2 rounded-md text-sm font-medium ${activeTab === 'history' ? 'bg-blue-100 text-blue-700' : 'text-gray-500 hover:text-gray-700'}`}
            >
@@ -91,8 +101,10 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {loading ? (
+      {loading && activeTab !== 'ai' ? (
         <div>加载配置中...</div>
+      ) : activeTab === 'ai' ? (
+        <AIConfigForm />
       ) : activeTab === 'general' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {Object.entries(configGroups).map(([group, items]) => (
