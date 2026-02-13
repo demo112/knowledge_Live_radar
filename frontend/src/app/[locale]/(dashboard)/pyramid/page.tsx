@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import Link from 'next/link';
+import {Link} from '@/i18n/routing';
 import { pyramidApi } from '@/lib/api';
 import { Pyramid } from '@/types';
 import { Upload } from 'lucide-react';
