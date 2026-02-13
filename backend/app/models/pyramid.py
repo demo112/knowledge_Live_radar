@@ -45,6 +45,20 @@ class PyramidNode(Base):
     parent: Mapped[Optional["PyramidNode"]] = relationship("PyramidNode", remote_side=[id], back_populates="children")
     children: Mapped[List["PyramidNode"]] = relationship("PyramidNode", back_populates="parent", cascade="all, delete-orphan")
     
+    # Node Relations
+    outgoing_relations: Mapped[List["NodeRelation"]] = relationship(
+        "NodeRelation",
+        foreign_keys="[NodeRelation.source_node_id]",
+        back_populates="source_node",
+        cascade="all, delete-orphan"
+    )
+    incoming_relations: Mapped[List["NodeRelation"]] = relationship(
+        "NodeRelation",
+        foreign_keys="[NodeRelation.target_node_id]",
+        back_populates="target_node",
+        cascade="all, delete-orphan"
+    )
+
     # Many-to-Many relationships defined in other modules
     # source_relations = relationship("SourceNodeRelation", back_populates="node")
     # content_relations = relationship("ContentNodeRelation", back_populates="node")

@@ -4,7 +4,7 @@ from typing import List, Optional, Any
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.repositories.pyramid import PyramidRepository, PyramidNodeRepository
-from app.schemas.pyramid import PyramidCreate, PyramidUpdate, PyramidNodeCreate, PyramidNodeUpdate
+from app.schemas.pyramid import PyramidCreate, PyramidUpdate, PyramidNodeCreate, PyramidNodeUpdate, NodeSplitRequest, NodeMergeRequest
 
 class PyramidService:
     def __init__(self, db: AsyncSession):
@@ -97,6 +97,68 @@ class PyramidService:
         if not node or node.is_deleted:
              raise HTTPException(status_code=404, detail="Node not found")
         return node
+
+    async def delete_node(self, node_id: UUID) -> Any:
+        node = await self.get_node(node_id)
+        # Soft delete descendants
+        await self.node_repo.soft_delete_descendants(node.pyramid_id, node.path)
+        # Soft delete node
+        return await self.node_repo.update(node, {"is_deleted": True})
+
+    async def split_node(self, node_id: UUID, schema: NodeSplitRequest) -> List[Any]:
+        node = await self.get_node(node_id)
+        created_nodes = []
+        for child_schema in schema.children:
+            child_schema.parent_id = node.id
+            new_node = await self.add_node(node.pyramid_id, child_schema)
+            created_nodes.append(new_node)
+        return created_nodes
+
+    async def merge_nodes(self, pyramid_id: UUID, schema: NodeMergeRequest) -> Any:
+        nodes = []
+        for nid in schema.source_node_ids:
+            node = await self.node_repo.get(nid)
+            if not node or node.pyramid_id != pyramid_id or node.is_deleted:
+                raise HTTPException(status_code=400, detail=f"Node {nid} invalid")
+            nodes.append(node)
+        
+        if not nodes:
+             raise HTTPException(status_code=400, detail="No nodes provided")
+
+        first_node = nodes[0]
+        new_node_data = PyramidNodeCreate(
+            name=schema.new_node_name,
+            description=schema.new_node_description,
+            parent_id=first_node.parent_id
+        )
+        new_node = await self.add_node(pyramid_id, new_node_data)
+        
+        for node in nodes:
+            children = await self.node_repo.get_children(node.id)
+            for child in children:
+                old_child_path = child.path
+                new_child_path_prefix = f"{new_node.path}{child.id}/"
+                level_diff = (new_node.level + 1) - child.level
+                
+                # Update child
+                await self.node_repo.update(child, {
+                    "parent_id": new_node.id,
+                    "path": new_child_path_prefix,
+                    "level": new_node.level + 1
+                })
+                
+                # Update descendants
+                await self.node_repo.update_descendants_path(
+                    pyramid_id,
+                    old_child_path,
+                    new_child_path_prefix,
+                    level_diff
+                )
+        
+        for node in nodes:
+             await self.node_repo.update(node, {"is_deleted": True})
+             
+        return new_node
 
     async def update_node(self, node_id: UUID, schema: PyramidNodeUpdate) -> Any:
         node = await self.get_node(node_id)

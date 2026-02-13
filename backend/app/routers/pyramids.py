@@ -5,7 +5,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.services.pyramid_service import PyramidService
 from app.services.snapshot_service import SnapshotService
-from app.schemas.pyramid import PyramidCreate, PyramidUpdate, PyramidResponse, PyramidDetailResponse, PyramidNodeCreate, PyramidNodeResponse
+from app.services.health_evaluator import HealthEvaluator
+from app.services.visualization_service import VisualizationService
+from app.schemas.pyramid import PyramidCreate, PyramidUpdate, PyramidResponse, PyramidDetailResponse, PyramidNodeCreate, PyramidNodeResponse, NodeMergeRequest
 from app.schemas.common import SuccessResponse, PaginatedResponse, PaginatedData
 from app.schemas.snapshot import SnapshotSummaryResponse
 
@@ -15,6 +17,12 @@ from app.services.template_service import TemplateService
 
 def get_service(db: AsyncSession = Depends(get_db)) -> PyramidService:
     return PyramidService(db)
+
+def get_health_evaluator(db: AsyncSession = Depends(get_db)) -> HealthEvaluator:
+    return HealthEvaluator(db)
+
+def get_visualization_service(db: AsyncSession = Depends(get_db)) -> VisualizationService:
+    return VisualizationService(db)
 
 def get_template_service(service: PyramidService = Depends(get_service)) -> TemplateService:
     return TemplateService(service)
@@ -84,6 +92,31 @@ async def delete_pyramid(
 ):
     pyramid = await service.delete_pyramid(id)
     return SuccessResponse(data=pyramid)
+
+@router.get("/{id}/health", response_model=SuccessResponse[dict])
+async def get_pyramid_health(
+    id: UUID,
+    evaluator: HealthEvaluator = Depends(get_health_evaluator)
+):
+    result = await evaluator.evaluate_pyramid(id)
+    return SuccessResponse(data=result)
+
+@router.get("/{id}/visualization", response_model=SuccessResponse[dict])
+async def get_pyramid_visualization(
+    id: UUID,
+    viz_service: VisualizationService = Depends(get_visualization_service)
+):
+    result = await viz_service.get_react_flow_data(id)
+    return SuccessResponse(data=result)
+
+@router.post("/{id}/merge-nodes", response_model=SuccessResponse[PyramidNodeResponse])
+async def merge_nodes(
+    id: UUID,
+    schema: NodeMergeRequest,
+    service: PyramidService = Depends(get_service)
+):
+    result = await service.merge_nodes(id, schema)
+    return SuccessResponse(data=result)
 
 @router.post("/{id}/nodes", response_model=SuccessResponse[PyramidNodeResponse], status_code=status.HTTP_201_CREATED)
 async def add_node(

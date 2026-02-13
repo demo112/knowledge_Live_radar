@@ -5,6 +5,9 @@
 ## [Unreleased]
 
 ### Added
+- 核心管理增强: 知识金字塔节点拆分 (Split)、合并 (Merge) 和跨金字塔关联 (Link) 功能
+- 核心管理增强: 多维度金字塔健康度评估 (Health Evaluation)
+- 核心管理增强: ReactFlow 兼容的金字塔可视化数据接口 (Visualization)
 - 初始化项目文档结构
 - 创建需求文档 (requirements.md)
 - 创建需求分析 (requirement-analysis.md)

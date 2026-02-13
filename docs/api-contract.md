@@ -75,7 +75,31 @@
 - **Body**: `{ new_parent_id: string }`
 - **Response**: `PyramidNode`
 
+### 拆分节点
+- **POST** `/nodes/{id}/split`
+- **Body**: `{ sub_nodes: NodeCreate[], delete_original: boolean }`
+- **Response**: `PyramidNode[]`
+
 ### 合并节点
+- **POST** `/pyramids/{id}/merge`
+- **Body**: `{ source_node_ids: string[], target_node_name: string, target_node_content: string, strategy: 'create_new'|'merge_to_first' }`
+- **Response**: `PyramidNode`
+
+### 关联节点
+- **POST** `/nodes/{id}/link`
+- **Body**: `{ target_node_id: string, relation_type: string }`
+- **Response**: `NodeRelation`
+
+### 获取金字塔健康度
+- **GET** `/pyramids/{id}/health`
+- **Response**: `{ score: number, details: HealthMetrics, suggestions: string[] }`
+
+### 获取金字塔可视化数据
+- **GET** `/pyramids/{id}/visualization`
+- **Query**: `depth`, `layout`
+- **Response**: `{ nodes: ReactFlowNode[], edges: ReactFlowEdge[] }`
+
+### 合并节点 (Legacy)
 - **POST** `/nodes/merge`
 - **Body**: `{ source_ids: string[], target_name: string }`
 - **Response**: `ChangeProposal` (合并操作需要审批)

@@ -4,6 +4,7 @@ from sqlalchemy import select, update, func
 from sqlalchemy.orm import selectinload
 from app.repositories.base import BaseRepository
 from app.models.pyramid import Pyramid, PyramidNode
+from app.models.node_relation import NodeRelation
 
 class PyramidRepository(BaseRepository[Pyramid]):
     def __init__(self, db):
@@ -56,3 +57,15 @@ class PyramidNodeRepository(BaseRepository[PyramidNode]):
             .values(is_deleted=True)
         )
         await self.db.execute(query)
+
+class NodeRelationRepository(BaseRepository[NodeRelation]):
+    def __init__(self, db):
+        super().__init__(NodeRelation, db)
+    
+    async def get_relations(self, node_id: UUID) -> List[NodeRelation]:
+        query = select(NodeRelation).where(
+            (NodeRelation.source_node_id == node_id) | 
+            (NodeRelation.target_node_id == node_id)
+        )
+        result = await self.db.execute(query)
+        return result.scalars().all()

@@ -26,6 +26,32 @@ class PyramidNodeMove(BaseModel):
     new_parent_id: Optional[UUID] = None
     new_sort_order: Optional[int] = None
 
+# Node Relation Schemas
+class NodeRelationBase(BaseModel):
+    target_node_id: UUID
+    relation_type: str = "related"
+
+class NodeRelationCreate(NodeRelationBase):
+    pass
+
+class NodeRelationResponse(NodeRelationBase):
+    id: UUID
+    source_node_id: UUID
+    
+    model_config = {"from_attributes": True}
+
+# Node Operation Schemas
+class NodeSplitRequest(BaseModel):
+    children: List[PyramidNodeCreate]
+
+class NodeMergeRequest(BaseModel):
+    source_node_ids: List[UUID]
+    new_node_name: str
+    new_node_description: Optional[str] = None
+
+class NodeLinkRequest(NodeRelationCreate):
+    pass
+
 class PyramidNodeResponse(PyramidNodeBase):
     id: UUID
     pyramid_id: UUID
