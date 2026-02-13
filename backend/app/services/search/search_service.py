@@ -158,12 +158,66 @@ class SearchService:
         return text
 
     def _parse_boolean_query(self, query: str):
-        # Very basic parser
-        # Converts "A AND B" -> and_(...)
-        # This is a placeholder for a real parser
-        # Implementing a robust boolean parser is non-trivial.
-        # Fallback to simple split for now.
-        return None 
+        """
+        Parse boolean query with AND, OR, NOT operators.
+        Examples:
+          "LLM AND agent" -> title/summary contains both
+          "LLM OR agent" -> title/summary contains either
+          "LLM NOT advertisement" -> contains LLM but not advertisement
+        """
+        try:
+            query = query.strip()
+            if not query:
+                return None
+
+            # Handle NOT first: "A NOT B" -> A and not B
+            if " NOT " in query:
+                parts = query.split(" NOT ", 1)
+                include_part = parts[0].strip()
+                exclude_part = parts[1].strip()
+                
+                include_filter = self._parse_boolean_query(include_part)
+                exclude_filter = or_(
+                    ContentItem.title.ilike(f"%{exclude_part}%"),
+                    ContentItem.summary.ilike(f"%{exclude_part}%")
+                )
+                
+                if include_filter is not None:
+                    return and_(include_filter, ~exclude_filter)
+                return ~exclude_filter
+
+            # Handle OR: "A OR B"
+            if " OR " in query:
+                parts = [p.strip() for p in query.split(" OR ")]
+                conditions = []
+                for part in parts:
+                    if part:
+                        conditions.append(or_(
+                            ContentItem.title.ilike(f"%{part}%"),
+                            ContentItem.summary.ilike(f"%{part}%")
+                        ))
+                return or_(*conditions) if conditions else None
+
+            # Handle AND: "A AND B"
+            if " AND " in query:
+                parts = [p.strip() for p in query.split(" AND ")]
+                conditions = []
+                for part in parts:
+                    if part:
+                        conditions.append(or_(
+                            ContentItem.title.ilike(f"%{part}%"),
+                            ContentItem.summary.ilike(f"%{part}%")
+                        ))
+                return and_(*conditions) if conditions else None
+
+            # No operator — treat as simple keyword
+            return or_(
+                ContentItem.title.ilike(f"%{query}%"),
+                ContentItem.summary.ilike(f"%{query}%")
+            )
+        except Exception as e:
+            logger.error(f"Failed to parse boolean query '{query}': {e}")
+            return None
 
     async def suggest(self, prefix: str, limit: int = 5) -> List[str]:
         # Suggest from history or existing titles

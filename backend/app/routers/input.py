@@ -100,7 +100,7 @@ async def submit_batch_files(
                 os.remove(path)
             except:
                 pass
-        raise HTTPException(status_code=500, detail=f"Failed to prepare batch upload: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"批量上传准备失败: {str(e)}")
     
     return {"success": True, "data": {"task_id": str(task.id), "status": task.status}}
 
@@ -111,11 +111,11 @@ async def get_batch_status(task_id: str, db: AsyncSession = Depends(get_db)):
     try:
         uuid_id = uuid.UUID(task_id)
     except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid task ID format")
+        raise HTTPException(status_code=400, detail="任务 ID 格式无效")
         
     task = await processor.get_task(uuid_id)
     if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
+        raise HTTPException(status_code=404, detail="未找到任务")
         
     return {
         "success": True, 

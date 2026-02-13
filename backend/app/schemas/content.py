@@ -33,3 +33,8 @@ class ContentResponse(ContentBase):
     created_at: datetime
     
     model_config = {"from_attributes": True}
+
+class ContentWithRelationResponse(ContentResponse):
+    relation_source: str
+    relation_confidence: float
+    relation_created_at: datetime

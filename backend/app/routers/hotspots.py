@@ -43,7 +43,7 @@ async def get_hotspot(
     result = await db.execute(select(Hotspot).where(Hotspot.id == id))
     hotspot = result.scalars().first()
     if not hotspot:
-        raise HTTPException(status_code=404, detail="Hotspot not found")
+        raise HTTPException(status_code=404, detail="未找到热点")
     return hotspot
 
 @router.put("/{id}/status")
@@ -58,7 +58,7 @@ async def update_hotspot_status(
     result = await db.execute(select(Hotspot).where(Hotspot.id == id))
     hotspot = result.scalars().first()
     if not hotspot:
-        raise HTTPException(status_code=404, detail="Hotspot not found")
+        raise HTTPException(status_code=404, detail="未找到热点")
         
     hotspot.status = status
     await db.commit()

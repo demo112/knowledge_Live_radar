@@ -49,7 +49,7 @@ async def get_approval(
 ):
     approval = await service.get_approval(id)
     if not approval:
-        raise HTTPException(status_code=404, detail="Approval not found")
+        raise HTTPException(status_code=404, detail="未找到审批提案")
     return SuccessResponse(data=approval)
 
 @router.post("/{id}/review", response_model=SuccessResponse[ApprovalResponse])
@@ -60,7 +60,7 @@ async def review_approval(
 ):
     approval = await service.review_approval(id, schema)
     if not approval:
-        raise HTTPException(status_code=404, detail="Approval not found")
+        raise HTTPException(status_code=404, detail="未找到审批提案")
     return SuccessResponse(data=approval)
 
 @router.post("/{id}/execute", response_model=SuccessResponse[bool])
@@ -72,7 +72,7 @@ async def execute_approval(
     executor = DecisionExecutor(db)
     success = await executor.execute_approval(id, user_id)
     if not success:
-        raise HTTPException(status_code=400, detail="Execution failed. Ensure approval is approved and valid.")
+        raise HTTPException(status_code=400, detail="执行失败。请确保提案已批准且有效。")
     return SuccessResponse(data=success)
 
 @router.get("/{id}/impact", response_model=SuccessResponse[dict])
@@ -83,7 +83,7 @@ async def get_approval_impact(
     service = ApprovalService(db)
     approval = await service.get_approval(id)
     if not approval:
-        raise HTTPException(status_code=404, detail="Approval not found")
+        raise HTTPException(status_code=404, detail="未找到审批提案")
         
     analyzer = ImpactAnalyzer(db)
     impact = await analyzer.analyze_impact(approval)

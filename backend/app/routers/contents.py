@@ -3,8 +3,9 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, status, HTTPException, UploadFile, File, Form
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, desc
+from sqlalchemy.orm import selectinload
 from app.database import get_db
-from app.models.content import ContentItem
+from app.models.content import ContentItem, ContentNodeRelation
 from app.models.approval import Approval
 from app.schemas.common import SuccessResponse, PaginatedResponse, PaginatedData
 from app.schemas.content_input import UrlInput, TextInput, AnalysisRequest
@@ -55,8 +56,36 @@ async def get_content(
     result = await db.execute(select(ContentItem).where(ContentItem.id == id))
     content = result.scalar_one_or_none()
     if not content:
-        raise HTTPException(status_code=404, detail="Content not found")
+        raise HTTPException(status_code=404, detail="未找到内容")
     return SuccessResponse(data=content)
+
+@router.get("/{id}/nodes", response_model=SuccessResponse[List[dict]])
+async def get_content_nodes(
+    id: UUID,
+    db: AsyncSession = Depends(get_db)
+):
+    stmt = (
+        select(ContentNodeRelation)
+        .where(ContentNodeRelation.content_id == id)
+        .options(selectinload(ContentNodeRelation.node))
+    )
+    result = await db.execute(stmt)
+    relations = result.scalars().all()
+    
+    data = []
+    for rel in relations:
+        if not rel.node: continue
+        node_dict = {
+            "id": rel.node.id,
+            "name": rel.node.name,
+            "pyramid_id": rel.node.pyramid_id,
+            "level": rel.node.level,
+            "relation_source": rel.source,
+            "relation_confidence": rel.confidence
+        }
+        data.append(node_dict)
+        
+    return SuccessResponse(data=data)
 
 @router.post("/upload", response_model=SuccessResponse[ContentResponse])
 async def upload_file(
@@ -96,7 +125,7 @@ async def analyze_content(
     try:
         pyramid_id_uuid = UUID(request.pyramid_id)
     except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid pyramid_id format")
+        raise HTTPException(status_code=400, detail="金字塔 ID 格式无效")
         
     proposals = await analyzer.analyze_content(id, pyramid_id_uuid)
     return SuccessResponse(data=proposals)

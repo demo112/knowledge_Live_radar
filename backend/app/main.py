@@ -30,6 +30,7 @@ async def lifespan(app: FastAPI):
     TaskRegistry.register("hotspot_lifecycle", tasks.run_hotspot_lifecycle)
     TaskRegistry.register("drift_detection", tasks.run_drift_detection)
     TaskRegistry.register("strategy_optimization", tasks.run_strategy_optimization)
+    TaskRegistry.register("cluster_discovery", tasks.run_cluster_discovery)
 
     # Startup
     await scheduler_service.start()
@@ -61,6 +62,10 @@ async def lifespan(app: FastAPI):
     # 6. Strategy Optimization (Daily at 01:00)
     await scheduler_service.register_task(
         "strategy_optimization", "strategy_optimization", "0 1 * * *"
+    )
+    # 7. Cluster Discovery (Daily at 05:00)
+    await scheduler_service.register_task(
+        "cluster_discovery", "cluster_discovery", "0 5 * * *"
     )
     
     yield

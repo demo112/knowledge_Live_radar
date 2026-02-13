@@ -19,54 +19,48 @@ logger = logging.getLogger(__name__)
 
 async def run_content_crawl():
     """
-    Task: Check and crawl all due sources.
+    Task: Check and crawl all due sources, process and save content.
     """
     logger.info("Task started: Content Crawl")
     async with AsyncSessionLocal() as db:
         try:
-            # Find due sources
-            # Assuming logic: last_checked + interval < now
-            # Or use next_check_time if available. Let's assume standard interval logic.
-            # Using simple iteration for now as I don't see next_check_time in model snippet,
-            # but usually it's there or calculated.
-            # Let's fetch all active sources and check.
+            from app.services.content_processor import content_processor
+            
             result = await db.execute(select(InformationSource).where(InformationSource.is_deleted == False))
             sources = result.scalars().all()
             
             now = datetime.now(timezone.utc)
             
             for source in sources:
-                # Calculate next run time
-                # If check_interval is seconds
                 interval = timedelta(seconds=source.check_interval or 3600)
                 last_checked = source.last_crawled_at or datetime.min.replace(tzinfo=timezone.utc)
                 
                 if (now - last_checked) >= interval:
                     logger.info(f"Crawling source: {source.name}")
                     try:
-                        # Use SourceService to handle crawl + DB updates + content processing
-                        # But SourceService might not be fully implemented for this.
-                        # Let's do a basic crawl here or use a helper.
-                        # Since crawl_engine just fetches, we need to process items.
-                        # For now, let's just fetch to update source status, assuming processing pipeline is triggered separately
-                        # OR, ideally SourceService.process_source(source)
+                        # Use ContentProcessor for full pipeline: fetch → validate → AI enhance → save
+                        job = await content_processor.process_source(source, db)
                         
-                        # Let's try to find SourceService or use CrawlEngine directly and just log success.
-                        # Real implementation needs to save content.
-                        items = await crawl_engine.crawl_source(source)
-                        
-                        # Update success
+                        # Update source metadata
                         source.last_crawled_at = now
                         source.error_count = 0
-                        source.status = "active"
+                        if source.status == "error":
+                            source.status = "active"
                         
-                        # TODO: Save items to DB (ContentService)
+                        logger.info(f"Source '{source.name}' crawl completed: job {job.id}, status={job.status}")
                         
                     except Exception as e:
                         logger.error(f"Failed to crawl {source.name}: {e}")
                         source.error_count = (source.error_count or 0) + 1
                         if source.error_count > 3:
                             source.status = "error"
+                            # Send health alert for failing source
+                            from app.services.notification_service import notification_service
+                            await notification_service.notify_source_health_alert(
+                                source_name=source.name,
+                                source_id=str(source.id),
+                                error_count=source.error_count,
+                            )
                             
                     db.add(source)
                     
@@ -105,13 +99,20 @@ async def run_source_health_check():
 
 async def run_system_health_detection():
     """
-    Task: Run full system health detection.
+    Task: Run full system health detection and send notification.
     """
     logger.info("Task started: System Health Detection")
     async with AsyncSessionLocal() as db:
         try:
             detector = HealthDetector(db)
-            await detector.run_full_detection()
+            report = await detector.run_full_detection()
+            
+            # Send notification with health results
+            from app.services.notification_service import notification_service
+            await notification_service.notify_system_health(
+                overall_score=report.overall_score,
+                issues_count=len(report.issues) if report.issues else 0,
+            )
         except Exception as e:
             logger.error(f"Task failed: System Health Detection: {e}")
 
@@ -123,7 +124,7 @@ async def run_hotspot_lifecycle():
     async with AsyncSessionLocal() as db:
         try:
             manager = HotspotManager(db)
-            await manager.update_lifecycle()
+            await manager.update_hotspot_stats()
         except Exception as e:
             logger.error(f"Task failed: Hotspot Lifecycle Update: {e}")
 
@@ -157,3 +158,25 @@ async def run_strategy_optimization():
             await adapter.optimize_strategies()
         except Exception as e:
             logger.error(f"Task failed: Strategy Optimization: {e}")
+
+async def run_cluster_discovery():
+    """
+    Task: Discover new topic clusters from unlinked content for all pyramids.
+    """
+    logger.info("Task started: Cluster Discovery")
+    async with AsyncSessionLocal() as db:
+        try:
+            from app.services.evolution_engine import EvolutionEngine
+            engine = EvolutionEngine(db)
+
+            result = await db.execute(select(Pyramid))
+            pyramids = result.scalars().all()
+
+            for pyramid in pyramids:
+                try:
+                    await engine.discover_clusters(pyramid.id)
+                except Exception as e:
+                    logger.error(f"Cluster discovery failed for pyramid {pyramid.id}: {e}")
+
+        except Exception as e:
+            logger.error(f"Task failed: Cluster Discovery: {e}")

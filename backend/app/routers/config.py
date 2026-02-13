@@ -38,7 +38,7 @@ async def get_config(key: str):
     """
     value = configuration_service.get(key)
     if value is None:
-        raise HTTPException(status_code=404, detail="Config key not found")
+        raise HTTPException(status_code=404, detail="配置项未找到")
     return {"key": key, "value": value}
 
 @router.put("/{key}")

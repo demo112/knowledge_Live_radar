@@ -32,7 +32,7 @@ async def list_templates():
 async def get_template(id: str):
     template = await prompt_manager.get_template(id)
     if not template:
-        raise HTTPException(status_code=404, detail="Template not found")
+        raise HTTPException(status_code=404, detail="未找到模板")
     return template
 
 @router.post("/{id}/versions")

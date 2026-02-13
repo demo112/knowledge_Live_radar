@@ -7,6 +7,7 @@ from sqlalchemy import select
 
 from app.models.source import InformationSource
 from app.models.crawl_job import CrawlJob
+from app.config import settings as app_settings
 
 logger = logging.getLogger(__name__)
 
@@ -69,9 +70,9 @@ class StrategyAdapter:
         
         original_interval = source.check_interval
         
-        # Rule 1: High failure rate (> 40%) -> Backoff significantly
-        if failed_jobs / total_jobs >= 0.4:
-            new_interval = min(source.check_interval * 2, self.MAX_INTERVAL)
+        # Rule 1: High failure rate -> Backoff significantly
+        if failed_jobs / total_jobs >= app_settings.STRATEGY_FAILURE_THRESHOLD:
+            new_interval = min(source.check_interval * app_settings.STRATEGY_BACKOFF_FACTOR, self.MAX_INTERVAL)
             if int(new_interval) != original_interval:
                 logger.info(f"Backing off source {source.name} due to errors ({failed_jobs}/{total_jobs}): {original_interval} -> {int(new_interval)}")
                 source.check_interval = int(new_interval)
@@ -87,20 +88,16 @@ class StrategyAdapter:
         total_new = sum(j.items_new for j in completed_jobs)
         
         # Rule 2: Low Freshness -> Slow down
-        # If we successfully fetched items (or checked), but found NO new items consistently
-        # Note: items_fetched might be 0 if RSS didn't return anything or page was empty.
-        # But if items_fetched > 0 and items_new == 0, it means we are checking too often.
         if total_fetched > 0 and total_new == 0:
-             new_interval = min(source.check_interval * 1.5, self.MAX_INTERVAL)
+             new_interval = min(source.check_interval * app_settings.STRATEGY_SLOWDOWN_FACTOR, self.MAX_INTERVAL)
              if int(new_interval) != original_interval:
                 logger.info(f"Slowing down source {source.name} due to no new content: {original_interval} -> {int(new_interval)}")
                 source.check_interval = int(new_interval)
                 return True
 
         # Rule 3: High Freshness -> Speed up
-        # Ratio > 0.5 (half of what we fetch is new) implies we might be missing things in between
-        if total_fetched > 0 and (total_new / total_fetched) > 0.5:
-             new_interval = max(source.check_interval * 0.8, self.MIN_INTERVAL)
+        if total_fetched > 0 and (total_new / total_fetched) > app_settings.STRATEGY_FRESHNESS_THRESHOLD:
+             new_interval = max(source.check_interval * app_settings.STRATEGY_SPEEDUP_FACTOR, self.MIN_INTERVAL)
              if int(new_interval) != original_interval:
                 logger.info(f"Speeding up source {source.name} due to high freshness: {original_interval} -> {int(new_interval)}")
                 source.check_interval = int(new_interval)

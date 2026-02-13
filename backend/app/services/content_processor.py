@@ -33,7 +33,7 @@ class ContentProcessor:
             job.items_fetched = len(items)
             
             # Initialize validators
-            hard_validator = HardValidator()
+            hard_validator = HardValidator(db=session)
             soft_validator = SoftValidator()
             cross_validator = CrossValidator(session)
             

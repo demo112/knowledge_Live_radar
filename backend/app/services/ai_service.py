@@ -21,27 +21,41 @@ class AIService:
         
         self.prompt_manager = PromptManager()
 
-    async def chat_completion(self, messages: List[Dict[str, str]], model: str = "deepseek-ai/DeepSeek-V3", temperature: float = 0.3) -> Optional[str]:
+    async def chat_completion(self, messages: List[Dict[str, str]], model: str = "deepseek-ai/DeepSeek-V3", temperature: float = 0.3, max_retries: int = 3) -> Optional[str]:
         """
-        Send a chat completion request to the AI model.
+        Send a chat completion request with exponential backoff retry.
         """
         if not self.client:
             logger.error("AI Client not initialized. Cannot perform chat completion.")
             return None
         
-        try:
-            logger.info(f"Sending request to AI model: {model}")
-            response = await self.client.chat.completions.create(
-                model=model,
-                messages=messages,
-                temperature=temperature
-            )
-            content = response.choices[0].message.content
-            logger.info("AI request successful")
-            return content
-        except Exception as e:
-            logger.error(f"AI Service Error: {str(e)}")
-            return None
+        import asyncio
+        
+        for attempt in range(max_retries):
+            try:
+                logger.info(f"Sending request to AI model: {model} (attempt {attempt + 1}/{max_retries})")
+                response = await self.client.chat.completions.create(
+                    model=model,
+                    messages=messages,
+                    temperature=temperature
+                )
+                content = response.choices[0].message.content
+                logger.info("AI request successful")
+                return content
+            except Exception as e:
+                error_str = str(e)
+                is_retryable = any(kw in error_str.lower() for kw in ["timeout", "rate", "429", "500", "502", "503", "connection"])
+                
+                if not is_retryable or attempt == max_retries - 1:
+                    logger.error(f"AI Service Error (final): {error_str}")
+                    return None
+                
+                delay = (2 ** attempt) * 1.0  # 1s, 2s, 4s
+                if "429" in error_str or "rate" in error_str.lower():
+                    delay = (3 ** attempt) * 1.0  # More aggressive backoff for rate limits
+                
+                logger.warning(f"AI Service Error (retrying in {delay}s): {error_str}")
+                await asyncio.sleep(delay)
 
     def _parse_json(self, text: str) -> Dict[str, Any]:
         """Extract and parse JSON from text."""

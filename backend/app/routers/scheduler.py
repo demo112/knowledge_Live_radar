@@ -63,7 +63,7 @@ async def get_task(
     result = await db.execute(select(ScheduledTask).where(ScheduledTask.id == task_id))
     task = result.scalars().first()
     if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
+        raise HTTPException(status_code=404, detail="未找到任务")
     return task
 
 @router.post("/tasks/{task_id}/trigger")
@@ -77,8 +77,8 @@ async def trigger_task(
     scheduler = SchedulerService()
     success = await scheduler.trigger_task(task_id)
     if not success:
-        raise HTTPException(status_code=400, detail="Failed to trigger task")
-    return {"status": "triggered", "message": "Task triggered successfully"}
+        raise HTTPException(status_code=400, detail="触发任务失败")
+    return {"status": "triggered", "message": "任务触发成功"}
 
 @router.put("/tasks/{task_id}/pause")
 async def pause_task(
@@ -91,8 +91,8 @@ async def pause_task(
     scheduler = SchedulerService()
     success = await scheduler.pause_task(task_id)
     if not success:
-        raise HTTPException(status_code=400, detail="Failed to pause task")
-    return {"status": "paused", "message": "Task paused"}
+        raise HTTPException(status_code=400, detail="暂停任务失败")
+    return {"status": "paused", "message": "任务已暂停"}
 
 @router.put("/tasks/{task_id}/resume")
 async def resume_task(
@@ -105,8 +105,8 @@ async def resume_task(
     scheduler = SchedulerService()
     success = await scheduler.resume_task(task_id)
     if not success:
-        raise HTTPException(status_code=400, detail="Failed to resume task")
-    return {"status": "resumed", "message": "Task resumed"}
+        raise HTTPException(status_code=400, detail="恢复任务失败")
+    return {"status": "resumed", "message": "任务已恢复"}
 
 @router.get("/executions", response_model=List[TaskExecutionRead])
 async def list_executions(

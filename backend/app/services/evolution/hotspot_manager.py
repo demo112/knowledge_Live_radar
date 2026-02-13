@@ -4,7 +4,8 @@ from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, update
+from sqlalchemy import select, func, update, String
+from sqlalchemy import String as sa_text_type
 from app.models.hotspot import Hotspot, HotspotStatus
 from app.models.content import ContentItem
 
@@ -118,22 +119,34 @@ class HotspotManager:
     async def _count_mentions(self, topic: str, start_date: datetime, end_date: datetime) -> int:
         """
         Count mentions of a topic in content items within a date range.
+        Uses a database-level JSON/text filter instead of loading all items into memory.
+        For PostgreSQL this uses JSON containment; for SQLite it falls back to text LIKE.
         """
-        # Fetch content items in range
-        stmt = select(ContentItem).where(
+        from app.config import settings
+
+        base_filter = [
             ContentItem.publish_time >= start_date,
-            ContentItem.publish_time < end_date
-        )
+            ContentItem.publish_time < end_date,
+        ]
+
+        if "postgresql" in settings.DATABASE_URL:
+            # PostgreSQL: use JSON array containment operator via raw text
+            from sqlalchemy import text, literal_column
+            stmt = (
+                select(func.count(ContentItem.id))
+                .where(*base_filter)
+                .where(ContentItem.tags.cast(sa_text_type).contains(f'"{topic}"'))
+            )
+        else:
+            # SQLite / fallback: tags stored as JSON text, use LIKE
+            stmt = (
+                select(func.count(ContentItem.id))
+                .where(*base_filter)
+                .where(ContentItem.tags.cast(String).like(f'%"{topic}"%'))
+            )
+
         result = await self.db.execute(stmt)
-        items = result.scalars().all()
-        
-        count = 0
-        for item in items:
-            # Check tags
-            if item.tags and isinstance(item.tags, list):
-                 if topic in item.tags:
-                     count += 1
-        return count
+        return result.scalar() or 0
 
     def _update_status(self, hotspot: Hotspot, recent_count: int, now: datetime):
         """

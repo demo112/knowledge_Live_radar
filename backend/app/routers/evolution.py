@@ -29,7 +29,7 @@ async def classify_content(
     content = result.scalar_one_or_none()
     
     if not content:
-        raise HTTPException(status_code=404, detail="Content not found")
+        raise HTTPException(status_code=404, detail="未找到内容")
         
     count = await engine.auto_classify_content(content)
     return SuccessResponse(data=count)

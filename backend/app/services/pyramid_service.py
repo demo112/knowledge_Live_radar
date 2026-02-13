@@ -19,13 +19,13 @@ class PyramidService:
     async def get_pyramid(self, id: UUID) -> Any:
         pyramid = await self.pyramid_repo.get(id)
         if not pyramid or pyramid.is_deleted:
-            raise HTTPException(status_code=404, detail="Pyramid not found")
+            raise HTTPException(status_code=404, detail="未找到金字塔")
         return pyramid
 
     async def get_pyramid_details(self, id: UUID) -> Any:
         pyramid = await self.pyramid_repo.get_with_nodes(id)
         if not pyramid or pyramid.is_deleted:
-            raise HTTPException(status_code=404, detail="Pyramid not found")
+            raise HTTPException(status_code=404, detail="未找到金字塔")
         return pyramid
 
     async def get_all_pyramids(self, skip: int = 0, limit: int = 100) -> List[Any]:
@@ -75,9 +75,9 @@ class PyramidService:
         if schema.parent_id:
             parent = await self.node_repo.get(schema.parent_id)
             if not parent:
-                raise HTTPException(status_code=404, detail="Parent node not found")
+                raise HTTPException(status_code=404, detail="未找到父节点")
             if parent.pyramid_id != pyramid_id:
-                raise HTTPException(status_code=400, detail="Parent node belongs to different pyramid")
+                raise HTTPException(status_code=400, detail="父节点属于不同的金字塔")
             
             data["level"] = parent.level + 1
             # Path format: /parent_path/parent_id/
@@ -95,7 +95,7 @@ class PyramidService:
     async def get_node(self, node_id: UUID) -> Any:
         node = await self.node_repo.get(node_id)
         if not node or node.is_deleted:
-             raise HTTPException(status_code=404, detail="Node not found")
+             raise HTTPException(status_code=404, detail="未找到节点")
         return node
 
     async def delete_node(self, node_id: UUID) -> Any:
@@ -119,11 +119,11 @@ class PyramidService:
         for nid in schema.source_node_ids:
             node = await self.node_repo.get(nid)
             if not node or node.pyramid_id != pyramid_id or node.is_deleted:
-                raise HTTPException(status_code=400, detail=f"Node {nid} invalid")
+                raise HTTPException(status_code=400, detail=f"节点 {nid} 无效")
             nodes.append(node)
         
         if not nodes:
-             raise HTTPException(status_code=400, detail="No nodes provided")
+             raise HTTPException(status_code=400, detail="未提供节点")
 
         first_node = nodes[0]
         new_node_data = PyramidNodeCreate(
@@ -196,7 +196,7 @@ class PyramidService:
             old_prefix = f"{old_path}{node.id}/" if old_path != "/" else f"/{node.id}/"
 
             if new_parent_id == node.id:
-                 raise HTTPException(status_code=400, detail="Cannot move node to itself")
+                 raise HTTPException(status_code=400, detail="不能移动节点到自身")
 
             new_parent = await self.get_node(new_parent_id)
             if new_parent.pyramid_id != node.pyramid_id:

@@ -14,14 +14,14 @@ class SourceService:
         # Check if URL exists
         existing = await self.source_repo.get_by_url(schema.url)
         if existing:
-            raise HTTPException(status_code=400, detail="Source with this URL already exists")
+            raise HTTPException(status_code=400, detail="该 URL 的信息源已存在")
         
         return await self.source_repo.create(schema.model_dump())
 
     async def get_source(self, id: UUID) -> Any:
         source = await self.source_repo.get(id)
         if not source:
-            raise HTTPException(status_code=404, detail="Source not found")
+            raise HTTPException(status_code=404, detail="未找到信息源")
         return source
 
     async def get_all_sources(self, skip: int = 0, limit: int = 100) -> List[Any]:

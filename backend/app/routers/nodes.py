@@ -6,6 +6,7 @@ from app.database import get_db
 from app.services.pyramid_service import PyramidService
 from app.services.node_service import NodeService
 from app.schemas.pyramid import PyramidNodeUpdate, PyramidNodeResponse, PyramidNodeMove, NodeSplitRequest, NodeLinkRequest, NodeRelationResponse
+from app.schemas.content import ContentWithRelationResponse
 from app.schemas.common import SuccessResponse
 
 router = APIRouter(prefix="/nodes", tags=["nodes"])
@@ -70,6 +71,43 @@ async def delete_node(
 ):
     node = await service.delete_node(id)
     return SuccessResponse(data=node)
+
+@router.get("/{id}/contents", response_model=SuccessResponse[List[ContentWithRelationResponse]])
+async def get_node_contents(
+    id: UUID,
+    node_service: NodeService = Depends(get_node_service)
+):
+    """Get contents linked to a node"""
+    relations = await node_service.get_node_contents(id)
+    
+    # Map relations to ContentWithRelationResponse
+    data = []
+    for rel in relations:
+        if not rel.content: continue
+        
+        # Merge content fields and relation fields
+        item = rel.content
+        item_dict = {
+            "id": item.id,
+            "title": item.title,
+            "url": item.url,
+            "summary": item.summary,
+            "content_text": item.content_text,
+            "publish_time": item.publish_time,
+            "tags": item.tags,
+            "concepts": item.concepts,
+            "ai_processed": item.ai_processed,
+            "source_id": item.source_id,
+            "status": item.status,
+            "content_hash": item.content_hash,
+            "created_at": item.created_at,
+            "relation_source": rel.source,
+            "relation_confidence": rel.confidence,
+            "relation_created_at": rel.created_at
+        }
+        data.append(item_dict)
+        
+    return SuccessResponse(data=data)
 
 @router.post("/{id}/contents/{content_id}", response_model=SuccessResponse)
 async def link_content(

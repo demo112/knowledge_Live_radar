@@ -48,7 +48,7 @@ async def remove_domain(
     service = WhitelistService(db)
     success = await service.remove_domain(domain_id)
     if not success:
-        raise HTTPException(status_code=404, detail="Domain not found")
+        raise HTTPException(status_code=404, detail="未找到域名")
     return {"success": True}
 
 @router.get("/discovered", response_model=PaginatedDiscovered)

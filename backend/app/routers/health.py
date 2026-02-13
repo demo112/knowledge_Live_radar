@@ -32,7 +32,7 @@ async def get_latest_health_report(db: AsyncSession = Depends(get_db)):
     )
     report = result.scalars().first()
     if not report:
-        raise HTTPException(status_code=404, detail="No health report found")
+        raise HTTPException(status_code=404, detail="未找到健康报告")
     return report
 
 @router.post("/evolution/restructure", response_model=dict)

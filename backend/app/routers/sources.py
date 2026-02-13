@@ -24,7 +24,7 @@ async def crawl_source_manual(
     service = SourceService(db)
     source = await service.get_source(id)
     if not source:
-        raise HTTPException(status_code=404, detail="Source not found")
+        raise HTTPException(status_code=404, detail="未找到信息源")
     
     job = await content_processor.process_source(source, db)
     await lifecycle_manager.update_source_status(source, job, db)
@@ -39,12 +39,12 @@ async def test_source_manual(
     service = SourceService(db)
     source = await service.get_source(id)
     if not source:
-        raise HTTPException(status_code=404, detail="Source not found")
+        raise HTTPException(status_code=404, detail="未找到信息源")
         
     try:
         items = await crawl_engine.crawl_source(source)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Crawl failed: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"抓取失败: {str(e)}")
         
     # Return limited items to avoid huge response
     return SuccessResponse(data={"items": items[:10], "count": len(items)})

@@ -10,6 +10,7 @@ from app.models.pyramid import PyramidNode
 from app.models.content import ContentItem, ContentNodeRelation
 from app.models.approval import Approval
 from app.services.ai_service import ai_service
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -65,12 +66,12 @@ class DriftDetector:
         # or stick to prod values and accept no drift in early days.
         
         now = datetime.now(timezone.utc)
-        threshold_old_end = now - timedelta(days=30)
-        threshold_new_start = now - timedelta(days=7)
+        threshold_old_end = now - timedelta(days=settings.DRIFT_OLD_DAYS)
+        threshold_new_start = now - timedelta(days=settings.DRIFT_NEW_DAYS)
         
-        # Fetch 5 samples of each
-        old_content = await self._fetch_node_content(node.id, None, threshold_old_end, limit=5)
-        new_content = await self._fetch_node_content(node.id, threshold_new_start, None, limit=5)
+        # Fetch samples of each
+        old_content = await self._fetch_node_content(node.id, None, threshold_old_end, limit=settings.DRIFT_SAMPLE_SIZE)
+        new_content = await self._fetch_node_content(node.id, threshold_new_start, None, limit=settings.DRIFT_SAMPLE_SIZE)
         
         if not old_content or not new_content:
             # Cannot compare if missing data on either side
@@ -85,22 +86,22 @@ class DriftDetector:
         Concept Name: {node.name}
         Description: {node.description or 'N/A'}
         
-        Historical Content (Older than 30 days):
+        Historical Content (Older than {settings.DRIFT_OLD_DAYS} days):
         {old_text}
         
-        Recent Content (Last 7 days):
+        Recent Content (Last {settings.DRIFT_NEW_DAYS} days):
         {new_text}
         
         Task: Analyze if the meaning or focus of this concept has shifted (drifted) significantly.
         Does the recent content suggest the concept has evolved into something else or broadened/narrowed significantly compared to historical understanding?
         
         Return 'YES' if significant drift is detected, otherwise 'NO'.
-        If YES, provide a brief reason (max 1 sentence).
+        If YES, provide a brief reason (max 1 sentence) in Chinese.
         """
         
         try:
             response = await ai_service.chat_completion([
-                {"role": "system", "content": "You are a knowledge graph consistency analyzer."},
+                {"role": "system", "content": "You are a knowledge graph consistency analyzer. Reply in Chinese."},
                 {"role": "user", "content": prompt}
             ])
             

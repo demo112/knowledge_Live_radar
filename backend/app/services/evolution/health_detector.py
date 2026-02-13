@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Any, List, Tuple
 
 from sqlalchemy import select, func, desc
@@ -144,7 +144,7 @@ class HealthDetector:
 
     async def evaluate_content_coverage(self) -> Tuple[float, List[Dict[str, Any]]]:
         # Check if we have new content in last 24h
-        yesterday = datetime.utcnow() - timedelta(days=1)
+        yesterday = datetime.now(timezone.utc) - timedelta(days=1)
         count_result = await self.db.execute(
             select(func.count(ContentItem.id)).where(ContentItem.created_at >= yesterday)
         )
@@ -219,7 +219,7 @@ class HealthDetector:
         return stats, issues
 
     async def collect_crawl_stats(self) -> Dict[str, Any]:
-        yesterday = datetime.utcnow() - timedelta(days=1)
+        yesterday = datetime.now(timezone.utc) - timedelta(days=1)
         
         try:
             result = await self.db.execute(

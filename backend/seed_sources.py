@@ -61,6 +61,12 @@ WHITELIST_DOMAINS = [
     {"domain": "36kr.com", "credibility": 65, "reason": "36氪，国内科技媒体"},
     {"domain": "jiqizhixin.com", "credibility": 75, "reason": "机器之心，AI 领域专业中文媒体"},
     {"domain": "qbitai.com", "credibility": 70, "reason": "量子位，AI 领域中文媒体"},
+    {"domain": "infoq.cn", "credibility": 80, "reason": "InfoQ 中国，高质量技术社区"},
+    {"domain": "zhidx.com", "credibility": 70, "reason": "智东西，智能产业媒体"},
+    {"domain": "geekpark.net", "credibility": 70, "reason": "极客公园，科技创新者社区"},
+    {"domain": "research.baidu.com", "credibility": 85, "reason": "百度研究院"},
+    {"domain": "modelscope.cn", "credibility": 90, "reason": "魔搭社区，阿里达摩院推出的模型社区"},
+    {"domain": "csdn.net", "credibility": 60, "reason": "CSDN，老牌技术社区"},
 ]
 
 # ── 信息源 ──────────────────────────────────────────────────
@@ -203,6 +209,41 @@ SOURCES = [
         "check_interval": 3600,
         "config": {"category": "中文媒体", "domain": "AI 综合"},
     },
+    {
+        "name": "36氪 - AI",
+        "type": "RSS",
+        "url": "https://36kr.com/feed",
+        "check_interval": 3600,
+        "config": {"category": "中文媒体", "domain": "科技创投"},
+    },
+    {
+        "name": "InfoQ 中国 - AI",
+        "type": "RSS",
+        "url": "https://www.infoq.cn/feed",
+        "check_interval": 3600,
+        "config": {"category": "中文媒体", "domain": "技术架构/AI"},
+    },
+    {
+        "name": "智东西",
+        "type": "RSS",
+        "url": "https://zhidx.com/feed",
+        "check_interval": 3600,
+        "config": {"category": "中文媒体", "domain": "智能产业"},
+    },
+    {
+        "name": "极客公园",
+        "type": "RSS",
+        "url": "https://www.geekpark.net/rss",
+        "check_interval": 3600,
+        "config": {"category": "中文媒体", "domain": "产品创新"},
+    },
+    {
+        "name": "百度研究院",
+        "type": "RSS",
+        "url": "http://research.baidu.com/Blog/rss",
+        "check_interval": 14400,
+        "config": {"category": "官方博客", "domain": "百度 AI"},
+    },
 
     # ━━ WEB 类 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     {
@@ -235,6 +276,17 @@ SOURCES = [
         "config": {
             "category": "开发工具",
             "domain": "LLM 应用合集",
+        },
+    },
+    {
+        "name": "ModelScope - 热门模型",
+        "type": "WEB",
+        "url": "https://modelscope.cn/models",
+        "check_interval": 14400,
+        "config": {
+            "category": "模型生态",
+            "domain": "魔搭社区",
+            "selector": ".model-card",
         },
     },
 

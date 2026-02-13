@@ -3,6 +3,7 @@ from uuid import UUID
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, delete, func
+from sqlalchemy.orm import selectinload
 
 from app.repositories.pyramid import NodeRelationRepository, PyramidNodeRepository
 from app.schemas.pyramid import NodeLinkRequest, NodeRelationCreate
@@ -22,7 +23,7 @@ class NodeService:
         # Check node exists
         node = await self.node_repo.get(node_id)
         if not node:
-            raise HTTPException(status_code=404, detail="Node not found")
+            raise HTTPException(status_code=404, detail="未找到节点")
 
         # Check if relation already exists
         stmt = select(ContentNodeRelation).where(
@@ -102,9 +103,9 @@ class NodeService:
         target = await self.node_repo.get(schema.target_node_id)
         
         if not source or source.is_deleted:
-            raise HTTPException(status_code=404, detail="Source node not found")
+            raise HTTPException(status_code=404, detail="未找到源节点")
         if not target or target.is_deleted:
-            raise HTTPException(status_code=404, detail="Target node not found")
+            raise HTTPException(status_code=404, detail="未找到目标节点")
             
         # Create relation
         relation_data = NodeRelationCreate(
@@ -118,3 +119,16 @@ class NodeService:
 
     async def get_node_relations(self, node_id: UUID) -> List[Any]:
         return await self.relation_repo.get_relations(node_id)
+
+    async def get_node_contents(self, node_id: UUID) -> List[Any]:
+        """
+        Get contents linked to a node.
+        """
+        stmt = (
+            select(ContentNodeRelation)
+            .where(ContentNodeRelation.node_id == node_id)
+            .options(selectinload(ContentNodeRelation.content))
+        )
+        result = await self.db.execute(stmt)
+        relations = result.scalars().all()
+        return relations
