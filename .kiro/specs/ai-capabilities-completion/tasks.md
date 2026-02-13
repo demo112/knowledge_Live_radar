@@ -262,13 +262,13 @@ graph TD
     - **Property 6: 动态配置读取**
     - **验证需求：2.5, 2.6**
 
-- [~] 3. 实现 AI 连通性测试服务
-  - [~] 3.1 创建 `AITestService` 类
+- [x] 3. 实现 AI 连通性测试服务
+  - [x] 3.1 创建 `AITestService` 类
     - 在 `backend/app/services/ai_test_service.py` 创建文件
     - 实现 `__init__` 方法注入 ConfigurationService
     - _需求：3.1_
   
-  - [~] 3.2 实现 `test_connection()` 方法
+  - [x] 3.2 实现 `test_connection()` 方法
     - 检查 `ai.enabled` 和 `ai.api_key`
     - 使用当前配置创建临时 AsyncOpenAI 客户端
     - 发送简单测试请求（"Hello"，max_tokens=10）
@@ -276,13 +276,13 @@ graph TD
     - 返回成功/失败响应（包含延迟、模型名、错误信息）
     - _需求：3.1, 3.2, 3.3, 3.5_
   
-  - [~] 3.3 创建 AI 配置测试 API 端点
+  - [x] 3.3 创建 AI 配置测试 API 端点
     - 在 `backend/app/routers/config.py` 添加 `POST /api/v1/config/ai/test` 路由
     - 调用 `AITestService.test_connection()`
     - 返回测试结果
     - _需求：3.1_
   
-  - [~] 3.4 编写单元测试验证测试服务
+  - [x] 3.4 编写单元测试验证测试服务
     - 测试成功场景
     - 测试失败场景（无效 API Key、超时）
     - 测试禁用场景
