@@ -288,32 +288,32 @@ graph TD
     - 测试禁用场景
 
 
-- [~] 4. 扩展配置 API 端点
-  - [~] 4.1 创建配置路由文件（如果不存在）
+- [x] 4. 扩展配置 API 端点
+  - [x] 4.1 创建配置路由文件（如果不存在）
     - 在 `backend/app/routers/config.py` 创建路由
     - 定义 APIRouter 前缀 `/api/v1/config`
     - _需求：1.2, 1.3, 1.4_
   
-  - [~] 4.2 实现 `GET /api/v1/config` 端点
+  - [x] 4.2 实现 `GET /api/v1/config` 端点
     - 调用 `configuration_service.get_all()`
     - 对 `ai.api_key` 调用 `get_masked()` 进行脱敏
     - 返回所有配置项
     - _需求：1.2_
   
-  - [~] 4.3 实现 `PUT /api/v1/config/{key}` 端点
+  - [x] 4.3 实现 `PUT /api/v1/config/{key}` 端点
     - 接收配置键和新值
     - 调用 `configuration_service.set(key, value, user_id)`
     - 处理验证错误并返回 422 状态码
     - 返回更新后的配置值
     - _需求：1.3, 1.4_
   
-  - [~] 4.4 实现 `GET /api/v1/config/history` 端点
+  - [x] 4.4 实现 `GET /api/v1/config/history` 端点
     - 支持可选的 `key` 查询参数
     - 调用 `configuration_service.get_history(key, limit)`
     - 返回配置历史记录
     - _需求：1.5_
   
-  - [~] 4.5 编写单元测试验证配置 API
+  - [x] 4.5 编写单元测试验证配置 API
     - 测试获取所有配置
     - 测试 API Key 脱敏
     - 测试配置更新
