@@ -19,10 +19,6 @@ class MockVectorService:
         pass
         
     async def search_similar_nodes(self, query_text, limit=3):
-        # Return a fake match for "Artificial Intelligence"
-        # We need to know the node_id to return it. 
-        # But we don't know it here easily without global state or passing it.
-        # So we will mock this method dynamically in the test.
         return []
     
     async def delete_node_vector(self, *args, **kwargs):
@@ -72,13 +68,6 @@ async def test_evolution_flow(client: AsyncClient, db_session: AsyncSession, mon
     ])
     
     # Patch EvolutionEngine's vector_service
-    # We need to patch the class used in app.routers.evolution or app.services.evolution_engine
-    # Since EvolutionEngine instantiates VectorService in __init__, we need to patch the class before EvolutionEngine is initialized
-    # OR patch the instance on the engine.
-    
-    # But the endpoint uses `get_evolution_engine` dependency which creates a new instance.
-    # So we should patch `app.services.evolution_engine.VectorService` class.
-    
     monkeypatch.setattr("app.services.evolution_engine.VectorService", lambda: mock_vector_service)
     
     # 4. Call Auto-classify API
@@ -107,7 +96,16 @@ async def test_evolution_flow(client: AsyncClient, db_session: AsyncSession, mon
     response = await client.post(f"/api/v1/nodes/{node_id}/contents/{content_id}")
     assert response.status_code == 200
     
-    # 7. Test Unlink API
+    # 7. Test Get Node Contents API
+    response = await client.get(f"/api/v1/nodes/{node_id}/contents")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["success"] is True
+    assert len(data["data"]) == 1
+    assert data["data"][0]["id"] == str(content_id)
+    assert data["data"][0]["relation_source"] == "ai_auto"
+    
+    # 8. Test Unlink API
     response = await client.delete(f"/api/v1/nodes/{node_id}/contents/{content_id}")
     assert response.status_code == 200
     

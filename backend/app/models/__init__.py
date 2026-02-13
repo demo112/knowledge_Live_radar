@@ -1,4 +1,5 @@
 from .pyramid import Pyramid, PyramidNode
+from .node_relation import NodeRelation
 from .source import InformationSource, SourceNodeRelation
 from .content import ContentItem, ContentNodeRelation, ValidationResult
 from .crawl_job import CrawlJob

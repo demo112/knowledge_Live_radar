@@ -8,16 +8,25 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 
+class DummyEmbeddingFunction(embedding_functions.EmbeddingFunction):
+    def __call__(self, texts: List[str]) -> List[List[float]]:
+        # Return random vectors of dimension 384 (MiniLM-L6-v2 dim)
+        import random
+        return [[random.random() for _ in range(384)] for _ in texts]
+
 class VectorService:
     def __init__(self):
         try:
             self.client = chromadb.PersistentClient(path=settings.VECTOR_DB_PATH)
             
-            # Use default embedding function (all-MiniLM-L6-v2)
-            # This might require downloading the model on first run
-            self.embedding_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
-                model_name=settings.EMBEDDING_MODEL
-            )
+            if settings.EMBEDDING_MODEL == "dummy":
+                self.embedding_fn = DummyEmbeddingFunction()
+            else:
+                # Use default embedding function (all-MiniLM-L6-v2)
+                # This might require downloading the model on first run
+                self.embedding_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
+                    model_name=settings.EMBEDDING_MODEL
+                )
             
             self.node_collection = self.client.get_or_create_collection(
                 name="nodes",
