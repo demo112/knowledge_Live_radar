@@ -14,7 +14,10 @@ SQLALCHEMY_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 @pytest_asyncio.fixture(autouse=True)
 async def mock_sleep():
     """Globally disable random sleep in RequestUtils for all tests."""
-    with patch("app.services.fetchers.request_utils.RequestUtils.random_sleep", new_callable=lambda: lambda *args, **kwargs: None):
+    async def _mock_sleep(*args, **kwargs):
+        pass
+        
+    with patch("app.services.fetchers.request_utils.RequestUtils.random_sleep", side_effect=_mock_sleep):
         yield
 
 @pytest_asyncio.fixture
