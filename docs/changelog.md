@@ -5,6 +5,7 @@
 ## [Unreleased]
 
 ### Added
+- **AI 配置测试**: 支持分别测试本地模型和云端模型的连通性。
 - **内容代谢 (Content Metabolism)**:
   - 实现基于质量、时间和热度的多维度评分 (Metabolism Score)
   - 实现 ACTIVE -> DEPRECATED -> ARCHIVED -> DELETED 的全生命周期流转

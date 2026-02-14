@@ -190,7 +190,49 @@
 - **GET** `/health/sources/{id}`
 - **Response**: `SourceHealthReport`
 
-## 7. 内容管理 (Content Management)
+## 7. 系统配置 (Configuration)
+
+### 获取所有配置
+- **GET** `/config`
+- **Response**: `{ [key: string]: any }` (敏感信息已脱敏)
+
+### 更新配置
+- **PUT** `/config/{key}`
+- **Body**: `{ value: any }`
+- **Response**: `{ status: 'success', key: string, value: any }`
+
+### 获取配置历史
+- **GET** `/config/history`
+- **Response**: `ConfigHistory[]`
+
+### 测试 AI 连接
+- **POST** `/config/ai/test`
+- **Query**: `target` (可选, "auto"|"local"|"cloud", 默认 "auto")
+- **Response**: `{ success: boolean, message: string, latency_ms?: number, model?: string }`
+
+## 8. 进化与分类 (Evolution)
+
+### 触发批量自动分类
+- **POST** `/evolution/classify/batch`
+- **Body**: `{ limit?: number }` (可选, 默认 10)
+- **Response**: `{ success: true, data: { task_id: string, status: string } }`
+
+### 触发单条内容分类
+- **POST** `/evolution/classify/{content_id}`
+- **Response**: `{ success: true, data: number }` (关联节点数量)
+
+## 9. 快照与回滚 (Snapshots)
+
+### 创建快照
+- **POST** `/pyramids/{id}/snapshots`
+- **Body**: `{ reason: string }`
+- **Response**: `Snapshot`
+
+### 回滚快照
+- **POST** `/pyramids/{id}/rollback/{snapshot_id}`
+- **Response**: `{ success: true, restored_nodes: number, restored_relations: number }`
+
+## 10. 内容管理 (Content Management)
 
 ### 触发新陈代谢
 - **POST** `/content-management/metabolism/run`
