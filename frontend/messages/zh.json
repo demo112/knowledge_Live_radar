@@ -125,7 +125,7 @@
             "title": "变更历史",
             "empty": "暂无历史记录。",
             "create_snapshot": "创建快照",
-            "reason": "备注",
+            "reason": "快照原因",
             "reason_placeholder": "例如：重构前备份",
             "rollback": "回滚",
             "rollback_confirm_title": "确认回滚",
@@ -205,7 +205,7 @@
       }
   },
   "Synonyms": {
-    "title": "同义词库",
+    "title": "同义词管理",
     "description": "管理概念的同义词映射，提升 AI 分析的准确性。",
     "add": "添加同义词",
     "canonical": "标准词",

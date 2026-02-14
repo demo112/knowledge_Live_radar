@@ -10,21 +10,46 @@ test.describe('Iteration 3 Features', () => {
 
     // 2. Open Create Modal
     await page.getByRole('button', { name: '添加同义词' }).click();
-    await expect(page.getByText('添加同义词映射')).toBeVisible();
+    await expect(page.getByRole('heading', { name: '添加同义词' })).toBeVisible();
 
     // 3. Fill form (Mocking or actual creation might affect DB, so use unique names)
     const uniqueTerm = `Term_${Date.now()}`;
-    await page.getByLabel('标准术语').fill(uniqueTerm);
+    await page.getByLabel('标准词').fill(uniqueTerm);
     await page.getByLabel('同义词').fill(`Syn_${uniqueTerm}`);
     
     // 4. Submit
     // Note: Since backend might be running against real DB, we should be careful.
     // For now, we just verify the form exists and can be cancelled.
-    await page.getByRole('button', { name: '取消' }).click();
-    await expect(page.getByText('添加同义词映射')).not.toBeVisible();
+    // Use locator inside form to disambiguate from close button which also has "Cancel" SR text
+    await page.locator('form').getByRole('button', { name: '取消' }).click();
+    await expect(page.getByRole('heading', { name: '添加同义词' })).not.toBeVisible();
   });
 
   test('Contributions View', async ({ page }) => {
+    // Mock API
+    await page.route(/.*\/api\/v1\/contributions\/stats/, async route => {
+        await route.fulfill({
+            json: {
+                total: 1,
+                by_status: { pending: 1, processed: 0, rejected: 0 }
+            }
+        });
+    });
+
+    await page.route(/.*\/api\/v1\/contributions(\?|$)/, async route => {
+        await route.fulfill({
+            json: [
+                {
+                    id: '1',
+                    input_type: 'text',
+                    original_input: 'Test contribution',
+                    status: 'pending',
+                    created_at: new Date().toISOString()
+                }
+            ]
+        });
+    });
+
     // 1. Navigate to Contributions page
     await page.goto('/contributions');
     await expect(page).toHaveURL(/.*\/contributions/);
@@ -35,6 +60,7 @@ test.describe('Iteration 3 Features', () => {
     await expect(page.getByText('加载贡献记录中...')).not.toBeVisible();
     
     // Check if there are items (might be empty, so check list container)
+    // We check the list directly since we mocked data
     const list = page.locator('ul.divide-y');
     await expect(list).toBeVisible();
 
@@ -58,8 +84,8 @@ test.describe('Iteration 3 Features', () => {
     
     // 4. Verify History View
     // It should show a list of history items or empty state
-    // We just verify the container is present
-    await expect(page.locator('div.bg-white.shadow')).toBeVisible();
+    // We just verify the container is present (using shadow-sm as identifier)
+    await expect(page.locator('div.shadow-sm')).toBeVisible();
   });
 
 });
