@@ -34,19 +34,20 @@ async def classify_content(
     count = await engine.auto_classify_content(content)
     return SuccessResponse(data=count)
 
-@router.post("/classify/batch", response_model=SuccessResponse[str])
+from app.services.batch_classification_service import batch_classification_service
+
+@router.post("/classify/batch", response_model=SuccessResponse[dict])
 async def batch_classify_content(
     background_tasks: BackgroundTasks,
-    limit: int = 100,
+    limit: int = 10,
     db: AsyncSession = Depends(get_db)
 ):
     """
     Trigger batch auto-classification for unclassified content (Background Task).
     """
-    # This is a simplified version. Ideally, we should query content that hasn't been linked.
-    # For now, we just return a message as this might be a long running task.
+    result = await batch_classification_service.start_batch_classification(
+        batch_size=limit,
+        background_tasks=background_tasks
+    )
     
-    # We can implement the actual logic later or add it to background tasks.
-    # To keep it safe, let's just implement a simple one-off for now or just placeholder.
-    
-    return SuccessResponse(data="Batch classification started (Not implemented yet)")
+    return SuccessResponse(data=result)

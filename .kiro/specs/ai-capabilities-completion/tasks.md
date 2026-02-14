@@ -420,14 +420,14 @@ graph TD
     - **Property 8: 分类错误隔离**
     - **验证需求：6.3**
 
-- [~] 11. 实现批量分类服务
-  - [~] 11.1 创建 `BatchClassificationService` 类
+- [x] 11. 实现批量分类服务
+  - [x] 11.1 创建 `BatchClassificationService` 类
     - 在 `backend/app/services/batch_classification_service.py` 创建文件
     - 实现 `__init__` 方法接收 AsyncSession
     - 添加 `_running_tasks` 集合用于并发控制
     - _需求：7.1, 7.7_
   
-  - [~] 11.2 实现 `start_batch_classification()` 方法
+  - [x] 11.2 实现 `start_batch_classification()` 方法
     - 检查任务是否已在运行中
     - 查询未链接到任何节点的 ContentItem
     - 支持 `pyramid_id` 和 `limit` 参数
@@ -435,7 +435,7 @@ graph TD
     - 立即返回任务状态
     - _需求：7.1, 7.3, 7.5, 7.6, 7.7_
   
-  - [~] 11.3 实现 `_execute_batch_classification()` 后台任务
+  - [x] 11.3 实现 `_execute_batch_classification()` 后台任务
     - 循环处理每个未分类内容
     - 调用 `EvolutionEngine.auto_classify_content()`
     - 统计成功和失败数量
@@ -443,14 +443,14 @@ graph TD
     - 清理运行标记
     - _需求：7.2, 7.4_
   
-  - [~] 11.4 创建批量分类 API 端点
+  - [x] 11.4 创建批量分类 API 端点
     - 在 `backend/app/routers/evolution.py` 添加 `POST /api/v1/evolution/classify/batch` 路由
     - 接收可选的 `pyramid_id` 和 `limit` 参数
     - 调用 `BatchClassificationService.start_batch_classification()`
     - 返回任务状态
     - _需求：7.1, 7.3_
   
-  - [~] 11.5 编写属性测试验证批量分类
+  - [x] 11.5 编写属性测试验证批量分类
     - **Property 9: 批量分类查询正确性**
     - **验证需求：7.1**
     - **Property 10: 批量分类限制遵守**
@@ -458,7 +458,7 @@ graph TD
     - **Property 11: 批量分类并发控制**
     - **验证需求：7.7**
 
-- [~] 12. 检查点 - 内容自动分类功能
+- [x] 12. 检查点 - 内容自动分类功能
   - 确保所有测试通过
   - 手动触发抓取任务，验证自动分类
   - 手动调用批量分类 API，验证批量处理
