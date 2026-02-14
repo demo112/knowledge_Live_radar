@@ -547,51 +547,51 @@ graph TD
   - 模拟连续失败，验证状态流转
   - 如有问题，询问用户
 
-- [~] 17. 创建 Snapshot 数据模型
-  - [~] 17.1 创建 Snapshot 模型
+- [x] 17. 创建 Snapshot 数据模型
+  - [x] 17.1 创建 Snapshot 模型
     - 在 `backend/app/models/snapshot.py` 创建文件
     - 定义字段：id, pyramid_id, data (JSON), reason, node_count, created_at
     - 添加与 Pyramid 的关系
     - _需求：10.1_
   
-  - [~] 17.2 创建数据库迁移
+  - [x] 17.2 创建数据库迁移
     - 在 `backend/alembic/versions/` 创建新迁移文件
     - 创建 `snapshots` 表
     - _需求：10.1_
   
-  - [~] 17.3 运行数据库迁移
+  - [x] 17.3 运行数据库迁移
     - 执行 `alembic upgrade head`
 
-- [~] 18. 实现 SnapshotService
-  - [~] 18.1 创建 `SnapshotService` 类
+- [x] 18. 实现 SnapshotService
+  - [x] 18.1 创建 `SnapshotService` 类
     - 在 `backend/app/services/snapshot_service.py` 创建文件
     - 实现 `__init__` 方法接收 AsyncSession
     - _需求：10.1_
   
-  - [~] 18.2 实现 `create_snapshot()` 方法
+  - [x] 18.2 实现 `create_snapshot()` 方法
     - 查询金字塔的所有节点（未删除）
     - 查询所有内容关联关系
     - 构建 JSON 数据结构（nodes, relations, created_at, reason）
     - 保存到 Snapshot 表
     - _需求：10.1_
   
-  - [~] 18.3 实现 `_validate_snapshot_data()` 方法
+  - [x] 18.3 实现 `_validate_snapshot_data()` 方法
     - 验证 JSON 结构完整性
     - 检查必需字段存在
     - _需求：10.7_
   
-  - [~] 18.4 实现 `rollback()` 方法 - 第一部分
+  - [x] 18.4 实现 `rollback()` 方法 - 第一部分
     - 获取并验证快照
     - 创建回滚前备份快照
     - _需求：10.2, 10.3, 10.7_
   
-  - [~] 18.5 实现 `rollback()` 方法 - 第二部分
+  - [x] 18.5 实现 `rollback()` 方法 - 第二部分
     - 软删除当前所有节点
     - 从快照重建节点（不设置父节点）
     - 建立节点 ID 映射（旧 ID → 新 ID）
     - _需求：10.4_
   
-  - [~] 18.6 实现 `rollback()` 方法 - 第三部分
+  - [x] 18.6 实现 `rollback()` 方法 - 第三部分
     - 设置父子关系
     - 删除旧的内容关联
     - 创建新的内容关联
@@ -599,7 +599,7 @@ graph TD
     - 记录审计日志
     - _需求：10.4, 10.6, 10.8_
   
-  - [~] 18.7 编写属性测试验证快照服务
+  - [x] 18.7 编写属性测试验证快照服务
     - **Property 21: 快照数据完整性**
     - **验证需求：10.1**
     - **Property 22: 回滚前备份创建**
