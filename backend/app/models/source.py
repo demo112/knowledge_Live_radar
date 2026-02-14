@@ -16,11 +16,15 @@ class InformationSource(Base):
     type: Mapped[str] = mapped_column(String(20), nullable=False) # RSS, API, WEB, USER
     url: Mapped[str] = mapped_column(String(500), nullable=False)
     config: Mapped[Optional[dict[str, Any]]] = mapped_column(JSON, nullable=True)
+    template_id: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     status: Mapped[str] = mapped_column(String(20), default="DISCOVERED")
     health_score: Mapped[int] = mapped_column(Integer, default=100)
     last_crawled_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     check_interval: Mapped[int] = mapped_column(Integer, default=3600)
     error_count: Mapped[int] = mapped_column(Integer, default=0)
+    trial_runs: Mapped[int] = mapped_column(Integer, default=0)
+    trial_successes: Mapped[int] = mapped_column(Integer, default=0)
+    recovery_count: Mapped[int] = mapped_column(Integer, default=0)
     last_error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     is_deleted: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
     

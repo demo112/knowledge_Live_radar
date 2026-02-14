@@ -388,33 +388,33 @@ graph TD
   - 如有问题，询问用户
 
 
-- [~] 9. 扩展 CrawlJob 模型添加分类字段
-  - [~] 9.1 创建数据库迁移
+- [x] 9. 扩展 CrawlJob 模型添加分类字段
+  - [x] 9.1 创建数据库迁移
     - 在 `backend/alembic/versions/` 创建新迁移文件
     - 添加 `items_classified` 字段到 `crawl_jobs` 表（Integer, default=0）
     - _需求：6.4_
   
-  - [~] 9.2 更新 CrawlJob 模型
+  - [x] 9.2 更新 CrawlJob 模型
     - 在 `backend/app/models/crawl_job.py` 添加 `items_classified` 字段
     - _需求：6.4_
   
-  - [~] 9.3 运行数据库迁移
+  - [x] 9.3 运行数据库迁移
     - 执行 `alembic upgrade head`
     - _需求：6.4_
 
-- [~] 10. 集成自动分类到 ContentProcessor
-  - [~] 10.1 修改 `process_source()` 方法
+- [x] 10. 集成自动分类到 ContentProcessor
+  - [x] 10.1 修改 `process_source()` 方法
     - 在保存 ContentItem 后，调用 `EvolutionEngine.auto_classify_content()`
     - 使用 try-except 捕获分类错误，记录日志但不影响流程
     - 统计成功分类的内容数量
     - _需求：6.1, 6.3_
   
-  - [~] 10.2 更新 CrawlJob 统计信息
+  - [x] 10.2 更新 CrawlJob 统计信息
     - 设置 `job.items_classified` 为成功分类的数量
     - 更新日志输出格式，包含分类统计
     - _需求：6.2, 6.5_
   
-  - [~] 10.3 编写属性测试验证自动分类
+  - [x] 10.3 编写属性测试验证自动分类
     - **Property 7: 自动分类触发**
     - **验证需求：6.1**
     - **Property 8: 分类错误隔离**
@@ -465,8 +465,8 @@ graph TD
   - 如有问题，询问用户
 
 
-- [~] 13. 扩展 InformationSource 模型添加生命周期字段
-  - [~] 13.1 创建数据库迁移
+- [x] 13. 扩展 InformationSource 模型添加生命周期字段
+  - [x] 13.1 创建数据库迁移
     - 在 `backend/alembic/versions/` 创建新迁移文件
     - 添加字段到 `information_sources` 表：
       - `error_count` (Integer, default=0)
@@ -475,34 +475,34 @@ graph TD
       - `recovery_count` (Integer, default=0)
     - _需求：8.1, 8.2, 8.3, 8.4, 8.5, 8.6_
   
-  - [~] 13.2 更新 InformationSource 模型
+  - [x] 13.2 更新 InformationSource 模型
     - 在 `backend/app/models/source.py` 添加新字段
     - 确保 `status` 字段默认值为 "DISCOVERED"
     - _需求：8.1_
   
-  - [~] 13.3 运行数据库迁移
+  - [x] 13.3 运行数据库迁移
     - 执行 `alembic upgrade head`
 
-- [~] 14. 实现 SourceLifecycleManager 服务
-  - [~] 14.1 创建 `SourceLifecycleManager` 类
+- [x] 14. 实现 SourceLifecycleManager 服务
+  - [x] 14.1 创建 `SourceLifecycleManager` 类
     - 在 `backend/app/services/source_lifecycle_manager.py` 创建文件
     - 实现 `__init__` 方法接收 AsyncSession
     - 注入 ConfigurationService 依赖
     - _需求：8.2_
   
-  - [~] 14.2 实现 `verify_source()` 方法
+  - [x] 14.2 实现 `verify_source()` 方法
     - 检查信息源状态是否为 DISCOVERED
     - 执行测试抓取
     - 成功则更新状态为 VERIFYING，初始化试运行计数
     - _需求：8.2, 8.3_
   
-  - [~] 14.3 实现 `on_crawl_success()` 方法
+  - [x] 14.3 实现 `on_crawl_success()` 方法
     - 重置 error_count 为 0
     - 处理 VERIFYING 状态：增加试运行计数，检查成功率
     - 处理 MONITORING 状态：增加恢复计数，检查是否恢复
     - _需求：8.4, 8.6, 9.1, 9.3_
   
-  - [~] 14.4 实现 `on_crawl_failure()` 方法
+  - [x] 14.4 实现 `on_crawl_failure()` 方法
     - 增加 error_count
     - 重置 recovery_count
     - 处理 ACTIVE → MONITORING 转换（3次失败）
@@ -510,12 +510,12 @@ graph TD
     - 处理 ADJUSTING → DEAD 转换（10次失败）
     - _需求：8.5, 8.7, 8.8, 9.2, 9.4_
   
-  - [~] 14.5 实现 `_record_state_change()` 方法
+  - [x] 14.5 实现 `_record_state_change()` 方法
     - 记录状态变更历史（可以先用日志，后续扩展为数据库表）
     - 发送通知（MONITORING 和 ADJUSTING 状态）
     - _需求：8.9, 9.6_
   
-  - [~] 14.6 编写属性测试验证生命周期管理
+  - [x] 14.6 编写属性测试验证生命周期管理
     - **Property 12: 试运行成功率状态转换**
     - **验证需求：8.4**
     - **Property 13-16: 状态转换规则**
@@ -528,20 +528,20 @@ graph TD
     - **验证需求：9.6**
 
 
-- [~] 15. 集成生命周期管理到 ContentProcessor
-  - [~] 15.1 修改 `process_source()` 方法添加成功回调
+- [x] 15. 集成生命周期管理到 ContentProcessor
+  - [x] 15.1 修改 `process_source()` 方法添加成功回调
     - 在任务成功完成后，调用 `SourceLifecycleManager.on_crawl_success(source.id)`
     - _需求：9.1_
   
-  - [~] 15.2 修改 `process_source()` 方法添加失败回调
+  - [x] 15.2 修改 `process_source()` 方法添加失败回调
     - 在任务失败时，调用 `SourceLifecycleManager.on_crawl_failure(source.id, error)`
     - _需求：9.2_
   
-  - [~] 15.3 编写集成测试验证回调
+  - [x] 15.3 编写集成测试验证回调
     - 测试成功抓取触发 on_crawl_success
     - 测试失败抓取触发 on_crawl_failure
 
-- [~] 16. 检查点 - 信息源生命周期功能
+- [x] 16. 检查点 - 信息源生命周期功能
   - 确保所有测试通过
   - 手动创建信息源，验证状态转换
   - 模拟连续失败，验证状态流转
