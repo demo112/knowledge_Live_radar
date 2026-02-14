@@ -13,6 +13,7 @@ class HealthReportType(str, enum.Enum):
     SCHEDULED = "scheduled"
     MANUAL = "manual"
     TRIGGERED = "triggered"
+    EVOLUTION_CYCLE = "evolution_cycle"
 
 class HealthReport(Base):
     __tablename__ = "health_reports"

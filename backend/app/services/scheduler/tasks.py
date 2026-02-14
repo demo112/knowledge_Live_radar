@@ -14,8 +14,11 @@ from app.services.evolution.hotspot_manager import HotspotManager
 from app.services.evolution.drift_detector import DriftDetector
 from app.services.evolution.strategy_adapter import StrategyAdapter
 from app.services.source_service import SourceService
+from app.services.metabolism_service import MetabolismService
 
 logger = logging.getLogger(__name__)
+
+from app.services.scheduler.crawl_manager import crawl_manager
 
 async def run_content_crawl():
     """
@@ -24,76 +27,46 @@ async def run_content_crawl():
     logger.info("Task started: Content Crawl")
     async with AsyncSessionLocal() as db:
         try:
-            from app.services.content_processor import content_processor
-            
             result = await db.execute(select(InformationSource).where(InformationSource.is_deleted == False))
             sources = result.scalars().all()
             
             now = datetime.now(timezone.utc)
             
+            count = 0
             for source in sources:
                 interval = timedelta(seconds=source.check_interval or 3600)
                 last_checked = source.last_crawled_at or datetime.min.replace(tzinfo=timezone.utc)
                 
+                # If never crawled or due for crawl
                 if (now - last_checked) >= interval:
-                    logger.info(f"Crawling source: {source.name}")
-                    try:
-                        # Use ContentProcessor for full pipeline: fetch → validate → AI enhance → save
-                        job = await content_processor.process_source(source, db)
+                    # Check status constraints
+                    if source.status in ["ADJUSTING", "ARCHIVED"]:
+                        continue
                         
-                        # Update source metadata
-                        source.last_crawled_at = now
-                        source.error_count = 0
-                        if source.status == "error":
-                            source.status = "active"
-                        
-                        logger.info(f"Source '{source.name}' crawl completed: job {job.id}, status={job.status}")
-                        
-                    except Exception as e:
-                        logger.error(f"Failed to crawl {source.name}: {e}")
-                        source.error_count = (source.error_count or 0) + 1
-                        if source.error_count > 3:
-                            source.status = "error"
-                            # Send health alert for failing source
-                            from app.services.notification_service import notification_service
-                            await notification_service.notify_source_health_alert(
-                                source_name=source.name,
-                                source_id=str(source.id),
-                                error_count=source.error_count,
-                            )
-                            
-                    db.add(source)
-                    
-            await db.commit()
+                    logger.info(f"Scheduling crawl for source: {source.name}")
+                    await crawl_manager.add_task(source.id, priority=1)
+                    count += 1
+            
+            logger.info(f"Scheduled {count} sources for crawl")
             
         except Exception as e:
             logger.error(f"Task failed: Content Crawl: {e}")
 
 async def run_source_health_check():
     """
-    Task: Verify source accessibility (HEAD request).
+    Task: Check sources in MONITORING state and verify health.
     """
     logger.info("Task started: Source Health Check")
-    # This might be redundant if crawl runs often.
-    # Implementing a lightweight check.
     async with AsyncSessionLocal() as db:
         try:
-            result = await db.execute(select(InformationSource).where(InformationSource.is_deleted == False))
-            sources = result.scalars().all()
+            from app.services.lifecycle_manager import lifecycle_manager
             
-            for source in sources:
-                try:
-                    is_valid = await crawl_engine.validate_source(source.type, source.url)
-                    if not is_valid:
-                        source.error_count = (source.error_count or 0) + 1
-                    else:
-                        # Only reset if it was error, but don't reset full crawl failure count?
-                        # Maybe just log warning.
-                        pass
-                except Exception:
-                    source.error_count = (source.error_count or 0) + 1
-                    
-            await db.commit()
+            # Use LifecycleManager to check MONITORING sources
+            await lifecycle_manager.check_monitoring_sources(db)
+            
+            # Optional: Check for sources that haven't been crawled in a long time (stuck?)
+            # ...
+            
         except Exception as e:
              logger.error(f"Task failed: Source Health Check: {e}")
 
@@ -126,30 +99,58 @@ async def run_hotspot_lifecycle():
             manager = HotspotManager(db)
             await manager.update_hotspot_stats()
         except Exception as e:
-            logger.error(f"Task failed: Hotspot Lifecycle Update: {e}")
+            logger.error(f"Task failed: Hotspot Lifecycle: {e}")
+
+async def run_content_metabolism():
+    """
+    Task: Execute content metabolism process (scoring, aging, archiving).
+    """
+    logger.info("Task started: Content Metabolism")
+    async with AsyncSessionLocal() as db:
+        try:
+            service = MetabolismService(db)
+            stats = await service.process_metabolism()
+            logger.info(f"Metabolism complete: {stats}")
+        except Exception as e:
+            logger.error(f"Task failed: Content Metabolism: {e}")
+
+from app.services.evolution.evolution_engine import evolution_engine
+
+async def run_evolution_cycle():
+    """
+    Task: Run the full self-evolution cycle (Health -> Strategy -> Structure -> Drift).
+    """
+    logger.info("Task started: Evolution Cycle")
+    try:
+        results = await evolution_engine.run_cycle()
+        logger.info(f"Evolution Cycle Results: {results}")
+    except Exception as e:
+        logger.error(f"Task failed: Evolution Cycle: {e}")
 
 async def run_drift_detection():
     """
-    Task: Detect concept drift for all pyramids.
+    Task: Run concept drift detection on all pyramids.
     """
-    logger.info("Task started: Concept Drift Detection")
+    logger.info("Task started: Drift Detection")
     async with AsyncSessionLocal() as db:
         try:
-            detector = DriftDetector(db)
-            
-            # Fetch all pyramids
-            result = await db.execute(select(Pyramid))
+            # Fetch all active pyramids
+            result = await db.execute(select(Pyramid).where(Pyramid.is_deleted == False))
             pyramids = result.scalars().all()
             
+            detector = DriftDetector(db)
+            count = 0
             for pyramid in pyramids:
-                await detector.detect_drift(pyramid.id)
+                proposals = await detector.detect_drift(pyramid.id)
+                count += len(proposals)
                 
+            logger.info(f"Drift detection complete. Generated {count} proposals across {len(pyramids)} pyramids.")
         except Exception as e:
-             logger.error(f"Task failed: Concept Drift Detection: {e}")
+            logger.error(f"Task failed: Drift Detection: {e}")
 
 async def run_strategy_optimization():
     """
-    Task: Optimize crawl strategies.
+    Task: Optimize crawl strategies based on history.
     """
     logger.info("Task started: Strategy Optimization")
     async with AsyncSessionLocal() as db:
@@ -161,22 +162,9 @@ async def run_strategy_optimization():
 
 async def run_cluster_discovery():
     """
-    Task: Discover new topic clusters from unlinked content for all pyramids.
+    Task: Discover new topic clusters in unclassified content.
     """
     logger.info("Task started: Cluster Discovery")
-    async with AsyncSessionLocal() as db:
-        try:
-            from app.services.evolution_engine import EvolutionEngine
-            engine = EvolutionEngine(db)
+    # Placeholder for cluster discovery implementation
+    logger.info("Cluster discovery not yet implemented.")
 
-            result = await db.execute(select(Pyramid))
-            pyramids = result.scalars().all()
-
-            for pyramid in pyramids:
-                try:
-                    await engine.discover_clusters(pyramid.id)
-                except Exception as e:
-                    logger.error(f"Cluster discovery failed for pyramid {pyramid.id}: {e}")
-
-        except Exception as e:
-            logger.error(f"Task failed: Cluster Discovery: {e}")

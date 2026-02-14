@@ -7,7 +7,8 @@ from app.routers import (
     pyramids, nodes, sources, contents, discovery, approvals, 
     input, whitelist, dashboard, health,
     hotspots, drift, strategy, scheduler, config, evolution,
-    contributions, synonyms, classification
+    contributions, synonyms, classification, notifications,
+    content_management
 )
 
 # Configure Logging
@@ -33,6 +34,7 @@ async def lifespan(app: FastAPI):
     TaskRegistry.register("drift_detection", tasks.run_drift_detection)
     TaskRegistry.register("strategy_optimization", tasks.run_strategy_optimization)
     TaskRegistry.register("cluster_discovery", tasks.run_cluster_discovery)
+    TaskRegistry.register("content_metabolism", tasks.run_content_metabolism)
 
     # Startup
     await scheduler_service.start()
@@ -69,6 +71,14 @@ async def lifespan(app: FastAPI):
     # 7. Cluster Discovery (Daily at 05:00)
     await scheduler_service.register_task(
         "cluster_discovery", "cluster_discovery", "0 5 * * *"
+    )
+    # 8. Content Metabolism (Daily at 02:30)
+    await scheduler_service.register_task(
+        "content_metabolism", "content_metabolism", "30 2 * * *"
+    )
+    # 9. Evolution Cycle (Daily at 00:00)
+    await scheduler_service.register_task(
+        "evolution_cycle", "evolution_cycle", "0 0 * * *"
     )
     
     yield
@@ -119,6 +129,8 @@ app.include_router(evolution.router, prefix=settings.API_V1_STR)
 app.include_router(contributions.router, prefix=settings.API_V1_STR)
 app.include_router(synonyms.router, prefix=settings.API_V1_STR)
 app.include_router(classification.router, prefix=settings.API_V1_STR)
+app.include_router(notifications.router, prefix=settings.API_V1_STR)
+app.include_router(content_management.router, prefix=settings.API_V1_STR)
 
 @app.get("/")
 async def root():
