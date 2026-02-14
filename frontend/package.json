@@ -10,14 +10,18 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@headlessui/react": "^2.2.9",
+    "@heroicons/react": "^2.2.0",
     "axios": "^1.13.5",
     "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
     "lucide-react": "^0.563.0",
     "next": "16.1.6",
     "next-intl": "^4.8.2",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "reactflow": "^11.11.4",
+    "recharts": "^3.7.0",
     "tailwind-merge": "^3.4.0",
     "zustand": "^5.0.11"
   },

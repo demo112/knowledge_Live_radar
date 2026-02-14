@@ -31,12 +31,42 @@ export interface InformationSource {
   type: string;
   url: string;
   config: any;
-  status: string;
+  status: string; // 'ACTIVE' | 'INACTIVE' | 'MONITORING' | 'ADJUSTING'
   health_score: number;
+  error_count: number;
+  last_error_at?: string;
   last_crawled_at?: string;
+  next_crawl_at?: string;
   check_interval: number;
+  template_id?: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface SourceTemplateConfigField {
+  name: string;
+  label: string;
+  type: string; // text, number, boolean, select
+  required: boolean;
+  default?: any;
+  options?: Array<{ label: string; value: string }>;
+  description?: string;
+}
+
+export interface SourceTemplate {
+  id: string;
+  name: string;
+  description: string;
+  source_type: string;
+  config_schema: SourceTemplateConfigField[];
+  default_config: Record<string, any>;
+}
+
+export interface ValidationResult {
+  overall_score?: number;
+  hard_result?: Record<string, any>;
+  soft_result?: Record<string, any>;
+  verified_at: string;
 }
 
 export interface ContentItem {
@@ -52,6 +82,7 @@ export interface ContentItem {
   tags?: string[];
   concepts?: Array<{ name: string; type: string }>;
   ai_processed?: boolean;
+  validation_result?: ValidationResult;
 }
 
 export interface ContentWithRelation extends ContentItem {
@@ -222,4 +253,43 @@ export interface Approval {
   reviewer_id?: string;
   reviewed_at?: string;
   executed_at?: string;
+  updated_at: string;
+}
+
+export interface DashboardStats {
+  total_sources: number;
+  active_sources: number;
+  discovered_domains: number;
+  whitelisted_domains: number;
+  total_contents: number;
+  validation_pass_rate: number;
+}
+
+export interface DailyTrend {
+  date: string;
+  total_validations: number;
+  pass_rate: number;
+}
+
+export interface DashboardTrend {
+  trends: DailyTrend[];
+}
+
+export interface Synonym {
+  id: string;
+  canonical_term: string;
+  synonym: string;
+  source: string;
+  confidence: number;
+  is_active: boolean;
+  usage_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SynonymCreate {
+  canonical_term: string;
+  synonym: string;
+  source?: string;
+  confidence?: number;
 }
