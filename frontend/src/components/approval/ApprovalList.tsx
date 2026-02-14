@@ -2,14 +2,26 @@
 
 import { useState, useEffect } from 'react';
 import { approvalApi } from '@/lib/api';
-import { useRouter } from 'next/navigation';
 import { Approval } from '@/types';
 import { BrainCircuit } from 'lucide-react';
+
+interface AffectedNode {
+  id: string;
+  title: string;
+  type: string;
+}
+
+interface ImpactData {
+  risk_level: string;
+  affected_nodes: AffectedNode[];
+  description: string;
+}
 
 export default function ApprovalList() {
   const [approvals, setApprovals] = useState<Approval[]>([]);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [impactData, setImpactData] = useState<Record<string, ImpactData>>({});
 
   useEffect(() => {
     fetchApprovals();
@@ -25,6 +37,25 @@ export default function ApprovalList() {
       console.error('Failed to fetch approvals', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const toggleImpact = async (id: string) => {
+    if (expandedId === id) {
+      setExpandedId(null);
+      return;
+    }
+    
+    setExpandedId(id);
+    if (!impactData[id]) {
+      try {
+        const response = await approvalApi.getImpact(id);
+        if (response.success) {
+          setImpactData(prev => ({ ...prev, [id]: response.data }));
+        }
+      } catch (error) {
+        console.error('Failed to fetch impact', error);
+      }
     }
   };
 
@@ -45,8 +76,9 @@ export default function ApprovalList() {
       }
       
       fetchApprovals(); // Refresh list
-    } catch (error: any) {
-      if (error.response?.status === 404) {
+    } catch (error: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if ((error as any).response?.status === 404) {
         alert('提案不存在或已被处理。');
         fetchApprovals();
       } else {
@@ -92,9 +124,9 @@ export default function ApprovalList() {
                       {/* Better formatting for Proposal Data */}
                       {approval.type === 'ADD_NODE' ? (
                         <div>
-                          <div><strong>节点名称:</strong> {approval.data.name}</div>
-                          <div><strong>父节点ID:</strong> {approval.data.parent_id}</div>
-                          <div><strong>描述:</strong> {approval.data.description}</div>
+                          <div><strong>节点名称:</strong> {(approval.data as Record<string, unknown>).name as string}</div>
+                          <div><strong>父节点ID:</strong> {(approval.data as Record<string, unknown>).parent_id as string}</div>
+                          <div><strong>描述:</strong> {(approval.data as Record<string, unknown>).description as string}</div>
                         </div>
                       ) : (
                         <pre>{JSON.stringify(approval.data, null, 2)}</pre>
@@ -102,6 +134,12 @@ export default function ApprovalList() {
                    </div>
                 </div>
                 <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => toggleImpact(approval.id)}
+                    className="inline-flex items-center px-3 py-2 border border-border text-sm font-medium rounded-md text-foreground bg-white hover:bg-muted focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors"
+                  >
+                    {expandedId === approval.id ? '隐藏影响' : '分析影响'}
+                  </button>
                   <button
                     onClick={() => handleReview(approval.id, 'approved')}
                     className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors"
@@ -116,6 +154,34 @@ export default function ApprovalList() {
                   </button>
                 </div>
               </div>
+              
+              {expandedId === approval.id && impactData[approval.id] && (
+                <div className="mt-4 p-4 bg-muted/50 rounded-lg border border-border">
+                  <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
+                    影响分析 
+                    <span className={`text-xs px-2 py-0.5 rounded-full border ${
+                      impactData[approval.id].risk_level === 'high' ? 'bg-red-100 text-red-800 border-red-200' :
+                      impactData[approval.id].risk_level === 'medium' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' :
+                      'bg-green-100 text-green-800 border-green-200'
+                    }`}>
+                      {impactData[approval.id].risk_level.toUpperCase()}
+                    </span>
+                  </h4>
+                  <p className="text-sm text-muted-foreground mb-2">{impactData[approval.id].description}</p>
+                  {impactData[approval.id].affected_nodes && impactData[approval.id].affected_nodes.length > 0 && (
+                    <div className="text-sm">
+                      <span className="font-medium">受影响节点:</span>
+                      <ul className="list-disc list-inside mt-1 ml-2 text-muted-foreground">
+                        {impactData[approval.id].affected_nodes.map((node) => (
+                          <li key={node.id}>
+                            {node.title} <span className="text-xs opacity-75">({node.type})</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
             </li>
           ))
         )}

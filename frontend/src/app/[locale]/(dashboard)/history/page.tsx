@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { approvalApi } from '@/lib/api';
 import ChangeTimeline from '@/components/history/ChangeTimeline';
 import ChangeDetail from '@/components/history/ChangeDetail';
 import RollbackDialog from '@/components/history/RollbackDialog';
 import { ChangeItem } from '@/lib/types';
-import { CHANGE_STATUS_MAP, CHANGE_TYPE_MAP } from '@/lib/constants';
+import { CHANGE_TYPE_MAP } from '@/lib/constants';
 
 export default function HistoryPage() {
   const [history, setHistory] = useState<ChangeItem[]>([]);
@@ -21,7 +21,7 @@ export default function HistoryPage() {
   const [selectedItem, setSelectedItem] = useState<ChangeItem | null>(null);
   const [rollbackItem, setRollbackItem] = useState<ChangeItem | null>(null);
 
-  const fetchHistory = async () => {
+  const fetchHistory = useCallback(async () => {
     setLoading(true);
     try {
       // If statusFilter is 'all', we might want to fetch everything, but typically History is about past actions.
@@ -45,11 +45,11 @@ export default function HistoryPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [statusFilter]);
 
   useEffect(() => {
     fetchHistory();
-  }, [statusFilter]);
+  }, [fetchHistory]);
 
   useEffect(() => {
     let result = history;

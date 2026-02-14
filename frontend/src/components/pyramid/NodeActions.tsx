@@ -141,7 +141,7 @@ export const MergeNodesDialog: React.FC<MergeNodesDialogProps> = ({ open, onOpen
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label>{t('Merge.strategy_label')}</Label>
-            <Select value={strategy} onChange={(e) => setStrategy(e.target.value as any)}>
+            <Select value={strategy} onChange={(e) => setStrategy(e.target.value as 'create_new' | 'merge_to_first')}>
               <option value="create_new">{t('Merge.strategies.create_new')}</option>
               <option value="merge_to_first">{t('Merge.strategies.merge_to_first')}</option>
             </Select>

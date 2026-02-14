@@ -212,7 +212,7 @@ graph LR
     - **Validates: Requirements 1.9**
 
 - [ ] 5. 批量处理服务
-  - [ ] 5.1 实现批量处理器
+  - [x] 5.1 实现批量处理器
     - 创建 `backend/app/services/input/batch_processor.py`
     - 实现 BatchProcessor 类，包含任务创建、执行、状态查询、取消功能
     - _Requirements: 17.1-17.6_
@@ -304,7 +304,7 @@ graph LR
     - **Validates: Requirements 5.3**
 
 - [ ] 14. 影响分析服务
-  - [ ] 14.1 实现影响分析器
+  - [x] 14.1 实现影响分析器
     - 实现 ImpactAnalyzer 类，包含影响分析、风险评估、预览生成功能
     - _Requirements: 6.1-6.7_
   
@@ -489,27 +489,27 @@ graph LR
     - 实现提取的概念和生成的提案预览
     - _Requirements: 11.6_
 
-- [ ] 26. 变更历史界面
-  - [ ] 26.1 创建变更历史页面
+- [x] 26. 变更历史界面
+  - [x] 26.1 创建变更历史页面
     - 实现变更时间线展示
     - _Requirements: 12.1_
   
-  - [ ] 26.2 创建变更时间线组件
+  - [x] 26.2 创建变更时间线组件
     - 创建 `frontend/src/components/history/ChangeTimeline.tsx`
     - 实现变更类型、执行时间、执行者、影响范围显示
     - _Requirements: 12.2_
   
-  - [ ] 26.3 创建变更详情组件
+  - [x] 26.3 创建变更详情组件
     - 创建 `frontend/src/components/history/ChangeDetail.tsx`
     - 实现变更详情和执行前后对比
     - _Requirements: 12.3_
   
-  - [ ] 26.4 创建回滚对话框组件
+  - [x] 26.4 创建回滚对话框组件
     - 创建 `frontend/src/components/history/RollbackDialog.tsx`
     - 实现回滚确认对话框和影响预览
     - _Requirements: 12.4_
   
-  - [ ] 26.5 实现筛选和导出功能
+  - [x] 26.5 实现筛选和导出功能
     - 实现按时间范围、变更类型筛选
     - 实现导出变更历史报告
     - _Requirements: 12.5, 12.6_

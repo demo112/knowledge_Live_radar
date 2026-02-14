@@ -25,12 +25,21 @@ class ContentUpdate(BaseModel):
     concepts: Optional[List[Any]] = None
     ai_processed: Optional[bool] = None
 
+class ValidationResultResponse(BaseModel):
+    overall_score: Optional[int] = None
+    hard_result: Optional[dict[str, Any]] = None
+    soft_result: Optional[dict[str, Any]] = None
+    verified_at: datetime
+    
+    model_config = {"from_attributes": True}
+
 class ContentResponse(ContentBase):
     id: UUID
     source_id: Optional[UUID] = None
     status: str
     content_hash: Optional[str] = None
     created_at: datetime
+    validation_result: Optional[ValidationResultResponse] = None
     
     model_config = {"from_attributes": True}
 

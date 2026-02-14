@@ -166,7 +166,8 @@ graph LR
     - 创建 services/template_service.py
     - 定义预设模板数据（AI 开发工具链、Agent 生态、Prompt 工程、模型应用能力、热点追踪）
     - 实现 create_from_template 方法（基于模板创建完整节点结构）
-    - _Requirements: 1.6, 38.1, 38.2_
+    - 实现 import_template 和 export_template 方法（支持 JSON 导入导出）
+    - _Requirements: 1.6, 12.1, 12.2, 12.3_
   
   - [x] 5.6 编写模板功能属性测试
     - **Property 16: 模板创建结构一致性** - 验证创建的金字塔包含模板定义的所有节点，层级结构一致

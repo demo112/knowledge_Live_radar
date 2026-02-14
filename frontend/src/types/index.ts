@@ -21,8 +21,21 @@ export interface PyramidNode {
   children?: PyramidNode[];
 }
 
+export interface LinkedNode extends PyramidNode {
+  relation_source: string;
+  relation_confidence: number;
+}
+
 export interface PyramidDetail extends Pyramid {
   nodes: PyramidNode[];
+}
+
+export interface PyramidTemplate {
+  id: string;
+  name: string;
+  description: string;
+  structure: unknown;
+  created_at: string;
 }
 
 export interface InformationSource {
@@ -30,7 +43,7 @@ export interface InformationSource {
   name: string;
   type: string;
   url: string;
-  config: any;
+  config: Record<string, unknown>;
   status: string; // 'ACTIVE' | 'INACTIVE' | 'MONITORING' | 'ADJUSTING'
   health_score: number;
   error_count: number;
@@ -48,7 +61,7 @@ export interface SourceTemplateConfigField {
   label: string;
   type: string; // text, number, boolean, select
   required: boolean;
-  default?: any;
+  default?: unknown;
   options?: Array<{ label: string; value: string }>;
   description?: string;
 }
@@ -59,13 +72,13 @@ export interface SourceTemplate {
   description: string;
   source_type: string;
   config_schema: SourceTemplateConfigField[];
-  default_config: Record<string, any>;
+  default_config: Record<string, unknown>;
 }
 
 export interface ValidationResult {
   overall_score?: number;
-  hard_result?: Record<string, any>;
-  soft_result?: Record<string, any>;
+  hard_result?: Record<string, unknown>;
+  soft_result?: Record<string, unknown>;
   verified_at: string;
 }
 
@@ -83,6 +96,10 @@ export interface ContentItem {
   concepts?: Array<{ name: string; type: string }>;
   ai_processed?: boolean;
   validation_result?: ValidationResult;
+  lifecycle_status?: string; // ACTIVE, DEPRECATED, ARCHIVED, DELETED
+  metabolism_score?: number;
+  last_accessed_at?: string;
+  access_count?: number;
 }
 
 export interface ContentWithRelation extends ContentItem {
@@ -134,6 +151,7 @@ export interface NodeRelation {
   target_node_id: string;
   relation_type: string;
   created_at: string;
+  updated_at?: string;
 }
 
 export interface HealthMetrics {
@@ -151,9 +169,9 @@ export interface HealthReport {
 export interface ReactFlowNode {
   id: string;
   type?: string;
-  data: { label: string; [key: string]: any };
+  data: { label: string; [key: string]: unknown };
   position: { x: number; y: number };
-  style?: any;
+  style?: Record<string, unknown>;
 }
 
 export interface ReactFlowEdge {
@@ -181,9 +199,42 @@ export interface SplitRequest {
   delete_original: boolean;
 }
 
+export interface MetabolismRunStats {
+  processed: number;
+  to_deprecated: number;
+  to_archived: number;
+}
+
+export interface MetabolismSuggestion {
+  id: string;
+  title: string;
+  score: number;
+  age_days: number;
+  reason: string;
+}
+
+export interface DashboardStats {
+  active_sources: number;
+  total_sources: number;
+  discovered_domains: number;
+  whitelisted_domains: number;
+  total_contents: number;
+  validation_pass_rate: number;
+}
+
+export interface TrendPoint {
+  date: string;
+  pass_rate: number;
+  total_validations: number;
+}
+
+export interface DashboardTrend {
+  trends: TrendPoint[];
+}
+
 export interface MergeRequest {
   source_node_ids: string[];
-  target_node_name: string;
+  target_node_name?: string;
   target_node_content?: string;
   strategy: 'create_new' | 'merge_to_first';
 }
@@ -191,88 +242,6 @@ export interface MergeRequest {
 export interface LinkRequest {
   target_node_id: string;
   relation_type: string;
-}
-
-export interface Hotspot {
-  id: string;
-  title: string;
-  summary?: string;
-  score: number;
-  keywords: string[];
-  created_at: string;
-  status: string;
-}
-
-export interface ScheduledTask {
-  id: string;
-  name: string;
-  task_type: string;
-  cron_expression: string;
-  is_active: boolean;
-  last_run_at?: string;
-  next_run_at?: string;
-}
-
-export interface TaskExecution {
-  id: string;
-  task_id: string;
-  status: string;
-  start_time: string;
-  end_time?: string;
-  result?: string;
-  error?: string;
-}
-
-export interface ConfigHistory {
-  id: string;
-  key: string;
-  old_value: any;
-  new_value: any;
-  changed_by: string;
-  changed_at: string;
-}
-
-export interface DriftProposal {
-  id: string;
-  type: string;
-  status: string;
-  data: any;
-  created_at: string;
-}
-
-export interface Approval {
-  id: string;
-  type: string;
-  status: string;
-  data: any;
-  created_at: string;
-  applicant_id?: string;
-  reason?: string;
-  confidence_score?: number;
-  review_comment?: string;
-  reviewer_id?: string;
-  reviewed_at?: string;
-  executed_at?: string;
-  updated_at: string;
-}
-
-export interface DashboardStats {
-  total_sources: number;
-  active_sources: number;
-  discovered_domains: number;
-  whitelisted_domains: number;
-  total_contents: number;
-  validation_pass_rate: number;
-}
-
-export interface DailyTrend {
-  date: string;
-  total_validations: number;
-  pass_rate: number;
-}
-
-export interface DashboardTrend {
-  trends: DailyTrend[];
 }
 
 export interface Synonym {
@@ -292,4 +261,22 @@ export interface SynonymCreate {
   synonym: string;
   source?: string;
   confidence?: number;
+  is_active?: boolean;
+}
+
+export interface Approval {
+  id: string;
+  type: string;
+  target_id?: string;
+  data?: Record<string, unknown>;
+  applicant_id?: string;
+  source_content_id?: string;
+  generated_by?: string;
+  reason?: string;
+  confidence_score?: number;
+  status: string;
+  reviewer_id?: string;
+  review_comment?: string;
+  created_at: string;
+  updated_at: string;
 }

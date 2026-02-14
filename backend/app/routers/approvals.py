@@ -42,6 +42,18 @@ async def get_pending_approvals(
     approvals = await service.get_approvals("pending", skip, limit)
     return SuccessResponse(data=approvals)
 
+@router.get("/queue", response_model=SuccessResponse[List[ApprovalResponse]])
+async def get_approval_queue(
+    skip: int = 0,
+    limit: int = 100,
+    service: ApprovalService = Depends(get_service)
+):
+    """
+    Get approval queue (alias for pending approvals).
+    """
+    approvals = await service.get_approvals("pending", skip, limit)
+    return SuccessResponse(data=approvals)
+
 @router.get("/{id}", response_model=SuccessResponse[ApprovalResponse])
 async def get_approval(
     id: UUID,
@@ -73,6 +85,17 @@ async def execute_approval(
     success = await executor.execute_approval(id, user_id)
     if not success:
         raise HTTPException(status_code=400, detail="执行失败。请确保提案已批准且有效。")
+    return SuccessResponse(data=success)
+
+@router.post("/{id}/rollback", response_model=SuccessResponse[bool])
+async def rollback_approval(
+    id: UUID,
+    db: AsyncSession = Depends(get_db)
+):
+    executor = DecisionExecutor(db)
+    success = await executor.rollback_execution(id)
+    if not success:
+        raise HTTPException(status_code=400, detail="回滚失败。请确保提案已执行且存在快照。")
     return SuccessResponse(data=success)
 
 @router.get("/{id}/impact", response_model=SuccessResponse[dict])

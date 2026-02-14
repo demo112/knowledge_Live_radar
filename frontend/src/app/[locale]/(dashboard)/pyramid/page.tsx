@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import {Link} from '@/i18n/routing';
 import { pyramidApi } from '@/lib/api';
-import { Pyramid } from '@/types';
+import { Pyramid, PyramidTemplate } from '@/types';
 import { Upload } from 'lucide-react';
 import { useTranslations, useFormatter } from 'next-intl';
 
@@ -20,7 +20,7 @@ export default function PyramidListPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Template support
-  const [templates, setTemplates] = useState<any[]>([]);
+  const [templates, setTemplates] = useState<PyramidTemplate[]>([]);
   const [creationMode, setCreationMode] = useState<'blank' | 'template'>('blank');
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
 
@@ -112,13 +112,15 @@ export default function PyramidListPage() {
       if (response.success) {
         fetchPyramids();
       }
-    } catch (error: any) {
-      if (error.response?.status === 404) {
+    } catch (error: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if ((error as any).response?.status === 404) {
         // Already deleted, just refresh
         fetchPyramids();
       } else {
         console.error('Failed to delete pyramid:', error);
-        const errorMessage = error.response?.data?.error?.message || error.message || '未知错误';
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const errorMessage = (error as any).response?.data?.error?.message || (error as Error).message || '未知错误';
         alert(`删除失败: ${errorMessage}`);
       }
     } finally {

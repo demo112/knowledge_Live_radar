@@ -2,7 +2,14 @@ import React from 'react';
 import { Database, CheckCircle, XCircle } from 'lucide-react';
 
 interface CrawlStatsProps {
-  stats: Record<string, any>;
+  stats: {
+    total_crawled?: number;
+    success_rate?: number;
+    avg_processing_time?: number;
+    validated_count?: number;
+    rejected_count?: number;
+    [key: string]: unknown;
+  };
   className?: string;
 }
 

@@ -17,7 +17,7 @@ class NotificationPreferenceUpdate(BaseModel):
     quiet_hours_end: str
     quiet_hours_allow_critical: bool
 
-@router.get("/")
+@router.get("")
 async def list_notifications(page: int = 1, size: int = 20):
     return await notification_service.list_notifications(page, size)
 

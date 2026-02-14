@@ -34,7 +34,7 @@ export default function HotspotDistribution({ distribution, hotspots, className 
       <div className="p-4 flex-1">
         {/* Distribution Bar */}
         <div className="flex h-4 w-full rounded-full overflow-hidden mb-6 bg-gray-100 dark:bg-gray-700">
-          {Object.entries(distribution || {}).map(([status, count], index) => {
+          {Object.entries(distribution || {}).map(([status, count]) => {
             const total = Object.values(distribution || {}).reduce((a, b) => a + b, 0);
             const percent = total > 0 ? (count / total) * 100 : 0;
             if (percent === 0) return null;

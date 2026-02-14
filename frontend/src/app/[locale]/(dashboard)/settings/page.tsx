@@ -3,39 +3,37 @@
 import React, { useEffect, useState } from 'react';
 import { configApi } from '@/lib/api';
 import { ConfigHistory } from '@/lib/types';
-import { Settings, Save, RotateCcw, History, Cpu } from 'lucide-react';
+import { Settings, Cpu } from 'lucide-react';
 import AIConfigForm from '@/components/settings/ai-config-form';
 
 export default function SettingsPage() {
-  const [configs, setConfigs] = useState<Record<string, any>>({});
+  const [configs, setConfigs] = useState<Record<string, unknown>>({});
   const [history, setHistory] = useState<ConfigHistory[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<'general' | 'ai' | 'history'>('general');
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      if (activeTab === 'general') {
-        const configData = await configApi.getAll();
-        setConfigs(configData);
-      } else if (activeTab === 'history') {
-        const historyData = await configApi.getHistory();
-        setHistory(historyData);
-      }
-    } catch (error) {
-      console.error("Failed to fetch settings", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        if (activeTab === 'general') {
+          const configData = await configApi.getAll();
+          setConfigs(configData);
+        } else if (activeTab === 'history') {
+          const historyData = await configApi.getHistory();
+          setHistory(historyData);
+        }
+      } catch (error) {
+        console.error("Failed to fetch settings", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchData();
   }, [activeTab]);
 
-  const handleSave = async (key: string, value: any) => {
-    setSaving(true);
+  const handleSave = async (key: string, value: unknown) => {
     try {
       // Parse number if needed
       let parsedValue = value;
@@ -51,16 +49,14 @@ export default function SettingsPage() {
       setHistory(newHistory);
       
       alert(`Updated ${key}`);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Failed to save setting", error);
       alert("保存配置失败");
-    } finally {
-      setSaving(false);
     }
   };
 
-  const groupConfigs = (configs: Record<string, any>) => {
-    const groups: Record<string, Record<string, any>> = {};
+  const groupConfigs = (configs: Record<string, unknown>) => {
+    const groups: Record<string, Record<string, unknown>> = {};
     Object.keys(configs).forEach(key => {
       const [group] = key.split('.');
       if (!groups[group]) groups[group] = {};
@@ -121,13 +117,13 @@ export default function SettingsPage() {
                     <div className="flex gap-2">
                       <input
                         type={typeof value === 'number' ? 'number' : 'text'}
-                        defaultValue={value}
+                        defaultValue={value as string | number}
                         onBlur={(e) => {
-                          if (e.target.value != value.toString()) {
+                          if (e.target.value != String(value)) {
                              handleSave(key, e.target.value);
                           }
                         }}
-                        className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 p-2 border"
+                        className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-700 p-2 border"
                       />
                     </div>
                     <p className="text-xs text-gray-400">{key}</p>

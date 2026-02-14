@@ -29,6 +29,12 @@ class ContentItem(Base):
     ai_processed: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
     is_deleted: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
     
+    # Metabolism fields
+    lifecycle_status: Mapped[str] = mapped_column(String(20), default="ACTIVE", server_default="ACTIVE", index=True) # ACTIVE, DEPRECATED, ARCHIVED, DELETED
+    metabolism_score: Mapped[float] = mapped_column(Float, default=0.0, server_default="0.0", index=True)
+    last_accessed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), index=True)
+    access_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 

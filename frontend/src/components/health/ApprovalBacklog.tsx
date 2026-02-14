@@ -1,13 +1,14 @@
 import React from 'react';
 import { FileText, Clock, AlertOctagon } from 'lucide-react';
+import { ApprovalBacklogData } from '@/lib/types';
 
 interface ApprovalBacklogProps {
-  backlog: Record<string, any>;
+  backlog: ApprovalBacklogData;
   className?: string;
 }
 
 export default function ApprovalBacklog({ backlog, className = '' }: ApprovalBacklogProps) {
-  const totalPending = backlog?.total_pending || 0;
+  const totalPending = backlog?.pending_count || 0;
   const penalty = backlog?.backlog_penalty || 0;
   const oldestPending = backlog?.oldest_pending_days || 0;
 

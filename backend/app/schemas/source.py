@@ -8,6 +8,7 @@ class InformationSourceBase(BaseModel):
     type: str = Field(..., pattern="^(RSS|API|WEB|USER|WECHAT_MP|BILIBILI_USER|JUEJIN_COLUMN)$")
     url: str
     config: Optional[dict[str, Any]] = None
+    template_id: Optional[str] = None
     check_interval: int = 3600
 
 class SourceCreate(InformationSourceBase):

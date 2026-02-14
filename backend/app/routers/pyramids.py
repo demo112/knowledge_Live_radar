@@ -9,7 +9,7 @@ from app.services.health_evaluator import HealthEvaluator
 from app.services.visualization_service import VisualizationService
 from app.schemas.pyramid import PyramidCreate, PyramidUpdate, PyramidResponse, PyramidDetailResponse, PyramidNodeCreate, PyramidNodeResponse, NodeMergeRequest
 from app.schemas.common import SuccessResponse, PaginatedResponse, PaginatedData
-from app.schemas.snapshot import SnapshotSummaryResponse
+from app.schemas.snapshot import SnapshotSummaryResponse, SnapshotResponse, SnapshotCreateRequest
 
 router = APIRouter(prefix="/pyramids", tags=["pyramids"])
 
@@ -17,6 +17,9 @@ from app.services.template_service import TemplateService
 
 def get_service(db: AsyncSession = Depends(get_db)) -> PyramidService:
     return PyramidService(db)
+
+def get_snapshot_service(db: AsyncSession = Depends(get_db)) -> SnapshotService:
+    return SnapshotService(db)
 
 def get_health_evaluator(db: AsyncSession = Depends(get_db)) -> HealthEvaluator:
     return HealthEvaluator(db)
@@ -49,6 +52,25 @@ async def create_pyramid_from_template(
     # We might want to return full details.
     return SuccessResponse(data=pyramid)
 
+@router.post("/import", response_model=SuccessResponse[PyramidDetailResponse], status_code=status.HTTP_201_CREATED)
+async def import_pyramid_template(
+    template_data: dict,
+    name: str = None,
+    service: TemplateService = Depends(get_template_service)
+):
+    """Import a pyramid from a template JSON"""
+    pyramid = await service.import_template(template_data, name)
+    return SuccessResponse(data=pyramid)
+
+@router.get("/{id}/export", response_model=SuccessResponse[dict])
+async def export_pyramid_template(
+    id: UUID,
+    service: TemplateService = Depends(get_template_service)
+):
+    """Export a pyramid as a template JSON"""
+    template = await service.export_template(id)
+    return SuccessResponse(data=template)
+
 @router.post("", response_model=SuccessResponse[PyramidResponse], status_code=status.HTTP_201_CREATED)
 async def create_pyramid(
     schema: PyramidCreate,
@@ -76,6 +98,68 @@ async def get_pyramid(
     pyramid = await service.get_pyramid_details(id)
     return SuccessResponse(data=pyramid)
 
+@router.post("/{pyramid_id}/snapshots", response_model=SuccessResponse[SnapshotResponse], status_code=status.HTTP_201_CREATED)
+async def create_snapshot(
+    pyramid_id: UUID,
+    request: SnapshotCreateRequest,
+    service: SnapshotService = Depends(get_snapshot_service)
+):
+    """Create a new snapshot for a pyramid"""
+    snapshot = await service.create_snapshot(pyramid_id, request.reason)
+    return SuccessResponse(data=snapshot)
+
+@router.get("/{pyramid_id}/snapshots", response_model=PaginatedResponse[SnapshotSummaryResponse])
+async def get_snapshots(
+    pyramid_id: UUID,
+    skip: int = 0,
+    limit: int = 20,
+    service: SnapshotService = Depends(get_snapshot_service)
+):
+    """Get all snapshots for a pyramid"""
+    snapshots = await service.get_snapshots_by_pyramid(pyramid_id, skip, limit)
+    # Note: total count is not implemented in service yet, using len(snapshots) as placeholder
+    return PaginatedResponse(
+        data=PaginatedData(
+            items=snapshots, 
+            total=len(snapshots), 
+            page=skip//limit + 1 if limit else 1, 
+            page_size=limit
+        )
+    )
+
+@router.get("/{pyramid_id}/snapshots/{snapshot_id}", response_model=SuccessResponse[SnapshotResponse])
+async def get_snapshot(
+    pyramid_id: UUID,
+    snapshot_id: UUID,
+    service: SnapshotService = Depends(get_snapshot_service)
+):
+    """Get snapshot details"""
+    snapshot = await service.get_snapshot_by_id(snapshot_id)
+    if not snapshot:
+        raise HTTPException(status_code=404, detail="Snapshot not found")
+    if snapshot.pyramid_id != pyramid_id:
+        raise HTTPException(status_code=400, detail="Snapshot does not belong to this pyramid")
+    return SuccessResponse(data=snapshot)
+
+@router.post("/{pyramid_id}/rollback/{snapshot_id}", response_model=SuccessResponse[bool])
+async def rollback_snapshot(
+    pyramid_id: UUID,
+    snapshot_id: UUID,
+    service: SnapshotService = Depends(get_snapshot_service)
+):
+    """Rollback pyramid to a snapshot"""
+    # Verify snapshot belongs to pyramid
+    snapshot = await service.get_snapshot_by_id(snapshot_id)
+    if not snapshot:
+        raise HTTPException(status_code=404, detail="Snapshot not found")
+    if snapshot.pyramid_id != pyramid_id:
+        raise HTTPException(status_code=400, detail="Snapshot does not belong to this pyramid")
+        
+    success = await service.rollback(snapshot_id)
+    if not success:
+        raise HTTPException(status_code=500, detail="Rollback failed")
+        
+    return SuccessResponse(data=True)
 @router.put("/{id}", response_model=SuccessResponse[PyramidResponse])
 async def update_pyramid(
     id: UUID,
@@ -127,13 +211,58 @@ async def add_node(
     node = await service.add_node(id, schema)
     return SuccessResponse(data=node)
 
-@router.get("/{id}/snapshots", response_model=SuccessResponse[List[SnapshotSummaryResponse]])
+@router.post("/{id}/snapshots", response_model=SuccessResponse[SnapshotSummaryResponse], status_code=status.HTTP_201_CREATED)
+async def create_snapshot(
+    id: UUID,
+    request: SnapshotCreateRequest,
+    service: SnapshotService = Depends(get_snapshot_service)
+):
+    """Create a new snapshot for the pyramid"""
+    snapshot = await service.create_snapshot(id, request.reason)
+    return SuccessResponse(data=snapshot)
+
+@router.get("/{id}/snapshots", response_model=PaginatedResponse[SnapshotSummaryResponse])
 async def get_snapshots(
     id: UUID,
     skip: int = 0,
     limit: int = 20,
-    db: AsyncSession = Depends(get_db)
+    service: SnapshotService = Depends(get_snapshot_service)
 ):
-    snapshot_service = SnapshotService(db)
-    snapshots = await snapshot_service.get_snapshots_by_pyramid(id, skip, limit)
-    return SuccessResponse(data=snapshots)
+    """Get all snapshots for the pyramid"""
+    items = await service.get_snapshots_by_pyramid(id, skip, limit)
+    # Mock total count for now
+    total = len(items)
+    return PaginatedResponse(data=PaginatedData(items=items, total=total, page=skip//limit + 1 if limit else 1, page_size=limit))
+
+@router.get("/{id}/snapshots/{snapshot_id}", response_model=SuccessResponse[SnapshotResponse])
+async def get_snapshot_details(
+    id: UUID,
+    snapshot_id: UUID,
+    service: SnapshotService = Depends(get_snapshot_service)
+):
+    """Get snapshot details"""
+    snapshot = await service.get_snapshot_by_id(snapshot_id)
+    if not snapshot:
+        raise HTTPException(status_code=404, detail="Snapshot not found")
+    if snapshot.pyramid_id != id:
+        raise HTTPException(status_code=400, detail="Snapshot does not belong to this pyramid")
+    return SuccessResponse(data=snapshot)
+
+@router.post("/{id}/rollback/{snapshot_id}", response_model=SuccessResponse[bool])
+async def rollback_pyramid(
+    id: UUID,
+    snapshot_id: UUID,
+    service: SnapshotService = Depends(get_snapshot_service)
+):
+    """Rollback pyramid to a snapshot state"""
+    snapshot = await service.get_snapshot_by_id(snapshot_id)
+    if not snapshot:
+        raise HTTPException(status_code=404, detail="Snapshot not found")
+    if snapshot.pyramid_id != id:
+        raise HTTPException(status_code=400, detail="Snapshot does not belong to this pyramid")
+        
+    success = await service.restore_snapshot(snapshot_id)
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to rollback snapshot")
+        
+    return SuccessResponse(data=True)

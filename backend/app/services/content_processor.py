@@ -8,6 +8,7 @@ from app.models.source import InformationSource
 from app.models.content import ContentItem, ValidationResult
 from app.models.crawl_job import CrawlJob
 from app.services.auto_discovery import auto_discovery
+from app.services.fetchers.request_utils import RateLimitException
 from typing import List
 import logging
 import uuid
@@ -137,6 +138,17 @@ class ContentProcessor:
             await session.commit()
             logger.info(f"Job {job.id} completed. New: {new_items_count}, Dupe: {duplicate_count}, Failed: {failed_count}, Classified: {classified_items_count}")
             
+        except RateLimitException as e:
+            logger.warning(f"Job {job.id} rate limited: {e}")
+            job.status = "RATE_LIMITED"
+            job.error_message = str(e)
+            job.ended_at = datetime.now(timezone.utc)
+            
+            # Notify lifecycle manager of rate limit
+            await lifecycle_manager.on_rate_limit(str(source.id))
+            
+            await session.commit()
+
         except Exception as e:
             logger.error(f"Job {job.id} failed: {e}")
             job.status = "FAILED"

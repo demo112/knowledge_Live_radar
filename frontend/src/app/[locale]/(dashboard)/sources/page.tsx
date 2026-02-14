@@ -11,17 +11,17 @@ export default function SourcesPage() {
   const [sources, setSources] = useState<InformationSource[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [historyDialog, setHistoryDialog] = useState<{ open: boolean; id: string | null }>({ open: false, id: null });
   const [editingSource, setEditingSource] = useState<InformationSource | null>(null);
   const [formData, setFormData] = useState({ name: '', url: '', type: 'RSS' });
   const [useTemplate, setUseTemplate] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<SourceTemplate | null>(null);
-  const [templateConfig, setTemplateConfig] = useState<any>(null);
+  const [templateConfig, setTemplateConfig] = useState<Record<string, unknown> | null>(null);
   const [discovering, setDiscovering] = useState(false);
   const [crawling, setCrawling] = useState<string | null>(null);
   const [testing, setTesting] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; id: string | null }>({ open: false, id: null });
-  const [historyDialog, setHistoryDialog] = useState<{ open: boolean; id: string | null }>({ open: false, id: null });
 
   useEffect(() => {
     fetchSources();
@@ -33,7 +33,7 @@ export default function SourcesPage() {
       if (response.success) {
         setSources(response.data.items);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to fetch sources:', error);
     } finally {
       setLoading(false);
@@ -68,8 +68,9 @@ export default function SourcesPage() {
       if (response.success) {
         fetchSources();
       }
-    } catch (error: any) {
-      if (error.response?.status === 404) {
+    } catch (error: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if ((error as any).response?.status === 404) {
         // Already deleted, just refresh
         fetchSources();
       } else {
@@ -85,7 +86,8 @@ export default function SourcesPage() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      let finalData: any = { ...formData };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const finalData: any = { ...formData };
       
       if (useTemplate && selectedTemplate && templateConfig) {
         finalData.type = selectedTemplate.source_type;
@@ -430,6 +432,14 @@ export default function SourcesPage() {
             </form>
           </div>
         </div>
+      )}
+
+      {historyDialog.open && historyDialog.id && (
+        <CrawlHistoryDialog
+          open={historyDialog.open}
+          sourceId={historyDialog.id}
+          onOpenChange={(open) => setHistoryDialog(prev => ({ ...prev, open }))}
+        />
       )}
     </div>
   );

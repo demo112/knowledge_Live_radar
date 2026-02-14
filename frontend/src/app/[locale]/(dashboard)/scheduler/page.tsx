@@ -8,11 +8,8 @@ import { Clock, Play, Pause, RotateCw, Activity, CheckCircle, XCircle } from 'lu
 export default function SchedulerPage() {
   const [tasks, setTasks] = useState<ScheduledTask[]>([]);
   const [executions, setExecutions] = useState<TaskExecution[]>([]);
-  const [selectedTask, setSelectedTask] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
 
   const fetchData = async () => {
-    setLoading(true);
     try {
       const tasksData = await schedulerApi.getAll();
       setTasks(tasksData);
@@ -23,7 +20,7 @@ export default function SchedulerPage() {
     } catch (error) {
       console.error("Failed to fetch scheduler data", error);
     } finally {
-      setLoading(false);
+      // setLoading(false);
     }
   };
 

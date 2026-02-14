@@ -1,24 +1,26 @@
 import feedparser
-import httpx
 from typing import List, Dict, Any
 from datetime import datetime
 from .base import BaseFetcher
 import logging
 from time import mktime
+from .request_utils import RequestUtils, RateLimitException
 
 logger = logging.getLogger(__name__)
 
 class RSSFetcher(BaseFetcher):
     async def fetch(self, url: str) -> List[Dict[str, Any]]:
-        logger.info(f"Fetching RSS feed: {url}")
-        async with httpx.AsyncClient() as client:
-            try:
-                response = await client.get(url, timeout=10.0)
-                response.raise_for_status()
-                content = response.text
-            except Exception as e:
-                logger.error(f"Error fetching RSS feed {url}: {e}")
-                raise
+        logger.info(f"Sniffing RSS feed: {url}")
+        try:
+            # 使用 RequestUtils 进行拟人化请求
+            response = await RequestUtils.fetch_url(url)
+            content = response.text
+        except RateLimitException as e:
+            logger.warning(f"Rate limited for {url}: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Error fetching RSS feed {url}: {repr(e)}")
+            raise
 
         feed = feedparser.parse(content)
         items = []
@@ -41,11 +43,9 @@ class RSSFetcher(BaseFetcher):
 
     async def validate_source(self, url: str) -> bool:
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.get(url, timeout=5.0)
-                if response.status_code != 200:
-                    return False
-                feed = feedparser.parse(response.text)
-                return bool(feed.version)
+            # 验证时也使用拟人化请求
+            response = await RequestUtils.fetch_url(url, timeout=15.0)
+            feed = feedparser.parse(response.text)
+            return bool(feed.version)
         except Exception:
             return False

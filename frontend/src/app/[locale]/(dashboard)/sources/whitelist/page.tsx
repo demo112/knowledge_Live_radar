@@ -86,15 +86,16 @@ function WhitelistTab() {
     try {
       await whitelistApi.remove(id);
       fetchItems();
-    } catch (error: any) {
-      if (error.response?.status === 404) {
-        // Already removed, just refresh
-        fetchItems();
-      } else {
-        console.error('Failed to remove domain:', error);
-        alert('移除失败');
+    } catch (error: unknown) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if ((error as any).response?.status === 404) {
+          // Already removed, just refresh
+          fetchItems();
+        } else {
+          console.error('Failed to remove domain:', error);
+          alert('移除失败');
+        }
       }
-    }
   };
 
   if (loading) return <div>加载中...</div>;

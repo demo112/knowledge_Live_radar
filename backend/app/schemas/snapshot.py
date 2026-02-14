@@ -8,6 +8,9 @@ class SnapshotBase(BaseModel):
     reason: Optional[str] = None
     data: Dict[str, Any]
 
+class SnapshotCreateRequest(BaseModel):
+    reason: str = "Manual snapshot"
+
 class SnapshotCreate(SnapshotBase):
     pass
 

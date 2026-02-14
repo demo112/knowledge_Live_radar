@@ -263,7 +263,7 @@ export const whitelistApi = {
     const response = await api.get('/whitelist');
     return response.data;
   },
-  add: async (data: { domain: string; reason?: string }) => {
+  add: async (data: { domain: string; reason?: string; credibility?: number }) => {
     const response = await api.post('/whitelist', data);
     return response.data;
   },
@@ -341,6 +341,21 @@ export const synonymApi = {
   },
   getCanonical: async (term: string) => {
     const response = await api.get(`/synonyms/canonical/${encodeURIComponent(term)}`);
+    return response.data;
+  }
+};
+
+export const metabolismApi = {
+  run: async () => {
+    const response = await api.post('/content-management/metabolism/run');
+    return response.data;
+  },
+  getSuggestions: async (limit: number = 50) => {
+    const response = await api.get('/content-management/metabolism/suggestions', { params: { limit } });
+    return response.data;
+  },
+  cleanup: async (ids: string[]) => {
+    const response = await api.post('/content-management/metabolism/cleanup', { ids });
     return response.data;
   }
 };

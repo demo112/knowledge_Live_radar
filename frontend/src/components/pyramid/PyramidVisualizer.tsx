@@ -12,8 +12,6 @@ import ReactFlow, {
   Panel,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Button } from '@/components/ui/button';
-import { Maximize, Minimize } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 interface PyramidVisualizerProps {

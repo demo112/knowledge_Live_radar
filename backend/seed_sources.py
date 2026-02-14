@@ -245,6 +245,60 @@ SOURCES = [
         "config": {"category": "官方博客", "domain": "百度 AI"},
     },
 
+    # ━━ 推荐扩展：高质量中文技术博客 (原生 RSS) ━━━━━━━━━━━━━━━━━━
+    {
+        "name": "科学空间 (苏剑林)",
+        "type": "RSS",
+        "url": "https://kexue.fm/feed",
+        "check_interval": 86400,
+        "config": {"category": "技术博客", "domain": "NLP/数学"},
+    },
+    {
+        "name": "阮一峰的网络日志",
+        "type": "RSS",
+        "url": "http://www.ruanyifeng.com/blog/atom.xml",
+        "check_interval": 86400,
+        "config": {"category": "技术博客", "domain": "技术趋势"},
+    },
+    {
+        "name": "酷壳 (CoolShell)",
+        "type": "RSS",
+        "url": "https://coolshell.cn/feed",
+        "check_interval": 86400,
+        "config": {"category": "技术博客", "domain": "架构/基础"},
+    },
+    {
+        "name": "AIWalker",
+        "type": "RSS",
+        "url": "https://aiwalker.cn/atom.xml",
+        "check_interval": 86400,
+        "config": {"category": "技术博客", "domain": "计算机视觉"},
+    },
+    {
+        "name": "美团技术团队",
+        "type": "RSS",
+        "url": "https://tech.meituan.com/feed/",
+        "check_interval": 86400,
+        "config": {"category": "技术博客", "domain": "大厂技术"},
+    },
+
+    # ━━ 桥接源：需 RSSHub / WeWe RSS ━━━━━━━━━━━━━━━━━━━━━━━━━
+    {
+        "name": "知乎日报",
+        "type": "RSS",
+        "url": "https://rsshub.app/zhihu/daily",
+        "check_interval": 3600,
+        "config": {"category": "聚合媒体", "domain": "综合/知乎"},
+    },
+    # 示例：微信公众号 (需本地 WeWe RSS，请替换 localhost:4000 为实际地址)
+    # {
+    #     "name": "机器之心 (公众号)",
+    #     "type": "RSS",
+    #     "url": "http://localhost:4000/feed/wechat/jiqizhixin", 
+    #     "check_interval": 3600,
+    #     "config": {"category": "微信公众号", "domain": "AI 媒体"},
+    # },
+
     # ━━ WEB 类 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     {
         "name": "Hugging Face - 热门模型",

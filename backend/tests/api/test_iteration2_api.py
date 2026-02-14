@@ -6,7 +6,7 @@ import uuid
 
 @pytest.mark.asyncio
 async def test_crawl_source_manual():
-    source_id = str(uuid.uuid4())
+    source_id = uuid.uuid4()
     with patch("app.routers.sources.SourceService") as MockService, \
          patch("app.routers.sources.content_processor") as mock_processor, \
          patch("app.routers.sources.lifecycle_manager") as mock_lifecycle:
@@ -23,7 +23,9 @@ async def test_crawl_source_manual():
             response = await ac.post(f"/api/v1/sources/{source_id}/crawl")
             
         assert response.status_code == 200
-        assert response.json()["data"]["items_new"] == 5
+        # Now returns PENDING and 0 items immediately
+        assert response.json()["data"]["status"] == "PENDING"
+        assert response.json()["data"]["items_new"] == 0
 
 @pytest.mark.asyncio
 async def test_discovery():

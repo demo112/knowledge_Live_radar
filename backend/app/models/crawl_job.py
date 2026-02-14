@@ -21,6 +21,7 @@ class CrawlJob(Base):
     items_new: Mapped[int] = mapped_column(Integer, default=0)
     items_duplicate: Mapped[int] = mapped_column(Integer, default=0)
     items_failed: Mapped[int] = mapped_column(Integer, default=0)
+    items_classified: Mapped[int] = mapped_column(Integer, default=0)
     
     error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     response_time_ms: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)

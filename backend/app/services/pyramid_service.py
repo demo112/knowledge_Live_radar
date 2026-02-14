@@ -28,6 +28,12 @@ class PyramidService:
             raise HTTPException(status_code=404, detail="未找到金字塔")
         return pyramid
 
+    async def get_nodes(self, pyramid_id: UUID) -> List[Any]:
+        """Get all nodes for a pyramid"""
+        # Ensure pyramid exists
+        await self.get_pyramid(pyramid_id)
+        return await self.node_repo.get_by_pyramid(pyramid_id)
+
     async def get_all_pyramids(self, skip: int = 0, limit: int = 100) -> List[Any]:
         return await self.pyramid_repo.get_all(skip, limit)
 

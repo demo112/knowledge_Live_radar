@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { healthApi, hotspotApi, evolutionApi } from '@/lib/api';
-import { HealthReport, Hotspot } from '@/lib/types';
+import { HealthReport, HealthIssue, Hotspot } from '@/lib/types';
 import { Activity, Zap, RefreshCw, AlertTriangle } from 'lucide-react';
 import PyramidHealthCard from '@/components/health/PyramidHealthCard';
 import SourceHealthSummary from '@/components/health/SourceHealthSummary';
@@ -104,7 +104,11 @@ export default function HealthPage() {
         <SourceHealthSummary score={report?.source_health_score || 0} />
 
         {/* Approval Backlog */}
-        <ApprovalBacklog backlog={report?.approval_backlog || {}} />
+        <ApprovalBacklog backlog={report?.approval_backlog || {
+            pending_count: 0,
+            backlog_penalty: 0,
+            oldest_pending_days: 0
+        }} />
 
         {/* Crawl Stats */}
         <CrawlStats stats={report?.crawl_stats || {}} />
@@ -135,7 +139,7 @@ export default function HealthPage() {
                   {(!report?.issues || report.issues.length === 0) ? (
                       <p className="text-sm text-gray-500">系统运行良好，未发现问题。</p>
                   ) : (
-                      report.issues.map((issue: any, idx: number) => (
+                      report.issues.map((issue: HealthIssue, idx: number) => (
                           <div key={idx} className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-100 dark:border-red-900/50">
                               <div className="flex justify-between">
                                   <span className="font-medium text-sm text-red-800 dark:text-red-300">

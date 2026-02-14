@@ -1,6 +1,5 @@
 import React from 'react';
 import { Layers } from 'lucide-react';
-import { HealthReport } from '@/lib/types';
 
 interface PyramidHealthCardProps {
   scores: Record<string, number>;

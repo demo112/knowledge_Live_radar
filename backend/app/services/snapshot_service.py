@@ -118,6 +118,29 @@ class SnapshotService:
             
         return True
 
+    async def rollback(self, snapshot_id: uuid.UUID) -> bool:
+        """
+        Rollback to a specific snapshot, creating a backup of the current state first.
+        """
+        # 1. Fetch snapshot to get pyramid_id
+        snapshot = await self.get_snapshot_by_id(snapshot_id)
+        if not snapshot:
+            logger.error(f"Snapshot {snapshot_id} not found")
+            return False
+        
+        # 2. Create backup of current state
+        try:
+            await self.create_snapshot(
+                pyramid_id=snapshot.pyramid_id, 
+                reason=f"Auto-backup before rollback to {snapshot.version}"
+            )
+        except Exception as e:
+            logger.error(f"Failed to create backup snapshot: {e}")
+            return False # Abort rollback if backup fails
+        
+        # 3. Perform restore
+        return await self.restore_snapshot(snapshot_id)
+
     async def restore_snapshot(self, snapshot_id: uuid.UUID) -> bool:
         """
         Restore a pyramid to a previous state.
@@ -221,3 +244,8 @@ class SnapshotService:
         stmt = select(Snapshot).where(Snapshot.pyramid_id == pyramid_id).order_by(Snapshot.created_at.desc()).offset(skip).limit(limit)
         result = await self.db.execute(stmt)
         return result.scalars().all()
+
+    async def get_snapshot_by_id(self, snapshot_id: uuid.UUID) -> Optional[Snapshot]:
+        stmt = select(Snapshot).where(Snapshot.id == snapshot_id)
+        result = await self.db.execute(stmt)
+        return result.scalar_one_or_none()

@@ -15,7 +15,7 @@ export default function RollbackDialog({ isOpen, onClose, onConfirm, title }: Pr
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md border border-gray-200 dark:border-gray-700">
         <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">确认回滚</h3>
         <p className="mb-6 text-gray-500 dark:text-gray-400">
-          您确定要回滚 <span className="font-medium text-gray-900 dark:text-white">"{title}"</span> 的变更吗？
+          您确定要回滚 <span className="font-medium text-gray-900 dark:text-white">&quot;{title}&quot;</span> 的变更吗？
           此操作将系统状态恢复到该变更执行之前的状态。
         </p>
         <div className="flex justify-end space-x-4">

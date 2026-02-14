@@ -17,22 +17,21 @@ export function NodeContents({ nodeId }: NodeContentsProps) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const loadContents = async () => {
+      try {
+        setLoading(true);
+        const res = await nodeApi.getContents(nodeId);
+        if (res.success) {
+          setContents(res.data);
+        }
+      } catch (error) {
+        console.error('Failed to load contents', error);
+      } finally {
+        setLoading(false);
+      }
+    };
     loadContents();
   }, [nodeId]);
-
-  const loadContents = async () => {
-    try {
-      setLoading(true);
-      const res = await nodeApi.getContents(nodeId);
-      if (res.success) {
-        setContents(res.data);
-      }
-    } catch (error) {
-      console.error('Failed to load contents', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleUnlink = async (contentId: string) => {
     if (!confirm('Are you sure you want to unlink this content?')) return;
@@ -81,9 +80,9 @@ export function NodeContents({ nodeId }: NodeContentsProps) {
                   <p className="text-sm text-muted-foreground line-clamp-2">{content.summary || 'No summary available.'}</p>
                   {content.concepts && content.concepts.length > 0 && (
                     <div className="flex gap-1 mt-1 flex-wrap">
-                      {content.concepts.map((c: any, i) => (
+                      {content.concepts.map((c: unknown, i) => (
                         <span key={i} className="text-xs bg-muted px-1.5 py-0.5 rounded">
-                          {typeof c === 'string' ? c : c.name}
+                          {typeof c === 'string' ? c : (c as { name: string }).name}
                         </span>
                       ))}
                     </div>

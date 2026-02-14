@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { contentApi } from '@/lib/api';
 import { ContentItem } from '@/types';
-import { Sparkles, Tag, CheckCircle2 } from 'lucide-react';
+import { Sparkles, Tag, CheckCircle2, Shield } from 'lucide-react';
 
 export default function FeedPage() {
   const [contents, setContents] = useState<ContentItem[]>([]);
@@ -109,6 +109,17 @@ export default function FeedPage() {
                     <CheckCircle2 className="w-3 h-3 mr-1" />
                     已验证
                   </span>
+                )}
+                
+                {/* Validation Score */}
+                {item.validation_result?.overall_score !== undefined && (
+                   <span className={`text-xs flex items-center ${
+                     (item.validation_result.overall_score || 0) >= 80 ? 'text-green-600' : 
+                     (item.validation_result.overall_score || 0) >= 60 ? 'text-yellow-600' : 'text-red-600'
+                   }`}>
+                     <Shield className="w-3 h-3 mr-1" />
+                     质量分: {item.validation_result.overall_score}
+                   </span>
                 )}
 
                 {/* Concepts Preview */}

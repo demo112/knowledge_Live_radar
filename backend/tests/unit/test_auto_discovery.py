@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import AsyncMock, patch, MagicMock
-from app.services.auto_discovery import AutoDiscovery
+from app.services.auto_discovery import SourceDiscoveryService
 
 @pytest.mark.asyncio
 async def test_discover_from_url():
@@ -19,7 +19,7 @@ async def test_discover_from_url():
         """
         mock_client.return_value.__aenter__.return_value.get.return_value = mock_response
 
-        discovery = AutoDiscovery()
+        discovery = SourceDiscoveryService()
         results = await discovery.discover_from_url("https://example.com")
         
         assert len(results) >= 1

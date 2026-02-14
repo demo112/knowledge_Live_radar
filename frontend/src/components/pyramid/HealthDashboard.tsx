@@ -1,6 +1,6 @@
 import React from 'react';
 import { HealthReport } from '@/types';
-import { Activity, Layers, AlertTriangle, CheckCircle, Info } from 'lucide-react';
+import { Activity, Layers, CheckCircle, Info } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTranslations } from 'next-intl';
 
@@ -11,7 +11,6 @@ interface HealthDashboardProps {
 
 const HealthDashboard: React.FC<HealthDashboardProps> = ({ report, isLoading }) => {
   const t = useTranslations('Pyramid.Health');
-  const tCommon = useTranslations('Common');
 
   if (isLoading) {
     return <div className="animate-pulse h-32 bg-gray-100 rounded-lg"></div>;
@@ -94,7 +93,7 @@ const HealthDashboard: React.FC<HealthDashboardProps> = ({ report, isLoading }) 
               {suggestions.map((suggestion, index) => (
                 <li key={index} className="text-sm text-gray-600 flex items-start gap-2">
                   <span className="mt-1">•</span>
-                  <span>{suggestion}</span>
+                  <span>{t(suggestion)}</span>
                 </li>
               ))}
             </ul>

@@ -14,7 +14,7 @@ router = APIRouter(
     tags=["hotspots"]
 )
 
-@router.get("/", response_model=List[HotspotSchema])
+@router.get("", response_model=List[HotspotSchema])
 async def list_hotspots(
     limit: int = 20,
     offset: int = 0,

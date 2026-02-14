@@ -7,6 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.models.source import InformationSource
+from app.models.strategy_adjustment import StrategyAdjustment
+from app.models.approval import Approval
 from app.services.config.configuration_service import ConfigurationService
 from app.services.crawl_engine import crawl_engine
 
@@ -119,6 +121,32 @@ class SourceLifecycleManager:
         await self.db.commit()
         await self.db.refresh(source)
 
+    async def on_rate_limit(self, source_id: str):
+        """
+        Handle rate limit (429/403).
+        Does NOT count as error.
+        Reschedules check time to future by updating last_crawled_at.
+        """
+        try:
+            source_uuid = uuid.UUID(source_id)
+        except ValueError:
+            return
+
+        stmt = select(InformationSource).where(InformationSource.id == source_uuid)
+        result = await self.db.execute(stmt)
+        source = result.scalar_one_or_none()
+        if not source:
+            return
+
+        # Cooldown: pretend we just crawled, so it waits for check_interval.
+        # Ideally we might want to wait longer, e.g. 2 * check_interval.
+        # For now, just setting it to now() means it will wait 'check_interval'.
+        source.last_crawled_at = datetime.now(timezone.utc)
+        source.last_error_message = "Rate limited (429/403) - Cooling down"
+        
+        logger.warning(f"Source {source.name} rate limited. Cooling down.")
+        await self.db.commit()
+
     async def on_crawl_failure(self, source_id: str, error_message: str):
         """
         Callback for failed crawl job.
@@ -153,6 +181,7 @@ class SourceLifecycleManager:
             if source.error_count >= 5:
                 await self._record_state_change(source, "MONITORING", "ADJUSTING", f"Consecutive errors: {source.error_count}")
                 source.status = "ADJUSTING"
+                await self._create_adjustment_proposal(source)
         
         elif source.status == "ADJUSTING":
             if source.error_count >= 10:
@@ -172,3 +201,48 @@ class SourceLifecycleManager:
         # Requirement 9.6: Notification (Mock for now)
         if new_status in ["MONITORING", "ADJUSTING", "DEAD"]:
             logger.warning(f"ALERT: Source {source.name} moved to {new_status}. Reason: {reason}")
+
+    async def _create_adjustment_proposal(self, source: InformationSource):
+        """
+        Create a strategy adjustment proposal for failing source.
+        """
+        # Check if there is already a pending proposal for this source
+        stmt = select(Approval).where(
+            Approval.target_id == source.id,
+            Approval.type == "strategy_adjustment",
+            Approval.status == "pending"
+        )
+        result = await self.db.execute(stmt)
+        if result.scalars().first():
+            logger.info(f"Pending strategy adjustment proposal already exists for source {source.name}")
+            return
+
+        reason = f"Source failed {source.error_count} times consecutively. Last error: {source.last_error_message}"
+        
+        adjustment = StrategyAdjustment(
+            source_id=source.id,
+            adjustment_type="manual_intervention",
+            reason=reason,
+            requires_approval=True
+        )
+        self.db.add(adjustment)
+        await self.db.flush() # Get ID for adjustment
+
+        proposal = Approval(
+            type="strategy_adjustment",
+            target_id=source.id,
+            status="pending",
+            data={
+                "adjustment_id": str(adjustment.id),
+                "source_name": source.name,
+                "current_status": source.status,
+                "error_count": source.error_count
+            },
+            generated_by="system",
+            reason=reason
+        )
+        self.db.add(proposal)
+        await self.db.flush()
+        
+        # Link adjustment to proposal
+        adjustment.proposal_id = str(proposal.id)

@@ -22,7 +22,7 @@ class HealthEvaluator:
         nodes = pyramid.nodes
         total_nodes = len(nodes)
         if total_nodes == 0:
-             return {"score": 100, "details": {"depth_score": 100, "coverage_score": 100, "activity_score": 100}, "suggestions": ["Pyramid is empty"]}
+             return {"score": 100, "details": {"depth_score": 100, "coverage_score": 100, "activity_score": 100}, "suggestions": ["pyramid_empty_desc"]}
 
         # 1. Depth Balance (Standard Deviation of leaf depths)
         parent_ids = set(n.parent_id for n in nodes if n.parent_id)
@@ -47,14 +47,14 @@ class HealthEvaluator:
         total_score = int(depth_score * 0.4 + coverage_score * 0.4 + activity_score * 0.2)
         
         suggestions = []
-        if depth_score < 60:
-            suggestions.append("Consider balancing the pyramid depth.")
+        if depth_score < 70:
+            suggestions.append("depth_balance_desc")
         if coverage_score < 60:
-            suggestions.append("Fill in descriptions for empty nodes.")
+            suggestions.append("empty_nodes_desc")
         if activity_score < 40:
-            suggestions.append("Pyramid has low update activity. Consider adding more sources or checking crawl health.")
+            suggestions.append("low_activity_desc")
         elif activity_score < 70:
-            suggestions.append("Pyramid update activity is moderate. Some nodes may need more active sources.")
+            suggestions.append("moderate_activity_desc")
 
         return {
             "score": total_score,

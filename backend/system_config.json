@@ -1,0 +1,20 @@
+{
+  "health.check_interval_hours": 24,
+  "hotspot.emerging_threshold": 5,
+  "hotspot.trending_growth_rate": 0.1,
+  "hotspot.mature_growth_rate_threshold": 0.01,
+  "hotspot.cooling_days_threshold": 14,
+  "hotspot.archive_days_threshold": 30,
+  "drift.similarity_threshold": 0.7,
+  "crawl.default_timeout_seconds": 30,
+  "crawl.max_retries": 3,
+  "restructure.max_node_content": 50,
+  "restructure.max_hierarchy_depth": 5,
+  "restructure.max_siblings": 10,
+  "ai.api_key": "sk-cjknkzteqqljinzsfmhxqmwzqpearrrepcbcdcjgrkeatfkc",
+  "ai.base_url": "https://api.siliconflow.cn/v1",
+  "ai.model": "Qwen/Qwen3-VL-235B-A22B-Instruct",
+  "ai.temperature": 0.7,
+  "ai.max_retries": 3,
+  "ai.enabled": true
+}

@@ -614,34 +614,34 @@ graph TD
     - **验证需求：10.8**
 
 
-- [ ] 19. 创建快照和回滚 API 端点
-  - [ ] 19.1 添加创建快照端点
+- [x] 19. 创建快照和回滚 API 端点
+  - [x] 19.1 添加创建快照端点
     - 在 `backend/app/routers/pyramids.py` 添加 `POST /api/v1/pyramids/{pyramid_id}/snapshots` 路由
     - 接收 `reason` 参数
     - 调用 `SnapshotService.create_snapshot()`
     - 返回创建的快照信息
     - _需求：10.1_
   
-  - [ ] 19.2 添加获取快照列表端点
+  - [x] 19.2 添加获取快照列表端点
     - 添加 `GET /api/v1/pyramids/{pyramid_id}/snapshots` 路由
     - 查询该金字塔的所有快照
     - 按创建时间倒序排列
     - 返回快照列表
     - _需求：11.2_
   
-  - [ ] 19.3 添加获取快照详情端点
+  - [x] 19.3 添加获取快照详情端点
     - 添加 `GET /api/v1/pyramids/{pyramid_id}/snapshots/{snapshot_id}` 路由
     - 返回快照的完整数据（包括节点结构）
     - _需求：11.3_
   
-  - [ ] 19.4 添加回滚端点
+  - [x] 19.4 添加回滚端点
     - 添加 `POST /api/v1/pyramids/{pyramid_id}/rollback/{snapshot_id}` 路由
     - 调用 `SnapshotService.rollback()`
     - 处理错误并返回适当的状态码
     - 返回回滚结果
     - _需求：10.2, 10.5, 10.6_
   
-  - [ ] 19.5 编写单元测试验证快照 API
+  - [x] 19.5 编写单元测试验证快照 API
     - 测试创建快照
     - 测试获取快照列表
     - 测试回滚成功场景

@@ -19,7 +19,9 @@
     "approval": "Approval",
     "history": "History",
     "health": "Health",
+    "synonyms": "Synonyms",
     "scheduler": "Scheduler",
+    "metabolism": "Metabolism",
     "settings": "Settings"
   },
   "Dashboard": {
@@ -102,7 +104,10 @@
       "nodes_with_content": "Nodes with content",
       "recent_updates": "Recent updates",
       "empty_nodes_desc": "Fill in descriptions for empty nodes.",
-      "low_activity_desc": "Pyramid has low update activity. Consider adding more sources or checking crawl health."
+      "low_activity_desc": "Pyramid has low update activity. Consider adding more sources or checking crawl health.",
+      "depth_balance_desc": "Consider balancing the pyramid depth.",
+      "moderate_activity_desc": "Pyramid update activity is moderate. Some nodes may need more active sources.",
+      "pyramid_empty_desc": "Pyramid is empty."
     },
     "Visualizer": {
       "right_click_actions": "Right-click node for actions (Split, Link)",
@@ -117,7 +122,16 @@
         "History": {
             "loading": "Loading history...",
             "title": "Change History",
-            "empty": "No history records."
+            "empty": "No history records.",
+            "create_snapshot": "Create Snapshot",
+            "reason": "Reason",
+            "reason_placeholder": "e.g., Backup before refactor",
+            "rollback": "Rollback",
+            "rollback_confirm_title": "Confirm Rollback",
+            "rollback_confirm_message": "Are you sure you want to rollback to snapshot \"{reason}\" ({version})? All unsaved changes will be lost.",
+            "rollback_success": "Rollback successful",
+            "create_success": "Snapshot created successfully",
+            "operation_failed": "Operation failed"
         },
         "actions": {
           "merge_nodes": "Merge {count} Nodes",
@@ -186,6 +200,20 @@
           "processing": "Linking..."
         }
       }
+  },
+  "Synonyms": {
+    "title": "Synonyms",
+    "description": "Manage concept synonym mappings to improve AI analysis accuracy.",
+    "add": "Add Synonym",
+    "canonical": "Canonical Term",
+    "synonym": "Synonym",
+    "confidence": "Confidence",
+    "source": "Source",
+    "usage": "Usage Count",
+    "actions": "Actions",
+    "delete_confirm": "Are you sure you want to delete this synonym?",
+    "placeholder_canonical": "e.g. Artificial Intelligence",
+    "placeholder_synonym": "e.g. AI"
   },
   "Status": {
     "active": "Active",

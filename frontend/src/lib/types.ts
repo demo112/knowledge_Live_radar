@@ -5,6 +5,13 @@ export interface Pyramid {
   created_at: string;
 }
 
+export interface PyramidTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  [key: string]: unknown;
+}
+
 export interface InformationSource {
   id: string;
   name: string;
@@ -16,6 +23,26 @@ export interface InformationSource {
   consecutive_failures: number;
 }
 
+export interface ApprovalBacklogData {
+  pending_count: number;
+  backlog_penalty?: number;
+  oldest_pending_days?: number;
+  [key: string]: unknown;
+}
+
+export interface CrawlStatsData {
+  total_crawled?: number;
+  success_rate?: number;
+  avg_processing_time?: number;
+  validated_count?: number;
+  rejected_count?: number;
+  active_tasks?: number;
+  success_rate_24h?: number;
+  total_pages_crawled?: number;
+  avg_latency?: number;
+  [key: string]: unknown;
+}
+
 export interface HealthReport {
   id: string;
   report_type: string;
@@ -24,8 +51,8 @@ export interface HealthReport {
   source_health_score: number;
   content_coverage_score: number;
   hotspot_distribution: Record<string, number>;
-  approval_backlog: Record<string, any>;
-  crawl_stats: Record<string, any>;
+  approval_backlog: ApprovalBacklogData;
+  crawl_stats: CrawlStatsData;
   issues: HealthIssue[];
   created_at: string;
 }
@@ -35,6 +62,26 @@ export interface HealthIssue {
   severity: 'low' | 'medium' | 'high' | 'critical';
   description: string;
   entity_id?: string;
+  category?: string;
+}
+
+export interface ContributionStats {
+  total: number;
+  by_status: Record<string, number>;
+  by_type: Record<string, number>;
+  period_days: number;
+}
+
+export interface Contribution {
+  id: string;
+  user_id?: string;
+  input_type: string;
+  original_input: string;
+  status: string;
+  extracted_concepts?: Record<string, unknown>[];
+  extracted_content?: string;
+  created_at: string;
+  rejection_reason?: string;
 }
 
 export interface Hotspot {
@@ -68,14 +115,14 @@ export interface TaskExecution {
   ended_at?: string;
   duration_seconds?: number;
   error_message?: string;
-  result?: any;
+  result?: unknown;
 }
 
 export interface ConfigHistory {
   id: string;
   config_key: string;
-  old_value?: any;
-  new_value?: any;
+  old_value?: unknown;
+  new_value?: unknown;
   changed_by: string;
   created_at: string;
 }
@@ -85,8 +132,14 @@ export interface DriftProposal {
   type: string;
   status: string;
   target_id: string;
-  data: any;
+  data: unknown;
   created_at: string;
+}
+
+export interface ImpactAnalysis {
+  risk_level: string;
+  affected_nodes_count: number;
+  description: string;
 }
 
 export interface ChangeItem {
@@ -94,9 +147,9 @@ export interface ChangeItem {
   type: string;
   created_at: string;
   applicant_id?: string;
-  data?: any;
+  data?: unknown;
   status: string;
   reason?: string;
-  impact_analysis?: any;
-  original_data?: any;
+  impact_analysis?: ImpactAnalysis;
+  original_data?: unknown;
 }

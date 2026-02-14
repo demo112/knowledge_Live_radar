@@ -3,7 +3,7 @@ import { configApi } from '@/lib/api';
 import { Save, Activity, RefreshCw, Eye, EyeOff, AlertTriangle, CheckCircle } from 'lucide-react';
 
 export default function AIConfigForm() {
-  const [configs, setConfigs] = useState<any>({
+  const [configs, setConfigs] = useState<Record<string, unknown>>({
     'ai.api_key': '',
     'ai.base_url': 'https://api.siliconflow.cn/v1',
     'ai.model': 'Qwen/Qwen2.5-7B-Instruct',
@@ -25,7 +25,7 @@ export default function AIConfigForm() {
     setLoading(true);
     try {
       const data = await configApi.getAll();
-      setConfigs((prev: any) => ({ ...prev, ...data }));
+      setConfigs((prev) => ({ ...prev, ...data }));
     } catch (error) {
       console.error("Failed to load configs", error);
     } finally {
@@ -33,8 +33,8 @@ export default function AIConfigForm() {
     }
   };
 
-  const handleChange = (key: string, value: any) => {
-    setConfigs((prev: any) => ({ ...prev, [key]: value }));
+  const handleChange = (key: string, value: unknown) => {
+    setConfigs((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleSave = async () => {
@@ -68,7 +68,7 @@ export default function AIConfigForm() {
       setTestResult(result);
     } catch (error) {
       console.error("Test failed", error);
-      setTestResult({ success: false, message: '连接测试失败: ' + (error as any).message });
+      setTestResult({ success: false, message: '连接测试失败: ' + (error instanceof Error ? error.message : String(error)) });
     } finally {
       setTesting(false);
     }
@@ -90,7 +90,7 @@ export default function AIConfigForm() {
              <input 
                type="checkbox" 
                className="sr-only peer"
-               checked={configs['ai.enabled'] || false}
+               checked={Boolean(configs['ai.enabled'])}
                onChange={(e) => handleChange('ai.enabled', e.target.checked)}
              />
              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
@@ -107,7 +107,7 @@ export default function AIConfigForm() {
           </label>
           <input
             type="text"
-            value={configs['ai.base_url'] || ''}
+            value={(configs['ai.base_url'] as string) || ''}
             onChange={(e) => handleChange('ai.base_url', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             placeholder="https://api.siliconflow.cn/v1"
@@ -123,7 +123,7 @@ export default function AIConfigForm() {
           <div className="relative">
             <input
               type={showKey ? "text" : "password"}
-              value={configs['ai.api_key'] || ''}
+              value={(configs['ai.api_key'] as string) || ''}
               onChange={(e) => handleChange('ai.api_key', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white pr-10"
               placeholder="sk-..."
@@ -146,7 +146,7 @@ export default function AIConfigForm() {
           </label>
           <input
             type="text"
-            value={configs['ai.model'] || ''}
+            value={(configs['ai.model'] as string) || ''}
             onChange={(e) => handleChange('ai.model', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             placeholder="Qwen/Qwen2.5-7B-Instruct"
@@ -158,14 +158,14 @@ export default function AIConfigForm() {
           {/* Temperature */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              温度 (Temperature): {configs['ai.temperature']}
+              温度 (Temperature): {configs['ai.temperature'] as number}
             </label>
             <input
               type="range"
               min="0"
               max="2"
               step="0.1"
-              value={configs['ai.temperature'] || 0.7}
+              value={(configs['ai.temperature'] as number) || 0.7}
               onChange={(e) => handleChange('ai.temperature', parseFloat(e.target.value))}
               className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
             />
@@ -185,7 +185,7 @@ export default function AIConfigForm() {
               type="number"
               min="0"
               max="10"
-              value={configs['ai.max_retries'] || 3}
+              value={(configs['ai.max_retries'] as number) || 3}
               onChange={(e) => handleChange('ai.max_retries', parseInt(e.target.value))}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             />

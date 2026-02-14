@@ -90,6 +90,52 @@ class DecisionExecutor:
             await self.db.rollback()
             return False
 
+    async def rollback_execution(self, approval_id: uuid.UUID) -> bool:
+        """
+        Rollback an executed approval by restoring the snapshot taken before it.
+        """
+        logger.info(f"Rolling back approval {approval_id}")
+        
+        stmt = select(Approval).where(Approval.id == approval_id)
+        result = await self.db.execute(stmt)
+        approval = result.scalar_one_or_none()
+        
+        if not approval:
+            logger.error(f"Approval {approval_id} not found")
+            return False
+            
+        if approval.status != "executed":
+            logger.error(f"Approval {approval_id} is not executed (current: {approval.status})")
+            return False
+
+        # Find the snapshot taken for this approval
+        # We look for snapshots created around the time of execution with the specific reason
+        # Or better, we should have linked snapshot to approval, but we didn't.
+        # We rely on the reason string: "Pre-execution of approval {approval_id}"
+        
+        from app.models.snapshot import Snapshot
+        stmt_snap = select(Snapshot).where(
+            Snapshot.reason == f"Pre-execution of approval {approval_id}"
+        ).order_by(Snapshot.created_at.desc())
+        
+        result_snap = await self.db.execute(stmt_snap)
+        snapshot = result_snap.scalar_one_or_none()
+        
+        if not snapshot:
+            logger.error(f"No snapshot found for approval {approval_id}")
+            return False
+            
+        # Restore
+        success = await self.snapshot_service.restore_snapshot(snapshot.id)
+        
+        if success:
+            approval.status = "rolled_back"
+            await self.db.commit()
+            logger.info(f"Approval {approval_id} rolled back successfully")
+            return True
+            
+        return False
+
     async def _execute_create_node(self, approval: Approval):
         data = approval.data
         pyramid_id = uuid.UUID(data["pyramid_id"])

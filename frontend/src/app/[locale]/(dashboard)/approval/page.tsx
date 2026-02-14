@@ -1,8 +1,12 @@
 'use client';
 
+import { useState } from 'react';
 import ApprovalList from '@/components/approval/ApprovalList';
+import ApprovalHistory from '@/components/approval/ApprovalHistory';
 
 export default function ApprovalPage() {
+  const [activeTab, setActiveTab] = useState<'pending' | 'history'>('pending');
+
   return (
     <div className="max-w-7xl mx-auto">
       <div className="md:flex md:items-center md:justify-between mb-8">
@@ -15,7 +19,35 @@ export default function ApprovalPage() {
           </p>
         </div>
       </div>
-      <ApprovalList />
+
+      <div className="mb-6 border-b border-border">
+        <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+          <button
+            onClick={() => setActiveTab('pending')}
+            className={`
+              whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm
+              ${activeTab === 'pending'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'}
+            `}
+          >
+            待审批
+          </button>
+          <button
+            onClick={() => setActiveTab('history')}
+            className={`
+              whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm
+              ${activeTab === 'history'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'}
+            `}
+          >
+            历史记录
+          </button>
+        </nav>
+      </div>
+
+      {activeTab === 'pending' ? <ApprovalList /> : <ApprovalHistory />}
     </div>
   );
 }

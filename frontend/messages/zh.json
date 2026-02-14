@@ -8,7 +8,8 @@
     "create": "创建",
     "back": "返回",
     "submit": "提交",
-    "confirm": "确认"
+    "confirm": "确认",
+    "close": "关闭"
   },
   "Navigation": {
     "dashboard": "仪表板",
@@ -19,7 +20,9 @@
     "approval": "审批中心",
     "history": "变更历史",
     "health": "健康报告",
+    "synonyms": "同义词库",
     "scheduler": "调度管理",
+    "metabolism": "内容代谢",
     "settings": "设置"
   },
   "Dashboard": {
@@ -102,7 +105,10 @@
       "nodes_with_content": "节点有内容",
       "recent_updates": "近期更新",
       "empty_nodes_desc": "为通过空节点补充描述。",
-      "low_activity_desc": "金字塔更新活跃度低。建议增加信息源或检查抓取健康度。"
+      "low_activity_desc": "金字塔更新活跃度低。建议增加信息源或检查抓取健康度。",
+      "depth_balance_desc": "建议调整金字塔深度平衡。",
+      "moderate_activity_desc": "金字塔更新活跃度中等。部分节点可能需要更多活跃信息源。",
+      "pyramid_empty_desc": "金字塔为空。"
     },
     "Visualizer": {
       "right_click_actions": "右键点击节点进行操作（拆分、链接）",
@@ -117,7 +123,18 @@
         "History": {
             "loading": "加载历史记录中...",
             "title": "变更历史",
-            "empty": "暂无历史记录。"
+            "empty": "暂无历史记录。",
+            "create_snapshot": "创建快照",
+            "reason": "备注",
+            "reason_placeholder": "例如：重构前备份",
+            "rollback": "回滚",
+            "rollback_confirm_title": "确认回滚",
+            "rollback_confirm_message": "确定要回滚到快照 \"{reason}\" ({version}) 吗？当前的所有未保存变更将丢失。",
+            "rollback_success": "回滚成功",
+            "create_success": "快照创建成功",
+            "operation_failed": "操作失败",
+            "preview": "预览",
+            "preview_title": "快照预览: {version}"
         },
         "actions": {
           "merge_nodes": "合并 {count} 个节点",
@@ -186,6 +203,20 @@
           "processing": "关联中..."
         }
       }
+  },
+  "Synonyms": {
+    "title": "同义词库",
+    "description": "管理概念的同义词映射，提升 AI 分析的准确性。",
+    "add": "添加同义词",
+    "canonical": "标准词",
+    "synonym": "同义词",
+    "confidence": "置信度",
+    "source": "来源",
+    "usage": "使用次数",
+    "actions": "操作",
+    "delete_confirm": "确定删除该同义词吗？",
+    "placeholder_canonical": "例如：人工智能",
+    "placeholder_synonym": "例如：AI"
   },
   "Status": {
     "active": "活跃",

@@ -11,7 +11,8 @@ import {
   HeartPulse,
   History,
   Repeat,
-  Settings
+  Settings,
+  Wrench
 } from 'lucide-react';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
@@ -25,6 +26,7 @@ const NAV_ITEMS = [
   { href: '/synonyms', labelKey: 'synonyms', icon: Repeat },
   { href: '/history', labelKey: 'history', icon: History },
   { href: '/health', labelKey: 'health', icon: HeartPulse },
+  { href: '/maintenance/metabolism', labelKey: 'metabolism', icon: Wrench },
   { href: '/settings', labelKey: 'settings', icon: Settings },
 ];
 

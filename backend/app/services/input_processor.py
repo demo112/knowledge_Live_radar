@@ -3,9 +3,12 @@ import uuid
 import asyncio
 from typing import List, Optional, Union
 from fastapi import UploadFile
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.content import ContentItem
 from app.services.input_parser import InputParser
+from app.services.contribution.contribution_tracker import ContributionTracker
 from app.services.fetchers import get_fetcher
 
 logger = logging.getLogger(__name__)
@@ -13,6 +16,14 @@ logger = logging.getLogger(__name__)
 class InputProcessor:
     def __init__(self, db: AsyncSession):
         self.db = db
+        self.contribution_tracker = ContributionTracker(db)
+
+    async def _refetch_with_relations(self, content_id: uuid.UUID) -> ContentItem:
+        stmt = select(ContentItem).where(ContentItem.id == content_id).options(
+            selectinload(ContentItem.validation_result)
+        )
+        result = await self.db.execute(stmt)
+        return result.scalar_one()
 
     async def process_file_input(self, file: UploadFile, submitter_id: Optional[str] = None) -> ContentItem:
         content_text = ""
@@ -51,7 +62,15 @@ class InputProcessor:
             )
             self.db.add(content_item)
             await self.db.commit()
-            await self.db.refresh(content_item)
+            content_item = await self._refetch_with_relations(content_item.id)
+
+            await self.contribution_tracker.create_contribution(
+                user_id=submitter_id,
+                input_type=input_type,
+                original_input=f"file://{file.filename}" if file.filename else "file://unknown",
+                content_id=content_item.id
+            )
+
             return content_item
             
         except Exception as e:
@@ -82,7 +101,15 @@ class InputProcessor:
             )
             self.db.add(content_item)
             await self.db.commit()
-            await self.db.refresh(content_item)
+            content_item = await self._refetch_with_relations(content_item.id)
+
+            await self.contribution_tracker.create_contribution(
+                user_id=submitter_id,
+                input_type="url",
+                original_input=url,
+                content_id=content_item.id
+            )
+
             return content_item
             
         except Exception as e:
@@ -101,7 +128,15 @@ class InputProcessor:
             )
             self.db.add(content_item)
             await self.db.commit()
-            await self.db.refresh(content_item)
+            content_item = await self._refetch_with_relations(content_item.id)
+
+            await self.contribution_tracker.create_contribution(
+                user_id=submitter_id,
+                input_type="text",
+                original_input=text,
+                content_id=content_item.id
+            )
+
             return content_item
         except Exception as e:
             logger.error(f"Error processing text input: {e}")

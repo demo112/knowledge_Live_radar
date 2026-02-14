@@ -1,13 +1,14 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy import select, func, and_
 from sqlalchemy.ext.asyncio import AsyncSession
+from datetime import datetime, timedelta
 
 from app.database import get_db
 from app.models.source import InformationSource
 from app.models.discovered_domain import DiscoveredDomain
 from app.models.domain_whitelist import DomainWhitelist
 from app.models.content import ContentItem, ValidationResult
-from app.schemas.dashboard import DashboardStats
+from app.schemas.dashboard import DashboardStats, DashboardTrend, DailyTrend
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
@@ -38,8 +39,6 @@ async def get_dashboard_stats(
     
     # Validation Rate
     # Assuming overall_score >= 60 is passed
-    # Check if overall_score exists in ValidationResult
-    # ValidationResult is joined with ContentItem usually, but here we just query table
     
     stmt_validations = select(func.count()).select_from(ValidationResult)
     total_validations = (await db.execute(stmt_validations)).scalar() or 0
@@ -58,3 +57,49 @@ async def get_dashboard_stats(
         total_contents=total_contents,
         validation_pass_rate=round(pass_rate, 2)
     )
+
+@router.get("/trend", response_model=DashboardTrend)
+async def get_dashboard_trend(
+    days: int = Query(7, ge=1, le=30),
+    db: AsyncSession = Depends(get_db)
+):
+    # Calculate start date
+    start_date = datetime.now() - timedelta(days=days)
+    
+    # Query validation results
+    stmt = select(ValidationResult.verified_at, ValidationResult.overall_score).where(
+        ValidationResult.verified_at >= start_date
+    ).order_by(ValidationResult.verified_at)
+    
+    results = (await db.execute(stmt)).all()
+    
+    # Group by date in python
+    daily_data = {}
+    for verified_at, score in results:
+        if not verified_at:
+            continue
+        date_str = verified_at.strftime('%Y-%m-%d')
+        if date_str not in daily_data:
+            daily_data[date_str] = {"total": 0, "passed": 0}
+        
+        daily_data[date_str]["total"] += 1
+        if score is not None and score >= 60:
+            daily_data[date_str]["passed"] += 1
+            
+    # Format response
+    trends = []
+    # Ensure all days are covered
+    for i in range(days):
+        date = (datetime.now() - timedelta(days=days-1-i)).strftime('%Y-%m-%d')
+        data = daily_data.get(date, {"total": 0, "passed": 0})
+        pass_rate = 0.0
+        if data["total"] > 0:
+            pass_rate = (data["passed"] / data["total"]) * 100
+            
+        trends.append(DailyTrend(
+            date=date,
+            total_validations=data["total"],
+            pass_rate=round(pass_rate, 2)
+        ))
+        
+    return DashboardTrend(trends=trends)

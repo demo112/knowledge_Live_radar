@@ -92,7 +92,7 @@ export default function ChangeDetail({ change, onClose, onRollback }: Props) {
                 <pre className="text-xs text-gray-800 dark:text-gray-300">{JSON.stringify(change.data, null, 2)}</pre>
               </div>
             </div>
-            {change.original_data && (
+            {!!change.original_data && (
               <div>
                 <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">原始数据（快照）</h3>
                 <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg overflow-x-auto max-h-60 border border-gray-200 dark:border-gray-700">

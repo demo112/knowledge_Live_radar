@@ -1,8 +1,8 @@
 'use client';
 
-import { use, useEffect, useState } from 'react';
+import { use, useEffect, useState, useCallback } from 'react';
 import { contentApi, evolutionApi } from '@/lib/api';
-import { ContentItem } from '@/types';
+import { ContentItem, LinkedNode } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,15 +14,11 @@ export default function ContentDetailPage({ params }: { params: Promise<{ id: st
   const contentId = unwrappedParams.id;
   
   const [content, setContent] = useState<ContentItem | null>(null);
-  const [nodes, setNodes] = useState<any[]>([]);
+  const [nodes, setNodes] = useState<LinkedNode[]>([]);
   const [loading, setLoading] = useState(true);
   const [classifying, setClassifying] = useState(false);
 
-  useEffect(() => {
-    fetchData();
-  }, [contentId]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       const [contentRes, nodesRes] = await Promise.all([
@@ -37,7 +33,11 @@ export default function ContentDetailPage({ params }: { params: Promise<{ id: st
     } finally {
       setLoading(false);
     }
-  };
+  }, [contentId]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleClassify = async () => {
     try {
@@ -87,7 +87,7 @@ export default function ContentDetailPage({ params }: { params: Promise<{ id: st
               <div>
                 <h3 className="font-semibold mb-1">Concepts</h3>
                 <div className="flex flex-wrap gap-2">
-                  {content.concepts?.map((c: any, i) => (
+                  {content.concepts?.map((c: string | { name: string }, i) => (
                     <Badge key={i} variant="secondary">
                       {typeof c === 'string' ? c : c.name}
                     </Badge>

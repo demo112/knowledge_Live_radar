@@ -35,7 +35,7 @@ async def test_lifecycle_manager_failure():
     await manager.update_source_status(source, job, session)
     
     assert source.error_count == 3
-    assert source.status == "ERROR"
+    assert source.status == "MONITORING"
     assert source.last_error_message == "Test Error"
     session.add.assert_called_once()
     session.commit.assert_called_once()
