@@ -5,6 +5,12 @@
 ## [Unreleased]
 
 ### Added
+- **内容代谢 (Content Metabolism)**:
+  - 实现基于质量、时间和热度的多维度评分 (Metabolism Score)
+  - 实现 ACTIVE -> DEPRECATED -> ARCHIVED -> DELETED 的全生命周期流转
+  - 集成 APScheduler 每日自动跑批处理
+  - 新增后端 API: `/api/v1/content-management/metabolism/*`
+  - 新增前端管理页面: `Maintenance > Content Metabolism`
 - **金字塔进化**: 实现基于向量相似度的内容自动归类 (Auto-Classification) 和聚类发现 (Clustering)。
 - **E2E测试**: 增加 Playwright 自动化测试覆盖进化流程。
 - **AI 核心能力**: 集成硅基流动 API，实现基于 Prompt 的智能内容处理。
