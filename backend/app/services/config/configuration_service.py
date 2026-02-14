@@ -2,6 +2,7 @@ import os
 import json
 import logging
 import asyncio
+import urllib.parse
 from typing import Any, Dict, List, Optional, Callable
 from sqlalchemy import select, desc
 
@@ -47,6 +48,23 @@ class ConfigurationService:
             "restructure.max_node_content": 50,
             "restructure.max_hierarchy_depth": 5,
             "restructure.max_siblings": 10,
+            
+            # AI configuration (Cloud/Legacy)
+            "ai.api_key": "",
+            "ai.base_url": "https://api.siliconflow.cn/v1",
+            "ai.model": "deepseek-ai/DeepSeek-V3",
+            "ai.temperature": 0.3,
+            "ai.max_retries": 3,
+            "ai.enabled": False,
+
+            # AI Local configuration
+            "ai.local.base_url": "http://localhost:11434/v1",
+            "ai.local.model": "qwen2.5:7b",
+            "ai.local.timeout": 5.0,
+            "ai.local.enabled": True,
+
+            # AI Strategy
+            "ai.strategy": "local_first", # local_first, cloud_only, local_only
         }
 
     def _load_from_file_sync(self):
@@ -64,8 +82,39 @@ class ConfigurationService:
 
     def get_all(self) -> Dict[str, Any]:
         return self._config_cache.copy()
+    def get_masked(self, key: str) -> Any:
+        """Get configuration value with masking applied for sensitive data.
+
+        For API keys (strings longer than 8 characters), returns masked format:
+        "first4***last4"
+
+        For other configuration items, returns the original value.
+
+        Args:
+            key: Configuration key to retrieve
+
+        Returns:
+            Masked value for sensitive strings, original value otherwise
+        """
+        value = self.get(key)
+
+        # Only mask sensitive keys
+        sensitive_keys = ["ai.api_key"]
+        if key not in sensitive_keys and "password" not in key and "secret" not in key:
+            return value
+
+        # Only mask string values longer than 8 characters
+        if isinstance(value, str) and len(value) > 8:
+            return value[:4] + "***" + value[-4:]
+
+        return value
 
     async def set(self, key: str, value: Any, user_id: str = "system"):
+        # Skip update if value is masked (contains "***")
+        if isinstance(value, str) and "***" in value:
+            logger.info(f"Skipping update for {key} because value is masked")
+            return
+
         old_value = self.get(key)
         if old_value == value:
             return
@@ -104,7 +153,21 @@ class ConfigurationService:
            key.endswith("_seconds") or key.endswith("_minutes") or \
            key.endswith("_hours") or key.endswith("_days"):
             if isinstance(value, (int, float)) and value < 0:
-                 raise ValueError(f"Value for '{key}' must be non-negative")
+                  raise ValueError(f"Value for '{key}' must be non-negative")
+
+        # AI Configuration Validation
+        if key == "ai.base_url":
+            result = urllib.parse.urlparse(str(value))
+            if not all([result.scheme, result.netloc]):
+                raise ValueError("ai.base_url must be a valid URL")
+        
+        if key == "ai.temperature":
+            if not isinstance(value, (int, float)) or not (0.0 <= value <= 2.0):
+                raise ValueError("ai.temperature must be between 0.0 and 2.0")
+
+        if key == "ai.max_retries":
+            if not isinstance(value, int) or value <= 0:
+                raise ValueError("ai.max_retries must be a positive integer")
 
     async def _save_to_file(self):
         try:
