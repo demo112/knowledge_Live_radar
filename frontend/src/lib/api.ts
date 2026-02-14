@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { HealthReport, Hotspot, ScheduledTask, TaskExecution, ConfigHistory, DriftProposal, VisualizationData, MergeRequest, SplitRequest, LinkRequest, NodeRelation, PyramidNode, Synonym, SynonymCreate } from '../types';
+import { MergeRequest, SplitRequest, LinkRequest, SynonymCreate } from '../types';
 
 const isServer = typeof window === 'undefined';
 // Server-side calls should go directly to the backend
@@ -24,7 +24,7 @@ export const pyramidApi = {
     const response = await api.get(`/pyramids/${id}`);
     return response.data;
   },
-  create: async (data: any) => {
+  create: async (data: Record<string, unknown>) => {
     const response = await api.post('/pyramids', data);
     return response.data;
   },
@@ -40,11 +40,11 @@ export const pyramidApi = {
     const response = await api.get(`/pyramids/${id}/export`);
     return response.data;
   },
-  importTemplate: async (data: any) => {
+  importTemplate: async (data: Record<string, unknown>) => {
     const response = await api.post('/pyramids/import', data);
     return response.data;
   },
-  update: async (id: string, data: any) => {
+  update: async (id: string, data: Record<string, unknown>) => {
     const response = await api.put(`/pyramids/${id}`, data);
     return response.data;
   },
@@ -52,11 +52,11 @@ export const pyramidApi = {
     const response = await api.delete(`/pyramids/${id}`);
     return response.data;
   },
-  addNode: async (pyramidId: string, data: any) => {
+  addNode: async (pyramidId: string, data: Record<string, unknown>) => {
     const response = await api.post(`/pyramids/${pyramidId}/nodes`, data);
     return response.data;
   },
-  mergeNodes: async (pyramidId: string, data: any) => {
+  mergeNodes: async (pyramidId: string, data: MergeRequest) => {
     const response = await api.post(`/pyramids/${pyramidId}/merge-nodes`, data);
     return response.data;
   },
@@ -71,19 +71,31 @@ export const pyramidApi = {
   getHistory: async (pyramidId: string) => {
     const response = await api.get(`/pyramids/${pyramidId}/snapshots`);
     return response.data;
+  },
+  createSnapshot: async (pyramidId: string, reason: string) => {
+    const response = await api.post(`/pyramids/${pyramidId}/snapshots`, { reason });
+    return response.data;
+  },
+  getSnapshot: async (pyramidId: string, snapshotId: string) => {
+    const response = await api.get(`/pyramids/${pyramidId}/snapshots/${snapshotId}`);
+    return response.data;
+  },
+  rollback: async (pyramidId: string, snapshotId: string) => {
+    const response = await api.post(`/pyramids/${pyramidId}/rollback/${snapshotId}`);
+    return response.data;
   }
 };
 
 export const nodeApi = {
-  split: async (id: string, data: any) => {
+  split: async (id: string, data: SplitRequest) => {
     const response = await api.post(`/nodes/${id}/split`, data);
     return response.data;
   },
-  link: async (id: string, data: any) => {
+  link: async (id: string, data: LinkRequest) => {
     const response = await api.post(`/nodes/${id}/link`, data);
     return response.data;
   },
-  move: async (id: string, data: any) => {
+  move: async (id: string, data: { target_parent_id: string }) => {
     const response = await api.post(`/nodes/${id}/move`, data);
     return response.data;
   },
@@ -91,7 +103,7 @@ export const nodeApi = {
     const response = await api.get(`/nodes/${id}`);
     return response.data;
   },
-  update: async (id: string, data: any) => {
+  update: async (id: string, data: Record<string, unknown>) => {
     const response = await api.put(`/nodes/${id}`, data);
     return response.data;
   },
@@ -118,11 +130,11 @@ export const sourceApi = {
     const response = await api.get('/sources');
     return response.data;
   },
-  create: async (data: any) => {
+  create: async (data: Record<string, unknown>) => {
     const response = await api.post('/sources', data);
     return response.data;
   },
-  update: async (id: string, data: any) => {
+  update: async (id: string, data: Record<string, unknown>) => {
     const response = await api.put(`/sources/${id}`, data);
     return response.data;
   },
@@ -146,14 +158,14 @@ export const sourceApi = {
     const response = await api.get('/sources/templates');
     return response.data;
   },
-  renderTemplate: async (id: string, params: any) => {
+  renderTemplate: async (id: string, params: Record<string, unknown>) => {
     const response = await api.post(`/sources/templates/${id}/render`, params);
     return response.data;
   }
 };
 
 export const contentApi = {
-  getAll: async (params?: any) => {
+  getAll: async (params?: Record<string, unknown>) => {
     const response = await api.get('/contents', { params });
     return response.data;
   },
@@ -251,7 +263,7 @@ export const whitelistApi = {
     const response = await api.get('/whitelist');
     return response.data;
   },
-  add: async (data: any) => {
+  add: async (data: { domain: string; reason?: string }) => {
     const response = await api.post('/whitelist', data);
     return response.data;
   },
@@ -259,7 +271,7 @@ export const whitelistApi = {
     const response = await api.delete(`/whitelist/${id}`);
     return response.data;
   },
-  update: async (id: string, data: any) => {
+  update: async (id: string, data: Record<string, unknown>) => {
     const response = await api.put(`/whitelist/${id}`, data);
     return response.data;
   },
@@ -319,7 +331,7 @@ export const synonymApi = {
     const response = await api.post('/synonyms', data);
     return response.data;
   },
-  bulkCreate: async (data: any) => {
+  bulkCreate: async (data: SynonymCreate[]) => {
     const response = await api.post('/synonyms/bulk', data);
     return response.data;
   },
@@ -402,12 +414,33 @@ export const configApi = {
     const response = await api.get('/config');
     return response.data;
   },
-  update: async (key: string, value: any) => {
+  update: async (key: string, value: unknown) => {
     const response = await api.put(`/config/${key}`, { value });
     return response.data;
   },
   testAIConnection: async () => {
     const response = await api.post('/config/ai/test');
+    return response.data;
+  }
+};
+
+export const contentManagementApi = {
+  batchClean: async (dryRun: boolean = false, chineseRatioThreshold: number = 0.2) => {
+    const response = await api.post('/content-management/clean', { 
+      dry_run: dryRun, 
+      chinese_ratio_threshold: chineseRatioThreshold 
+    });
+    return response.data;
+  },
+  batchSummarize: async (targetIds?: string[], overwrite: boolean = true) => {
+    const response = await api.post('/content-management/summarize', { 
+      target_ids: targetIds, 
+      overwrite 
+    });
+    return response.data;
+  },
+  batchDelete: async (ids: string[]) => {
+    const response = await api.post('/content-management/delete', { ids });
     return response.data;
   }
 };
