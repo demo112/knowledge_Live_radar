@@ -254,7 +254,7 @@ export default function PyramidHistory({ pyramidId }: PyramidHistoryProps) {
         <DialogContent className="max-w-4xl h-[80vh]">
           <DialogHeader>
             <DialogTitle>
-              {t('preview_title', { version: previewSnapshot?.version })}
+              {t('preview_title', { version: previewSnapshot?.version || '' })}
             </DialogTitle>
             <DialogDescription>
                 {previewSnapshot?.reason}
