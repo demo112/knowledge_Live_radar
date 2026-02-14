@@ -6,7 +6,8 @@ from app.config import settings
 from app.routers import (
     pyramids, nodes, sources, contents, discovery, approvals, 
     input, whitelist, dashboard, health,
-    hotspots, drift, strategy, scheduler, config, evolution
+    hotspots, drift, strategy, scheduler, config, evolution,
+    contributions, synonyms, classification
 )
 
 # Configure Logging
@@ -17,6 +18,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 from app.services.scheduler.scheduler_service import scheduler_service
+from app.services.scheduler.crawl_manager import crawl_manager
 from app.services.scheduler import tasks
 from app.services.scheduler.task_registry import TaskRegistry
 from app.services.prompt_loader import prompt_loader
@@ -34,6 +36,7 @@ async def lifespan(app: FastAPI):
 
     # Startup
     await scheduler_service.start()
+    await crawl_manager.start()
     
     # Load AI Prompts
     await prompt_loader.load_initial_prompts()
@@ -71,6 +74,7 @@ async def lifespan(app: FastAPI):
     yield
     # Shutdown
     await scheduler_service.stop()
+    await crawl_manager.stop()
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -109,6 +113,9 @@ app.include_router(strategy.router, prefix=settings.API_V1_STR)
 app.include_router(scheduler.router, prefix=settings.API_V1_STR)
 app.include_router(config.router, prefix=settings.API_V1_STR)
 app.include_router(evolution.router, prefix=settings.API_V1_STR)
+app.include_router(contributions.router, prefix=settings.API_V1_STR)
+app.include_router(synonyms.router, prefix=settings.API_V1_STR)
+app.include_router(classification.router, prefix=settings.API_V1_STR)
 
 @app.get("/")
 async def root():
