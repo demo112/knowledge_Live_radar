@@ -14,22 +14,31 @@ class AITestService:
         """
         pass
 
-    async def test_connection(self) -> Dict[str, Any]:
+    async def test_connection(self, target: str = "auto") -> Dict[str, Any]:
         """
         Test connection to AI provider using current configuration.
-        
-        Returns:
-            Dict containing:
-            - success: bool
-            - message: str
-            - latency_ms: float (optional)
-            - model: str (optional)
-            - code: str (optional, for errors)
+        Respects ai.strategy to determine which service to test.
         """
         enabled = configuration_service.get("ai.enabled")
-        api_key = configuration_service.get("ai.api_key")
-        base_url = configuration_service.get("ai.base_url")
-        model = configuration_service.get("ai.model")
+        strategy = configuration_service.get("ai.strategy") or "cloud_only"
+        
+        # Determine target config based on strategy or explicit target
+        if target == "local":
+            use_local = True
+        elif target == "cloud":
+            use_local = False
+        else:
+            # For 'local_first' or 'local_only', we prioritize testing local
+            use_local = strategy in ["local_first", "local_only"]
+        
+        if use_local:
+            api_key = "ollama" # Local usually doesn't need key
+            base_url = configuration_service.get("ai.local.base_url")
+            model = configuration_service.get("ai.local.model")
+        else:
+            api_key = configuration_service.get("ai.api_key")
+            base_url = configuration_service.get("ai.base_url")
+            model = configuration_service.get("ai.model")
 
         if not enabled:
             return {
@@ -38,11 +47,18 @@ class AITestService:
                 "code": "AI_DISABLED"
             }
 
-        if not api_key:
+        if not api_key and not use_local:
              return {
                 "success": False,
                 "message": "未配置 API Key",
                 "code": "API_KEY_MISSING"
+            }
+            
+        if not base_url:
+             return {
+                "success": False,
+                "message": "未配置 Base URL",
+                "code": "URL_MISSING"
             }
 
         # Create a temporary client for testing
@@ -72,11 +88,12 @@ class AITestService:
             
             latency = (time.time() - start_time) * 1000 # ms
             
+            target_name = "Local AI" if use_local else "Cloud AI"
             return {
                 "success": True,
                 "latency_ms": round(latency, 2),
                 "model": model,
-                "message": "连接测试成功"
+                "message": f"{target_name} 连接测试成功"
             }
             
         except Exception as e:

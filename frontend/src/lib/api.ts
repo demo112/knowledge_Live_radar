@@ -433,29 +433,29 @@ export const configApi = {
     const response = await api.put(`/config/${key}`, { value });
     return response.data;
   },
-  testAIConnection: async () => {
-    const response = await api.post('/config/ai/test');
+  testAIConnection: async (target: 'auto' | 'local' | 'cloud' = 'auto') => {
+    const response = await api.post('/config/ai/test', null, { params: { target } });
     return response.data;
   }
 };
 
 export const contentManagementApi = {
   batchClean: async (dryRun: boolean = false, chineseRatioThreshold: number = 0.2) => {
-    const response = await api.post('/content-management/clean', { 
+    const response = await api.post('/contents/batch/clean', { 
       dry_run: dryRun, 
       chinese_ratio_threshold: chineseRatioThreshold 
     });
     return response.data;
   },
   batchSummarize: async (targetIds?: string[], overwrite: boolean = true) => {
-    const response = await api.post('/content-management/summarize', { 
+    const response = await api.post('/contents/batch/summarize', { 
       target_ids: targetIds, 
       overwrite 
     });
     return response.data;
   },
   batchDelete: async (ids: string[]) => {
-    const response = await api.post('/content-management/delete', { ids });
+    const response = await api.post('/contents/batch/delete', { ids });
     return response.data;
   }
 };

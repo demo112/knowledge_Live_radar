@@ -80,9 +80,10 @@ async def update_config(
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/ai/test")
-async def test_ai_connection():
+async def test_ai_connection(target: str = "auto"):
     """
     Test connectivity to the AI provider using current configuration.
+    target: "auto", "local", "cloud"
     """
     service = AITestService()
-    return await service.test_connection()
+    return await service.test_connection(target)

@@ -18,7 +18,7 @@ export default function AIConfigForm() {
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [testing, setTesting] = useState(false);
+  const [testingTarget, setTestingTarget] = useState<'auto' | 'local' | 'cloud' | null>(null);
   const [showKey, setShowKey] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; message: string; latency_ms?: number } | null>(null);
 
@@ -65,17 +65,17 @@ export default function AIConfigForm() {
     }
   };
 
-  const handleTestConnection = async () => {
-    setTesting(true);
+  const handleTestConnection = async (target: 'auto' | 'local' | 'cloud' = 'auto') => {
+    setTestingTarget(target);
     setTestResult(null);
     try {
-      const result = await configApi.testAIConnection();
+      const result = await configApi.testAIConnection(target);
       setTestResult(result);
     } catch (error) {
       console.error("Test failed", error);
       setTestResult({ success: false, message: '连接测试失败: ' + (error instanceof Error ? error.message : String(error)) });
     } finally {
-      setTesting(false);
+      setTestingTarget(null);
     }
   };
 
@@ -194,6 +194,18 @@ export default function AIConfigForm() {
                 />
               </div>
             </div>
+            
+            <div className="flex justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => handleTestConnection('local')}
+                disabled={!!testingTarget || !configs['ai.local.enabled']}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 disabled:opacity-50 transition-colors dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+              >
+                {testingTarget === 'local' ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Activity className="w-3 h-3" />}
+                测试本地连接
+              </button>
+            </div>
           </div>
         )}
 
@@ -256,6 +268,18 @@ export default function AIConfigForm() {
                 placeholder="Qwen/Qwen2.5-7B-Instruct"
               />
             </div>
+
+            <div className="flex justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => handleTestConnection('cloud')}
+                disabled={!!testingTarget || !configs['ai.enabled']}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 disabled:opacity-50 transition-colors dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+              >
+                {testingTarget === 'cloud' ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Activity className="w-3 h-3" />}
+                测试云端连接
+              </button>
+            </div>
           </div>
         )}
 
@@ -301,7 +325,10 @@ export default function AIConfigForm() {
 
       {/* Test Result Area */}
       {testResult && (
-        <div className={`p-4 rounded-md flex items-start gap-3 ${testResult.success ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+        <div 
+          data-testid="connection-test-result"
+          className={`p-4 rounded-md flex items-start gap-3 ${testResult.success ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}
+        >
           {testResult.success ? <CheckCircle className="w-5 h-5 mt-0.5" /> : <AlertTriangle className="w-5 h-5 mt-0.5" />}
           <div>
             <p className="font-medium">{testResult.success ? '连接成功' : '连接失败'}</p>
@@ -325,12 +352,12 @@ export default function AIConfigForm() {
         </button>
 
         <button
-          onClick={handleTestConnection}
-          disabled={testing || !configs['ai.enabled']}
+          onClick={() => handleTestConnection('auto')}
+          disabled={!!testingTarget || !configs['ai.enabled']}
           className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 disabled:opacity-50 transition-colors dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
         >
-          {testing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Activity className="w-4 h-4" />}
-          测试连接
+          {testingTarget === 'auto' ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Activity className="w-4 h-4" />}
+          测试当前策略连接
         </button>
       </div>
     </div>
