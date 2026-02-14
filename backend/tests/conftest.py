@@ -6,9 +6,16 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 from sqlalchemy.pool import StaticPool
 from app.database import Base, get_db
 from app.main import app
+from unittest.mock import patch
 
 # 使用内存 SQLite 数据库
 SQLALCHEMY_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
+
+@pytest_asyncio.fixture(autouse=True)
+async def mock_sleep():
+    """Globally disable random sleep in RequestUtils for all tests."""
+    with patch("app.services.fetchers.request_utils.RequestUtils.random_sleep", new_callable=lambda: lambda *args, **kwargs: None):
+        yield
 
 @pytest_asyncio.fixture
 async def db_session():
