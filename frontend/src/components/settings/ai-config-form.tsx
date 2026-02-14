@@ -9,7 +9,12 @@ export default function AIConfigForm() {
     'ai.model': 'Qwen/Qwen2.5-7B-Instruct',
     'ai.temperature': 0.7,
     'ai.max_retries': 3,
-    'ai.enabled': false
+    'ai.enabled': false,
+    'ai.strategy': 'local_first',
+    'ai.local.enabled': true,
+    'ai.local.base_url': 'http://localhost:11434/v1',
+    'ai.local.model': 'qwen2.5:7b',
+    'ai.local.timeout': 5.0
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -100,61 +105,162 @@ export default function AIConfigForm() {
       </div>
 
       <div className="grid grid-cols-1 gap-6">
-        {/* Base URL */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            API Base URL
+        
+        {/* Strategy Selection */}
+        <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg border border-gray-100 dark:border-gray-700">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+            调度策略 (Strategy)
           </label>
-          <input
-            type="text"
-            value={(configs['ai.base_url'] as string) || ''}
-            onChange={(e) => handleChange('ai.base_url', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-            placeholder="https://api.siliconflow.cn/v1"
-          />
-          <p className="mt-1 text-xs text-gray-500">兼容 OpenAI 接口的服务地址</p>
-        </div>
-
-        {/* API Key */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            API Key
-          </label>
-          <div className="relative">
-            <input
-              type={showKey ? "text" : "password"}
-              value={(configs['ai.api_key'] as string) || ''}
-              onChange={(e) => handleChange('ai.api_key', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white pr-10"
-              placeholder="sk-..."
-            />
-            <button
-              type="button"
-              onClick={() => setShowKey(!showKey)}
-              className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-500 hover:text-gray-700"
-            >
-              {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </button>
+          <div className="flex gap-4">
+            {[
+              { value: 'local_first', label: '本地优先 (Local First)', desc: '优先使用本地，失败时自动降级到云端' },
+              { value: 'local_only', label: '仅本地 (Local Only)', desc: '只使用本地模型，不连接外网' },
+              { value: 'cloud_only', label: '仅云端 (Cloud Only)', desc: '只使用云端服务' },
+            ].map((option) => (
+              <label key={option.value} className="flex items-start gap-2 cursor-pointer group">
+                <input
+                  type="radio"
+                  name="ai.strategy"
+                  value={option.value}
+                  checked={configs['ai.strategy'] === option.value}
+                  onChange={(e) => handleChange('ai.strategy', e.target.value)}
+                  className="mt-1"
+                />
+                <div>
+                  <div className="text-sm font-medium text-gray-900 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                    {option.label}
+                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                    {option.desc}
+                  </div>
+                </div>
+              </label>
+            ))}
           </div>
-          <p className="mt-1 text-xs text-gray-500">如显示为 *** 则表示已脱敏，无需修改。留空则禁用 AI。</p>
         </div>
 
-        {/* Model */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            模型名称 (Model)
-          </label>
-          <input
-            type="text"
-            value={(configs['ai.model'] as string) || ''}
-            onChange={(e) => handleChange('ai.model', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-            placeholder="Qwen/Qwen2.5-7B-Instruct"
-          />
-        </div>
+        {/* Local AI Configuration */}
+        {(configs['ai.strategy'] !== 'cloud_only') && (
+          <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-md font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                🏠 本地模型配置 (Local AI)
+              </h3>
+              <label className="flex items-center cursor-pointer">
+                 <input 
+                   type="checkbox" 
+                   className="sr-only peer"
+                   checked={Boolean(configs['ai.local.enabled'])}
+                   onChange={(e) => handleChange('ai.local.enabled', e.target.checked)}
+                 />
+                 <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-green-600"></div>
+              </label>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Local Base URL
+                </label>
+                <input
+                  type="text"
+                  value={(configs['ai.local.base_url'] as string) || ''}
+                  onChange={(e) => handleChange('ai.local.base_url', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  placeholder="http://localhost:11434/v1"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Local Model Name
+                </label>
+                <input
+                  type="text"
+                  value={(configs['ai.local.model'] as string) || ''}
+                  onChange={(e) => handleChange('ai.local.model', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  placeholder="qwen2.5:7b"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Timeout (Seconds)
+                </label>
+                <input
+                  type="number"
+                  value={(configs['ai.local.timeout'] as number) || 5.0}
+                  onChange={(e) => handleChange('ai.local.timeout', parseFloat(e.target.value))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Cloud AI Configuration */}
+        {(configs['ai.strategy'] !== 'local_only') && (
+          <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-4">
+            <h3 className="text-md font-medium text-gray-900 dark:text-white flex items-center gap-2">
+              ☁️ 云端模型配置 (Cloud AI)
+            </h3>
+            
+            {/* Base URL */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Cloud API Base URL
+              </label>
+              <input
+                type="text"
+                value={(configs['ai.base_url'] as string) || ''}
+                onChange={(e) => handleChange('ai.base_url', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                placeholder="https://api.siliconflow.cn/v1"
+              />
+              <p className="mt-1 text-xs text-gray-500">兼容 OpenAI 接口的服务地址</p>
+            </div>
+
+            {/* API Key */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                API Key
+              </label>
+              <div className="relative">
+                <input
+                  type={showKey ? "text" : "password"}
+                  value={(configs['ai.api_key'] as string) || ''}
+                  onChange={(e) => handleChange('ai.api_key', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white pr-10"
+                  placeholder="sk-..."
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowKey(!showKey)}
+                  className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-500 hover:text-gray-700"
+                >
+                  {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              <p className="mt-1 text-xs text-gray-500">如显示为 *** 则表示已脱敏，无需修改。留空则禁用 AI。</p>
+            </div>
+
+            {/* Model */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Cloud Model Name
+              </label>
+              <input
+                type="text"
+                value={(configs['ai.model'] as string) || ''}
+                onChange={(e) => handleChange('ai.model', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                placeholder="Qwen/Qwen2.5-7B-Instruct"
+              />
+            </div>
+          </div>
+        )}
 
         {/* Parameters Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t dark:border-gray-700">
           {/* Temperature */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
