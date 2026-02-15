@@ -5,6 +5,14 @@
 ## [Unreleased]
 
 ### Added
+- **AI-First 架构重构**:
+  - 新增 AI 核心层 (`backend/app/core/ai/`)，统一管理 Prompt、Client 和 Processors
+  - 实现两阶段 AI 建议模型 (`AISuggestion`)，支持 Suggest -> Confirm 流程
+  - 实现基于 Markdown 的 Prompt 模板管理和动态加载
+  - 新增 AI 辅助金字塔创建 (`/api/v1/pyramids/suggest`)
+  - 新增 AI 辅助信息源分析 (`/api/v1/sources/analyze`)
+  - 新增 AI 内容实时分类 (`/api/v1/contents/classify`)
+  - 前端新增 AI 思考过程展示 (`AIReasoningDisplay`) 和结果预览组件
 - **AI 配置测试**: 支持分别测试本地模型和云端模型的连通性。
 - **内容代谢 (Content Metabolism)**:
   - 实现基于质量、时间和热度的多维度评分 (Metabolism Score)
