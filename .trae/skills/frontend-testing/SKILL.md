@@ -100,9 +100,15 @@ cd frontend && npx vitest --run src/utils/date.test.ts
 # 运行整个项目
 cd frontend && npm test
 
-# 运行后端测试
+# 运行后端测试（注意：不要添加任何会启动服务器的参数）
 cd backend && python -m pytest tests/
 ```
+
+**⚠️ 重要：测试命令必须非阻塞**
+- ✅ 命令执行完毕后应立即返回到命令提示符
+- ❌ 不要使用任何会输出 "Serving HTML report at..." 的命令
+- ❌ 不要使用任何需要按 Ctrl+C 退出的命令
+- ✅ 如需查看 HTML 报告，直接用浏览器打开生成的文件
 
 ### 场景 C：测试失败处理
 

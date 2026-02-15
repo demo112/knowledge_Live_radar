@@ -1,11 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { approvalApi } from '@/lib/api';
 import { Approval } from '@/types';
 import { format } from 'date-fns';
 
 export default function ApprovalHistory() {
+  const t = useTranslations('Approval.History');
+  const tTypes = useTranslations('Approval.types');
   const [approvals, setApprovals] = useState<Approval[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -39,25 +42,31 @@ export default function ApprovalHistory() {
   };
 
   const handleRollback = async (id: string) => {
-    if (!confirm('确定要回滚此操作吗？这将撤销所有相关变更。')) return;
+    if (!confirm(t('actions.rollback_confirm'))) return;
     
     try {
       await approvalApi.rollback(id);
-      alert('回滚成功');
+      alert(t('actions.rollback_success'));
       fetchHistory();
     } catch (error) {
       console.error('Rollback failed', error);
-      alert('回滚失败');
+      alert(t('actions.rollback_failed'));
     }
   };
 
-  if (loading) return <div>加载历史记录...</div>;
+  const statusMap: Record<string, string> = {
+    executed: t('status.executed'),
+    rejected: t('status.rejected'),
+    rolled_back: t('status.rolled_back')
+  };
+
+  if (loading) return <div>{t('loading')}</div>;
 
   return (
     <div className="bg-card shadow-sm border border-border sm:rounded-lg">
       <ul className="divide-y divide-border">
         {approvals.length === 0 ? (
-          <li className="px-6 py-12 text-center text-muted-foreground">暂无历史记录。</li>
+          <li className="px-6 py-12 text-center text-muted-foreground">{t('empty')}</li>
         ) : (
           approvals.map((approval) => (
             <li key={approval.id} className="px-6 py-4 hover:bg-muted/50 transition-colors duration-200">
@@ -70,19 +79,17 @@ export default function ApprovalHistory() {
                       approval.status === 'rolled_back' ? 'bg-gray-100 text-gray-800' :
                       'bg-yellow-100 text-yellow-800'
                     }`}>
-                      {approval.status === 'executed' ? '已执行' :
-                       approval.status === 'rejected' ? '已拒绝' :
-                       approval.status === 'rolled_back' ? '已回滚' : approval.status}
+                      {statusMap[approval.status] || approval.status}
                     </span>
                     <span className="text-xs text-muted-foreground">
                       {format(new Date(approval.updated_at), 'yyyy-MM-dd HH:mm')}
                     </span>
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                      {approval.type}
+                      {tTypes.has(approval.type) ? tTypes(approval.type) : approval.type}
                     </span>
                   </div>
                   <p className="mt-1 text-sm text-foreground">
-                    {approval.reason || '无描述'}
+                    {approval.reason || t('no_description')}
                   </p>
                 </div>
                 
@@ -91,7 +98,7 @@ export default function ApprovalHistory() {
                     onClick={() => handleRollback(approval.id)}
                     className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                   >
-                    回滚
+                    {t('actions.rollback')}
                   </button>
                 )}
               </div>

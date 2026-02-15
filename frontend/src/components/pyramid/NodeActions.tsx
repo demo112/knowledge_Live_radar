@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { NodeCreate, SplitRequest, MergeRequest, LinkRequest } from '@/types';
 import { Plus, Trash2 } from 'lucide-react';
 
@@ -20,7 +20,8 @@ interface SplitNodeDialogProps {
 }
 
 export const SplitNodeDialog: React.FC<SplitNodeDialogProps> = ({ open, onOpenChange, onConfirm, isLoading }) => {
-  const t = useTranslations('Pyramid.Detail.NodeActions');
+  const t = useTranslations('Pyramid.NodeActions');
+  const tCommon = useTranslations('Common');
   const [subNodes, setSubNodes] = useState<NodeCreate[]>([
     { name: '', content: '', node_type: 'concept' },
     { name: '', content: '', node_type: 'concept' }
@@ -61,10 +62,15 @@ export const SplitNodeDialog: React.FC<SplitNodeDialogProps> = ({ open, onOpenCh
               </div>
               <div className="col-span-3">
                  <Label>{t('Split.type_label')}</Label>
-                 <Select value={node.node_type} onChange={(e) => handleChange(index, 'node_type', e.target.value)}>
-                   <option value="concept">{t('Split.types.concept')}</option>
-                   <option value="fact">{t('Split.types.fact')}</option>
-                   <option value="principle">{t('Split.types.principle')}</option>
+                 <Select value={node.node_type} onValueChange={(value) => handleChange(index, 'node_type', value)}>
+                   <SelectTrigger>
+                     <SelectValue placeholder={t('Split.types.concept')} />
+                   </SelectTrigger>
+                   <SelectContent>
+                     <SelectItem value="concept">{t('Split.types.concept')}</SelectItem>
+                     <SelectItem value="fact">{t('Split.types.fact')}</SelectItem>
+                     <SelectItem value="principle">{t('Split.types.principle')}</SelectItem>
+                   </SelectContent>
                  </Select>
               </div>
               <div className="col-span-5">
@@ -93,7 +99,7 @@ export const SplitNodeDialog: React.FC<SplitNodeDialogProps> = ({ open, onOpenCh
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>{t('common.cancel')}</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{tCommon('cancel')}</Button>
           <Button onClick={handleSubmit} disabled={isLoading}>
             {isLoading ? t('Split.processing') : t('Split.confirm')}
           </Button>
@@ -114,7 +120,8 @@ interface MergeNodesDialogProps {
 }
 
 export const MergeNodesDialog: React.FC<MergeNodesDialogProps> = ({ open, onOpenChange, selectedNodeNames, onConfirm, isLoading }) => {
-  const t = useTranslations('Pyramid.Detail.NodeActions');
+  const t = useTranslations('Pyramid.NodeActions');
+  const tCommon = useTranslations('Common');
   const [targetName, setTargetName] = useState('');
   const [targetContent, setTargetContent] = useState('');
   const [strategy, setStrategy] = useState<'create_new' | 'merge_to_first'>('create_new');
@@ -141,9 +148,14 @@ export const MergeNodesDialog: React.FC<MergeNodesDialogProps> = ({ open, onOpen
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label>{t('Merge.strategy_label')}</Label>
-            <Select value={strategy} onChange={(e) => setStrategy(e.target.value as 'create_new' | 'merge_to_first')}>
-              <option value="create_new">{t('Merge.strategies.create_new')}</option>
-              <option value="merge_to_first">{t('Merge.strategies.merge_to_first')}</option>
+            <Select value={strategy} onValueChange={(value) => setStrategy(value as 'create_new' | 'merge_to_first')}>
+              <SelectTrigger>
+                <SelectValue placeholder={t('Merge.strategies.create_new')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="create_new">{t('Merge.strategies.create_new')}</SelectItem>
+                <SelectItem value="merge_to_first">{t('Merge.strategies.merge_to_first')}</SelectItem>
+              </SelectContent>
             </Select>
           </div>
           {strategy === 'create_new' && (
@@ -160,7 +172,7 @@ export const MergeNodesDialog: React.FC<MergeNodesDialogProps> = ({ open, onOpen
           )}
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>{t('common.cancel')}</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{tCommon('cancel')}</Button>
           <Button onClick={handleSubmit} disabled={isLoading || (strategy === 'create_new' && !targetName)}>
             {isLoading ? t('Merge.processing') : t('Merge.confirm')}
           </Button>
@@ -180,7 +192,7 @@ interface LinkNodeDialogProps {
 }
 
 export const LinkNodeDialog: React.FC<LinkNodeDialogProps> = ({ open, onOpenChange, onConfirm, isLoading }) => {
-  const t = useTranslations('Pyramid.Detail.NodeActions');
+  const t = useTranslations('Pyramid.NodeActions');
   const [targetNodeId, setTargetNodeId] = useState('');
   const [relationType, setRelationType] = useState('related');
 
@@ -203,10 +215,15 @@ export const LinkNodeDialog: React.FC<LinkNodeDialogProps> = ({ open, onOpenChan
           </div>
           <div className="space-y-2">
             <Label>{t('Link.relation_label')}</Label>
-            <Select value={relationType} onChange={(e) => setRelationType(e.target.value)}>
-              <option value="related">{t('Link.relations.related')}</option>
-              <option value="prerequisite">{t('Link.relations.prerequisite')}</option>
-              <option value="part_of">{t('Link.relations.part_of')}</option>
+            <Select value={relationType} onValueChange={setRelationType}>
+              <SelectTrigger>
+                <SelectValue placeholder={t('Link.relations.related')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="related">{t('Link.relations.related')}</SelectItem>
+                <SelectItem value="prerequisite">{t('Link.relations.prerequisite')}</SelectItem>
+                <SelectItem value="part_of">{t('Link.relations.part_of')}</SelectItem>
+              </SelectContent>
             </Select>
           </div>
         </div>

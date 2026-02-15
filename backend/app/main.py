@@ -131,6 +131,7 @@ app.include_router(synonyms.router, prefix=settings.API_V1_STR)
 app.include_router(classification.router, prefix=settings.API_V1_STR)
 app.include_router(notifications.router, prefix=settings.API_V1_STR)
 app.include_router(content_management.router, prefix=settings.API_V1_STR)
+app.include_router(content_management.metabolism_router, prefix=settings.API_V1_STR)
 
 @app.get("/")
 async def root():

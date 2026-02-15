@@ -26,7 +26,7 @@ interface SnapshotDetail extends Snapshot {
       description?: string;
     };
     nodes: PyramidNode[];
-    relations: any[];
+    relations: unknown[];
   };
 }
 
@@ -36,6 +36,7 @@ interface PyramidHistoryProps {
 
 export default function PyramidHistory({ pyramidId }: PyramidHistoryProps) {
   const t = useTranslations('Pyramid.Detail.History');
+  const tCommon = useTranslations('Common');
   const format = useFormatter();
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
   const [loading, setLoading] = useState(true);
@@ -220,9 +221,9 @@ export default function PyramidHistory({ pyramidId }: PyramidHistoryProps) {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setCreateOpen(false)}>{t('Common.cancel')}</Button>
+            <Button variant="outline" onClick={() => setCreateOpen(false)}>{tCommon('cancel')}</Button>
             <Button onClick={handleCreateSnapshot} disabled={processing || !reason.trim()}>
-              {processing ? t('Common.loading') : t('Common.create')}
+              {processing ? tCommon('loading') : tCommon('create')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -241,9 +242,9 @@ export default function PyramidHistory({ pyramidId }: PyramidHistoryProps) {
                 </DialogDescription>
             </DialogHeader>
             <DialogFooter>
-                <Button variant="outline" onClick={() => setRollbackSnapshot(null)}>{t('Common.cancel')}</Button>
+                <Button variant="outline" onClick={() => setRollbackSnapshot(null)}>{tCommon('cancel')}</Button>
                 <Button variant="destructive" onClick={handleRollback} disabled={processing}>
-                    {processing ? t('Common.loading') : t('rollback')}
+                    {processing ? tCommon('loading') : t('rollback')}
                 </Button>
             </DialogFooter>
         </DialogContent>
@@ -273,7 +274,7 @@ export default function PyramidHistory({ pyramidId }: PyramidHistoryProps) {
             )}
           </div>
           <DialogFooter>
-            <Button onClick={() => setPreviewSnapshot(null)}>{t('Common.close')}</Button>
+            <Button onClick={() => setPreviewSnapshot(null)}>{tCommon('close')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

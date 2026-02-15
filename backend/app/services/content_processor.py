@@ -83,6 +83,7 @@ class ContentProcessor:
                 text = item_data.get("content", "")[:3000]
                 
                 ai_summary_data = await ai_service.generate_summary(title, text)
+                summary = ai_summary_data.get("summary", "")
                 ai_tags = await ai_service.generate_tags(title, text)
                 ai_concepts = await ai_service.extract_concepts(title, text)
                 
@@ -94,10 +95,10 @@ class ContentProcessor:
                     content_text=item_data.get("content"),
                     publish_time=item_data.get("published_at"),
                     status="PROCESSED",
-                    summary=ai_summary_data.get("summary", ""),
+                    summary=summary,
                     tags=ai_tags,
                     concepts=ai_concepts,
-                    ai_processed=True
+                    ai_processed=bool(summary)
                 )
                 session.add(content)
                 await session.flush() # Get ID

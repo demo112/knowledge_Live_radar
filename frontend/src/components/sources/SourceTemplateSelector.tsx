@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { sourceApi } from '@/lib/api';
 import { SourceTemplate } from '@/types';
+import { useTranslations } from 'next-intl';
 
 interface SourceTemplateSelectorProps {
   onTemplateSelect: (template: SourceTemplate) => void;
@@ -13,6 +14,7 @@ export default function SourceTemplateSelector({
   onConfigChange,
   selectedTemplateId 
 }: SourceTemplateSelectorProps) {
+  const t = useTranslations('Sources.TemplateSelector');
   const [templates, setTemplates] = useState<SourceTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTemplate, setSelectedTemplate] = useState<SourceTemplate | null>(null);
@@ -78,12 +80,12 @@ export default function SourceTemplateSelector({
     }
   };
 
-  if (loading) return <div className="text-sm text-gray-500">加载模板中...</div>;
+  if (loading) return <div className="text-sm text-gray-500">{t('loading')}</div>;
 
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">选择模板</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">{t('select_title')}</label>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {templates.map((template) => (
             <div
@@ -107,7 +109,7 @@ export default function SourceTemplateSelector({
 
       {selectedTemplate && (
         <div className="bg-gray-50 rounded-lg p-4 space-y-3 border border-gray-200">
-          <h4 className="text-sm font-medium text-gray-900 mb-2">配置参数</h4>
+          <h4 className="text-sm font-medium text-gray-900 mb-2">{t('config_title')}</h4>
           {selectedTemplate.config_schema.map((field) => (
             <div key={field.name}>
               <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -120,7 +122,7 @@ export default function SourceTemplateSelector({
                   onChange={(e) => handleInputChange(field.name, e.target.value)}
                   className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
                 >
-                  <option value="">请选择</option>
+                  <option value="">{t('select_placeholder')}</option>
                   {field.options?.map((opt) => (
                     <option key={opt.value} value={opt.value}>
                       {opt.label}

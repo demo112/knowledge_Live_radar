@@ -82,6 +82,13 @@ export interface ValidationResult {
   verified_at: string;
 }
 
+export interface ContentNodeInfo {
+  id: string;
+  name: string;
+  pyramid_id: string;
+  pyramid_name: string;
+}
+
 export interface ContentItem {
   id: string;
   source_id?: string;
@@ -96,6 +103,7 @@ export interface ContentItem {
   concepts?: Array<{ name: string; type: string }>;
   ai_processed?: boolean;
   validation_result?: ValidationResult;
+  nodes?: ContentNodeInfo[];
   lifecycle_status?: string; // ACTIVE, DEPRECATED, ARCHIVED, DELETED
   metabolism_score?: number;
   last_accessed_at?: string;

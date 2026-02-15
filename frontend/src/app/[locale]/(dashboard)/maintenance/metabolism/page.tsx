@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { metabolismApi } from '@/lib/api';
 import { MetabolismSuggestion, MetabolismRunStats } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -8,6 +9,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 export default function MetabolismPage() {
+  const t = useTranslations('Metabolism');
   const [suggestions, setSuggestions] = useState<MetabolismSuggestion[]>([]);
   const [stats, setStats] = useState<MetabolismRunStats | null>(null);
   const [loading, setLoading] = useState(false);
@@ -44,7 +46,7 @@ export default function MetabolismPage() {
       fetchSuggestions(); // Refresh list
     } catch (error) {
       console.error('Failed to run metabolism:', error);
-      alert('执行失败，请查看日志');
+      alert(t('alerts.run_failed'));
     } finally {
       setRunning(false);
     }
@@ -52,16 +54,16 @@ export default function MetabolismPage() {
 
   const handleCleanup = async () => {
     if (selectedIds.size === 0) return;
-    if (!confirm(`确定要永久删除这 ${selectedIds.size} 个项目吗？`)) return;
+    if (!confirm(t('alerts.confirm_cleanup', { count: selectedIds.size }))) return;
 
     try {
       await metabolismApi.cleanup(Array.from(selectedIds));
       setSelectedIds(new Set());
       fetchSuggestions();
-      alert('清理完成');
+      alert(t('alerts.cleanup_success'));
     } catch (error) {
       console.error('Failed to cleanup:', error);
-      alert('清理失败');
+      alert(t('alerts.cleanup_failed'));
     }
   };
 
@@ -87,12 +89,12 @@ export default function MetabolismPage() {
     <div className="p-8 space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">内容新陈代谢管理</h1>
-          <p className="text-muted-foreground">管理内容生命周期，清理陈旧内容</p>
+          <h1 className="text-2xl font-bold">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('description')}</p>
         </div>
         <div className="flex gap-2">
           <Button onClick={handleRun} disabled={running}>
-            {running ? '执行中...' : '立即执行新陈代谢'}
+            {running ? t('actions.running') : t('actions.run')}
           </Button>
         </div>
       </div>
@@ -102,15 +104,15 @@ export default function MetabolismPage() {
           <CardContent className="pt-6">
             <div className="flex gap-8">
               <div>
-                <div className="text-sm text-gray-500">已处理</div>
+                <div className="text-sm text-gray-500">{t('stats.processed')}</div>
                 <div className="text-2xl font-bold">{stats.processed}</div>
               </div>
               <div>
-                <div className="text-sm text-gray-500">转为废弃</div>
+                <div className="text-sm text-gray-500">{t('stats.deprecated')}</div>
                 <div className="text-2xl font-bold text-orange-600">{stats.to_deprecated}</div>
               </div>
               <div>
-                <div className="text-sm text-gray-500">转为归档</div>
+                <div className="text-sm text-gray-500">{t('stats.archived')}</div>
                 <div className="text-2xl font-bold text-gray-600">{stats.to_archived}</div>
               </div>
             </div>
@@ -121,13 +123,13 @@ export default function MetabolismPage() {
       <Card>
         <CardHeader>
           <div className="flex justify-between items-center">
-            <CardTitle>清理建议 ({suggestions.length})</CardTitle>
+            <CardTitle>{t('suggestions.title')} ({suggestions.length})</CardTitle>
             {selectedIds.size > 0 && (
               <Button 
                 variant="destructive" 
                 onClick={handleCleanup}
               >
-                清理选中 ({selectedIds.size})
+                {t('actions.cleanup_selected')} ({selectedIds.size})
               </Button>
             )}
           </div>
@@ -145,23 +147,23 @@ export default function MetabolismPage() {
                       className="cursor-pointer"
                     />
                   </th>
-                  <th className="p-4">标题</th>
-                  <th className="p-4">分数</th>
-                  <th className="p-4">存在时间</th>
-                  <th className="p-4">建议原因</th>
+                  <th className="p-4">{t('table.title')}</th>
+                  <th className="p-4">{t('table.score')}</th>
+                  <th className="p-4">{t('table.age')}</th>
+                  <th className="p-4">{t('table.reason')}</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
                     <td colSpan={5} className="p-8 text-center text-muted-foreground">
-                      加载中...
+                      {t('table.loading')}
                     </td>
                   </tr>
                 ) : suggestions.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="p-8 text-center text-muted-foreground">
-                      暂无清理建议
+                      {t('table.empty')}
                     </td>
                   </tr>
                 ) : (

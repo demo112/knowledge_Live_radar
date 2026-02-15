@@ -27,6 +27,7 @@ class ContentItem(Base):
     submitter_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True) # User ID who submitted this
     input_type: Mapped[str] = mapped_column(String(20), default="url", server_default="url") # url, pdf, word, markdown, image, text
     ai_processed: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    ai_metadata: Mapped[Optional[dict[str, Any]]] = mapped_column(JSON, nullable=True) # AI analysis metadata (reasoning, confidence, etc.)
     is_deleted: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
     
     # Metabolism fields
@@ -41,7 +42,12 @@ class ContentItem(Base):
     # Relationships
     source: Mapped[Optional["InformationSource"]] = relationship("app.models.source.InformationSource")
     validation_result: Mapped[Optional["ValidationResult"]] = relationship("ValidationResult", uselist=False, back_populates="content")
+    node_relations: Mapped[List["ContentNodeRelation"]] = relationship("ContentNodeRelation", back_populates="content", cascade="all, delete-orphan")
     
+    @property
+    def nodes(self) -> List["ContentNodeRelation"]:
+        return self.node_relations
+
     def __repr__(self):
         return f"<ContentItem(id={self.id}, title={self.title})>"
 
@@ -57,8 +63,24 @@ class ContentNodeRelation(Base):
     is_manual: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true") # Deprecated, use source instead
 
     # Relationships
-    content: Mapped["ContentItem"] = relationship("ContentItem")
+    content: Mapped["ContentItem"] = relationship("ContentItem", back_populates="node_relations")
     node: Mapped["PyramidNode"] = relationship("app.models.pyramid.PyramidNode")
+
+    @property
+    def id(self) -> uuid.UUID:
+        return self.node_id
+
+    @property
+    def name(self) -> str:
+        return self.node.name if self.node else ""
+
+    @property
+    def pyramid_id(self) -> uuid.UUID:
+        return self.node.pyramid_id if self.node else None
+
+    @property
+    def pyramid_name(self) -> str:
+        return self.node.pyramid.name if self.node and self.node.pyramid else ""
 
     def __repr__(self):
         return f"<ContentNodeRelation(content_id={self.content_id}, node_id={self.node_id}, source={self.source})>"

@@ -11,7 +11,18 @@
     "confirm": "确认",
     "close": "关闭"
   },
+  "Components": {
+    "AIReasoning": {
+      "title": "AI 思考过程",
+      "analyzing": "AI 正在分析..."
+    },
+    "PyramidPreview": {
+      "title": "结构预览"
+    }
+  },
   "Navigation": {
+    "appName": "AI 知识雷达",
+    "version": "v0.4.0 Iteration 4",
     "dashboard": "仪表板",
     "pyramid": "知识金字塔",
     "sources": "信息源",
@@ -25,184 +36,658 @@
     "metabolism": "内容代谢",
     "settings": "设置"
   },
-  "Dashboard": {
-      "title": "系统概览",
-      "loading": "加载中...",
-      "cards": {
-        "sources": {
-          "title": "信息源",
-          "active": "/ {total} 活跃"
-        },
-        "discovery": {
-          "title": "发现 & 白名单",
-          "discovered": "新发现域名",
-          "whitelisted": "白名单域名"
-        },
-        "contents": {
-          "title": "已收录内容",
-          "items": "条目"
-        },
-        "quality": {
-          "title": "内容合格率",
-          "passed": "通过校验"
+  "Approval": {
+    "title": "审批中心",
+    "description": "审查并批准待处理的系统变更提案。",
+    "types": {
+      "ADD_NODE": "添加节点",
+      "UPDATE_NODE": "更新节点",
+      "DELETE_NODE": "删除节点",
+      "MERGE_NODES": "合并节点",
+      "SPLIT_NODE": "拆分节点",
+      "LINK_NODE": "关联节点",
+      "CRAWL_SOURCE": "抓取源",
+      "OPTIMIZE_SCHEDULE": "优化调度"
+    },
+    "tabs": {
+      "pending": "待审批",
+      "history": "审批历史"
+    },
+    "List": {
+      "loading": "加载审批列表中...",
+      "empty": "暂无待审批提案。",
+      "ai_confidence": "AI 置信度",
+      "default_audit_reason": "UI 界面审核",
+      "no_reason": "未提供原因",
+      "node_name": "节点名称",
+      "parent_id": "父节点ID",
+      "description": "描述",
+      "actions": {
+        "analyze_impact": "分析影响",
+        "hide_impact": "隐藏影响",
+        "approve": "批准",
+        "reject": "拒绝"
+      },
+      "impact": {
+        "title": "影响分析",
+        "affected_nodes": "受影响节点",
+        "risk": {
+          "high": "高风险",
+          "medium": "中风险",
+          "low": "低风险"
         }
       },
-      "charts": {
-        "trend_title": "质量趋势 (近7天)",
-        "no_data": "暂无趋势数据",
-        "pass_rate": "合格率",
-        "validation_count": "校验数量",
-        "more_developing": "更多统计维度 (开发中)"
+      "alerts": {
+        "approved_success": "审批已通过并执行成功！",
+        "approved_failed": "已批准，但执行失败。请检查日志。",
+        "rejected": "提案已拒绝。",
+        "not_found": "提案不存在或已被处理。",
+        "failed": "审批操作失败。"
       }
     },
-    "Pyramid": {
-    "List": {
-        "title": "知识金字塔",
-        "loading": "加载中...",
-        "import": "导入",
-        "new_pyramid": "新建金字塔",
-        "no_description": "暂无描述",
-        "created_at": "创建时间: {date}",
-        "edit": "编辑",
-        "delete": "删除",
-        "empty": "暂无金字塔。请创建一个开始。",
-        "delete_confirm": {
-            "title": "确认删除",
-            "message": "确定要删除这个金字塔吗？此操作不可撤销。",
-            "confirm": "删除",
-            "cancel": "取消"
-        },
-        "modal": {
-            "title_create": "新建金字塔",
-            "title_edit": "编辑金字塔",
-            "create_blank": "空白创建",
-            "create_template": "从模板创建",
-            "select_template": "选择模板",
-            "select_template_placeholder": "请选择模板...",
-            "name_label": "名称",
-            "name_placeholder": "例如：AI 知识图谱",
-            "description_label": "描述",
-            "description_placeholder": "简要描述这个金字塔的目标...",
-            "save": "保存",
-            "saving": "保存中...",
-            "cancel": "取消"
-        },
-        "alerts": {
-            "import_success": "导入成功",
-            "import_failed": "导入失败，请检查文件格式",
-            "delete_failed": "删除失败",
-            "save_failed": "保存失败"
+    "History": {
+      "loading": "加载历史记录...",
+      "empty": "暂无历史记录。",
+      "no_description": "无描述",
+      "status": {
+        "executed": "已执行",
+        "rejected": "已拒绝",
+        "rolled_back": "已回滚"
+      },
+      "actions": {
+        "rollback": "回滚",
+        "rollback_confirm": "确定要回滚此操作吗？这将撤销所有相关变更。",
+        "rollback_success": "回滚成功",
+        "rollback_failed": "回滚失败"
+      }
+    }
+  },
+  "Feed": {
+    "title": "最新动态",
+    "loading": "加载动态中...",
+    "load_failed": "加载动态失败",
+    "network_error": "网络错误，请稍后重试",
+    "retry": "重试",
+    "empty": "暂无动态，请先在信息源中添加订阅或手动触发抓取，或者使用上方输入框分享内容。",
+    "unknown_time": "未知时间",
+    "ai_summary": "AI 摘要",
+    "no_content": "暂无内容",
+    "from_subscription": "来自订阅源",
+    "user_submit": "用户提交",
+    "verified": "已验证",
+    "quality_score": "质量分",
+    "concepts": "涉及概念",
+    "unknown_pyramid": "未知金字塔",
+    "InputBox": {
+      "title": "分享知识",
+      "text_tab": "文本 / 笔记",
+      "url_tab": "链接 / URL",
+      "title_placeholder": "标题 (可选)",
+      "content_placeholder": "有什么想法？或粘贴内容...",
+      "url_placeholder": "https://...",
+      "url_hint": "粘贴链接以进行分析并将其添加到雷达。",
+      "ai_steps": {
+        "reading": "读取内容...",
+        "concepts": "识别概念...",
+        "relations": "发现关联...",
+        "classifying": "分类中..."
+      },
+      "ai_analysis": "AI 分析",
+      "confidence": "置信度",
+      "cancel": "取消",
+      "analyze_first": "先分析",
+      "submit": "发布",
+      "analyze_failed": "分析失败",
+      "submit_success": "内容添加成功",
+      "submit_failed": "提交失败"
+    }
+  },
+  "Dashboard": {
+    "title": "系统概览",
+    "loading": "加载中...",
+    "cards": {
+      "sources": {
+        "title": "信息源",
+        "active": "/ {total} 活跃"
+      },
+      "discovery": {
+        "title": "发现 & 白名单",
+        "discovered": "新发现域名",
+        "whitelisted": "白名单域名"
+      },
+      "contents": {
+        "title": "已收录内容",
+        "items": "条目"
+      },
+      "quality": {
+        "title": "内容合格率",
+        "passed": "通过校验"
+      }
+    },
+    "charts": {
+      "trend_title": "质量趋势 (近7天)",
+      "no_data": "暂无趋势数据",
+      "pass_rate": "合格率",
+      "validation_count": "校验数量",
+      "more_developing": "更多统计维度 (开发中)"
+    }
+  },
+  "Sources": {
+    "title": "信息源",
+    "manage_whitelist": "管理白名单",
+    "add_source": "添加信息源",
+    "empty_list": "未找到信息源。",
+    "last_crawled": "上次抓取: {date}",
+    "never": "从未",
+    "types": {
+      "rss": "RSS 订阅源",
+      "sitemap": "网站地图",
+      "web": "网站抓取",
+      "wechat_mp": "微信公众号",
+      "bilibili_user": "Bilibili UP主",
+      "juejin_column": "掘金专栏",
+      "youtube_channel": "YouTube 频道",
+      "wechat_mp_hint": "微信公众号 (ID/URL)",
+      "bilibili_user_hint": "Bilibili UP主 (ID/URL)",
+      "juejin_column_hint": "掘金专栏 (ID/URL)",
+      "youtube_channel_hint": "YouTube 频道 (ID/URL)"
+    },
+    "status": {
+      "active": "正常",
+      "monitoring": "监控中",
+      "adjusting": "需调整"
+    },
+    "tags": {
+      "template": "模板"
+    },
+    "actions": {
+      "crawl_title": "立即抓取",
+      "crawl_desc": "触发一次立即抓取任务",
+      "edit_title": "编辑源",
+      "edit_desc": "修改源配置",
+      "delete_title": "删除源",
+      "delete_desc": "移除此信息源及其数据"
+    },
+    "alerts": {
+      "discovered": "已发现: {title} ({type})",
+      "discover_not_found": "未找到信息源",
+      "discover_failed": "发现失败",
+      "crawl_started": "抓取已开始。新增项目: {count}",
+      "crawl_failed": "抓取失败",
+      "test_success": "测试成功！信息源可正常访问。",
+      "test_failed": "测试失败: {message}",
+      "test_failed_generic": "测试失败",
+      "delete_failed": "删除失败",
+      "save_failed": "保存失败"
+    },
+    "delete_confirm": {
+      "title": "确认删除",
+      "message": "确定要删除这个信息源吗？此操作不可撤销。"
+    },
+    "modal": {
+      "edit_title": "编辑信息源",
+      "create_title": "添加新信息源",
+      "custom_add": "自定义添加",
+      "template_add": "使用模板添加"
+    },
+    "form": {
+      "name": "名称",
+      "name_placeholder": "例如：技术博客",
+      "url_id": "链接地址 / ID",
+      "placeholder_wechat": "输入公众号ID",
+      "placeholder_bilibili": "输入用户ID或主页链接",
+      "placeholder_juejin": "输入专栏ID",
+      "placeholder_default": "https://example.com/rss",
+      "discovering": "发现中",
+      "discover": "发现",
+      "type": "类型",
+      "saving": "保存中...",
+      "save_changes": "保存修改",
+      "add_now": "立即添加"
+    },
+    "history": {
+      "title": "抓取历史",
+      "empty": "暂无抓取记录",
+      "status": {
+        "completed": "已完成",
+        "failed": "失败",
+        "in_progress": "进行中",
+        "pending": "等待中"
+      },
+      "table": {
+        "status": "状态",
+        "started_at": "开始时间",
+        "items_fetched": "获取数量",
+        "items_new": "新增数量",
+        "duration": "耗时"
+      }
+    },
+    "Add": {
+      "title": "添加信息源",
+      "description": "添加一个新的信息源供雷达监控。",
+      "steps": {
+        "input": "输入",
+        "analyzing": "分析中",
+        "review": "确认"
+      },
+      "url_card": {
+        "title": "来源 URL",
+        "description": "输入网站、RSS 源或 API 端点的 URL。",
+        "label": "URL",
+        "placeholder": "https://example.com/feed.xml",
+        "analyze_btn": "分析来源"
+      },
+      "analyzing_card": {
+        "title": "正在分析来源",
+        "description": "AI 正在分析该来源的内容和相关性。",
+        "steps": {
+          "fetching": "正在获取来源内容...",
+          "analyzing": "正在分析内容结构...",
+          "evaluating": "正在评估相关性...",
+          "generating": "正在生成元数据..."
         }
       },
-      "Health": {
-      "overall": "整体健康度",
-      "depth_balance": "深度平衡",
-      "content_coverage": "内容覆盖率",
-      "activity": "近期活跃度",
-      "suggestions": "优化建议",
-      "out_of_100": "满分 100",
-      "structural_balance": "结构平衡",
-      "nodes_with_content": "节点有内容",
-      "recent_updates": "近期更新",
-      "empty_nodes_desc": "为通过空节点补充描述。",
-      "low_activity_desc": "金字塔更新活跃度低。建议增加信息源或检查抓取健康度。",
-      "depth_balance_desc": "建议调整金字塔深度平衡。",
-      "moderate_activity_desc": "金字塔更新活跃度中等。部分节点可能需要更多活跃信息源。",
-      "pyramid_empty_desc": "金字塔为空。"
+      "review_card": {
+        "title": "分析结果",
+        "description": "审查 AI 分析结果并配置来源设置。",
+        "ai_analysis": "AI 分析",
+        "analysis_complete": "分析完成。",
+        "confidence": "置信度",
+        "name_label": "来源名称",
+        "type_label": "来源类型",
+        "types": {
+          "web": "网站",
+          "rss": "RSS 源",
+          "api": "API",
+          "user": "用户手册"
+        },
+        "interval_label": "检查间隔",
+        "intervals": {
+          "hourly": "每小时",
+          "every_4h": "每 4 小时",
+          "every_12h": "每 12 小时",
+          "daily": "每 24 小时"
+        },
+        "summary_label": "来源摘要",
+        "no_summary": "暂无摘要。",
+        "confirm_btn": "确认添加来源"
+      },
+      "alerts": {
+        "input_url": "请输入 URL",
+        "analyze_failed": "分析失败",
+        "analyze_error": "分析来源出错",
+        "success": "来源添加成功",
+        "create_error": "创建来源出错"
+      }
     },
-    "Visualizer": {
-      "right_click_actions": "右键点击节点进行操作（拆分、链接）",
-      "shift_click_select": "Shift+点击可多选以合并"
+    "TemplateSelector": {
+      "loading": "加载模板中...",
+      "select_title": "选择模板",
+      "config_title": "配置参数",
+      "select_placeholder": "请选择"
+    },
+    "Whitelist": {
+      "title": "域名白名单管理",
+      "tabs": {
+        "allowed": "已允许域名",
+        "discovered": "新发现域名"
+      },
+      "columns": {
+        "domain": "域名",
+        "credibility": "可信度",
+        "reason": "原因",
+        "count": "出现次数",
+        "status": "状态",
+        "rss": "RSS",
+        "actions": "操作"
+      },
+      "actions": {
+        "add": "添加域名",
+        "remove": "移除",
+        "add_to_whitelist": "添加白名单",
+        "add_reason_discovered": "从发现列表添加",
+        "confirm_remove": "确定要移除该域名吗？"
+      },
+      "status": {
+        "approved": "已通过",
+        "rejected": "已拒绝",
+        "pending": "待处理"
+      },
+      "empty": {
+        "allowed": "暂无数据",
+        "discovered": "暂无新发现域名"
+      },
+      "modal": {
+        "title": "添加白名单域名",
+        "domain_label": "域名",
+        "domain_placeholder": "example.com 或 *.example.com",
+        "credibility_label": "可信度 (0-100)",
+        "reason_label": "原因",
+        "cancel": "取消",
+        "save": "保存"
+      },
+      "alerts": {
+        "add_success": "已添加到白名单",
+        "add_failed": "添加失败",
+        "remove_failed": "移除失败"
+      }
+    }
+  },
+  "Contents": {
+    "title": "内容库",
+    "loading": "加载中...",
+    "error_loading": "加载内容失败",
+    "error_generic": "发生未知错误",
+    "retry": "重试",
+    "empty": "暂无内容",
+    "actions": {
+      "batch_clean": "批量清理",
+      "regenerate_summary": "重新生成摘要",
+      "submit": "提交内容",
+      "selected_count": "已选择 {count} 项",
+      "generate_summary": "生成摘要",
+      "delete_selected": "删除所选",
+      "select_all_page": "全选本页",
+      "prev_page": "上一页",
+      "next_page": "下一页",
+      "page_info": "第 {page} 页",
+      "submitting": "提交中...",
+      "analyze": "AI 自动分类",
+      "analyzing": "分类中..."
+    },
+    "alerts": {
+      "confirm_clean": "确定要执行批量清理吗？这将移除所有无效的内容条目。",
+      "clean_success": "清理完成。扫描了 {scanned} 条，删除了 {deleted} 条。",
+      "clean_failed": "清理失败",
+      "confirm_regenerate_selected": "确定要为选中的 {count} 条内容重新生成摘要吗？",
+      "confirm_regenerate_all": "确定要为所有内容重新生成摘要吗？这可能需要很长时间。",
+      "task_started": "任务已启动，请稍后刷新查看结果。",
+      "task_failed": "任务启动失败",
+      "confirm_delete": "确定要删除选中的 {count} 条内容吗？此操作不可恢复。",
+      "delete_success": "删除成功",
+      "delete_failed": "删除失败",
+      "failed": "操作失败",
+      "error": "发生错误",
+      "classification_complete": "分类完成。已关联 {count} 个节点。",
+      "classification_failed": "分类失败"
+    },
+    "status": {
+      "pending": "待处理",
+      "processed": "已处理",
+      "failed": "失败",
+      "rejected": "已拒绝",
+      "archived": "已归档",
+      "ai_processed": "AI 处理"
+    },
+    "item": {
+      "no_summary": "暂无摘要",
+      "publish_time": "发布时间: {time}",
+      "unknown_time": "未知",
+      "summary": "摘要",
+      "concepts": "涉及概念",
+      "source": "来源",
+      "linked_nodes": "关联节点",
+      "no_nodes": "暂无关联节点"
     },
     "Detail": {
-        "export_template": "导出模板",
-        "tabs": {
-          "view": "可视化与健康度",
-          "history": "历史记录"
-        },
-        "History": {
-            "loading": "加载历史记录中...",
-            "title": "变更历史",
-            "empty": "暂无历史记录。",
-            "create_snapshot": "创建快照",
-            "reason": "快照原因",
-            "reason_placeholder": "例如：重构前备份",
-            "rollback": "回滚",
-            "rollback_confirm_title": "确认回滚",
-            "rollback_confirm_message": "确定要回滚到快照 \"{reason}\" ({version}) 吗？当前的所有未保存变更将丢失。",
-            "rollback_success": "回滚成功",
-            "create_success": "快照创建成功",
-            "operation_failed": "操作失败",
-            "preview": "预览",
-            "preview_title": "快照预览: {version}"
-        },
-        "actions": {
-          "merge_nodes": "合并 {count} 个节点",
-          "split_node": "拆分节点",
-          "link_node": "关联节点"
-        },
-        "node_info": {
-          "title": "节点: {label}"
-        },
-        "not_found": "未找到金字塔",
-        "export_failed": "导出失败",
-        "split_failed": "拆分失败",
-        "merge_failed": "合并失败",
-        "link_failed": "关联失败"
+      "title": "内容详情",
+      "not_found": "未找到内容",
+      "back": "返回列表",
+      "card_details": "详细信息",
+      "card_nodes": "关联节点 ({count})"
+    },
+    "Submit": {
+      "title": "提交内容",
+      "description": "提交文章、文档或文本进行分析。",
+      "tabs": {
+        "url": "链接提交",
+        "text": "文本提交",
+        "file": "文件上传"
       },
-      "NodeActions": {
-        "common": {
-          "cancel": "取消"
-        },
-        "Split": {
-          "title": "拆分节点",
-          "description": "将此节点拆分为多个子节点。",
-          "name_label": "名称",
-          "name_placeholder": "子节点名称",
-          "type_label": "类型",
-          "types": {
-            "concept": "概念",
-            "fact": "事实",
-            "principle": "原理"
-          },
-          "content_label": "内容",
-          "content_placeholder": "内容描述",
-          "add_sub_node": "添加子节点",
-          "archive_original": "拆分后归档原节点",
-          "confirm": "确认拆分",
-          "processing": "拆分中..."
-        },
-        "Merge": {
-          "title": "合并节点",
-          "description": "合并 {count} 个节点: {names}",
-          "strategy_label": "合并策略",
-          "strategies": {
-            "create_new": "创建新父节点",
-            "merge_to_first": "合并到第一个选中节点"
-          },
-          "new_name_label": "新节点名称",
-          "new_name_placeholder": "合并后的节点名称",
-          "content_label": "内容 (可选)",
-          "content_placeholder": "合并后的内容摘要",
-          "confirm": "确认合并",
-          "processing": "合并中..."
-        },
-        "Link": {
-          "title": "关联节点",
-          "description": "创建对另一个节点的引用。",
-          "target_id_label": "目标节点 ID",
-          "target_id_placeholder": "目标节点 UUID",
-          "target_id_hint": "当前仅支持直接通过 ID 关联。",
-          "relation_label": "关系类型",
-          "relations": {
-            "related": "相关",
-            "prerequisite": "前置",
-            "part_of": "部分"
-          },
-          "confirm": "确认关联",
-          "processing": "关联中..."
-        }
+      "labels": {
+        "url": "文章链接 URL",
+        "title": "标题",
+        "content": "正文内容",
+        "file": "选择文件"
+      },
+      "hints": {
+        "file_formats": "支持 PDF, DOCX, TXT, MD 格式"
+      },
+      "actions": {
+        "submit": "提交分析",
+        "submitting": "正在提交..."
+      },
+      "alerts": {
+        "success": "提交成功",
+        "failed": "提交失败",
+        "error": "发生错误，请重试"
       }
+    }
+  },
+  "History": {
+    "title": "变更历史",
+    "export": "导出 JSON",
+    "filters": {
+      "status": "状态",
+      "type": "类型",
+      "all_status": "全部历史",
+      "all_types": "全部类型",
+      "executed": "已执行",
+      "rolled_back": "已回滚"
+    },
+    "timeline": {
+      "empty": "暂无变更历史",
+      "details": "查看详情"
+    },
+    "detail": {
+      "time": "时间",
+      "applicant": "申请人",
+      "system": "系统",
+      "reason": "原因",
+      "impact_analysis": "影响分析",
+      "risk_level": "风险等级",
+      "affected_nodes": "受影响节点数",
+      "change_data": "变更数据",
+      "original_data": "原始数据",
+      "close": "关闭",
+      "rollback_change": "回滚变更"
+    },
+    "rollback": {
+      "title": "确认回滚",
+      "confirm": "您确定要回滚 \"{title}\" 的变更吗？此操作将系统状态恢复到该变更执行之前的状态。",
+      "cancel": "取消",
+      "submit": "回滚",
+      "success": "回滚请求已提交",
+      "failed": "回滚失败"
+    },
+    "types": {
+      "create_node": "创建节点",
+      "update_node": "更新节点",
+      "delete_node": "删除节点",
+      "add_source": "添加信息源",
+      "update_source": "更新信息源",
+      "delete_source": "删除信息源",
+      "create_pyramid": "创建金字塔",
+      "delete_pyramid": "删除金字塔"
+    },
+    "status": {
+      "executed": "已执行",
+      "rolled_back": "已回滚",
+      "failed": "失败",
+      "pending": "待处理",
+      "approved": "已批准",
+      "rejected": "已拒绝"
+    },
+    "risk": {
+      "low": "低",
+      "medium": "中",
+      "high": "高",
+      "critical": "严重"
+    }
+  },
+  "Pyramid": {
+    "List": {
+      "title": "知识金字塔",
+      "loading": "加载中...",
+      "import": "导入",
+      "new_pyramid": "新建金字塔",
+      "no_description": "暂无描述",
+      "created_at": "创建时间: {date}",
+      "edit": "编辑",
+      "delete": "删除",
+      "empty": "暂无金字塔。请创建一个开始。",
+      "delete_confirm": {
+          "title": "确认删除",
+          "message": "确定要删除这个金字塔吗？此操作不可撤销。",
+          "confirm": "删除",
+          "cancel": "取消"
+      },
+      "modal": {
+          "title_create": "新建金字塔",
+          "title_edit": "编辑金字塔",
+          "create_blank": "空白创建",
+          "create_template": "从模板创建",
+          "select_template": "选择模板",
+          "select_template_placeholder": "请选择模板...",
+          "name_label": "名称",
+          "name_placeholder": "例如：AI 知识图谱",
+          "description_label": "描述",
+          "description_placeholder": "简要描述这个金字塔的目标...",
+          "save": "保存",
+          "saving": "保存中...",
+          "cancel": "取消"
+      },
+      "alerts": {
+          "import_success": "导入成功",
+          "import_failed": "导入失败，请检查文件格式",
+          "delete_failed": "删除失败",
+          "save_failed": "保存失败"
+      }
+    },
+    "Create": {
+      "title": "创建知识金字塔",
+      "back": "返回",
+      "name_label": "名称",
+      "name_placeholder": "例如：人工智能",
+      "desc_label": "描述",
+      "desc_placeholder": "描述这个知识金字塔的主题...",
+      "generate_btn": "AI 生成结构",
+      "modify_btn": "修改描述",
+      "confirm_btn": "确认创建",
+      "creating": "创建中...",
+      "alerts": {
+        "fill_required": "请填写所有必填项",
+        "generate_failed": "生成建议失败",
+        "unknown_error": "未知错误",
+        "generate_error": "生成建议出错",
+        "create_success": "金字塔创建成功",
+        "create_failed": "创建金字塔失败",
+        "create_error": "创建金字塔出错"
+      }
+    },
+    "Detail": {
+      "not_found": "未找到金字塔",
+      "export_template": "导出模板",
+      "tabs": {
+        "view": "视图",
+        "history": "历史记录"
+      },
+      "actions": {
+        "merge_nodes": "合并 {count} 个节点",
+        "split_node": "拆分节点",
+        "link_node": "关联节点"
+      },
+      "split_failed": "拆分节点失败",
+      "merge_failed": "合并节点失败",
+      "link_failed": "关联节点失败",
+      "export_failed": "导出模板失败",
+      "History": {
+        "loading": "加载历史记录中...",
+        "title": "变更历史",
+        "empty": "暂无历史记录。",
+        "create_snapshot": "创建快照",
+        "reason": "快照原因",
+        "reason_placeholder": "例如：重构前备份",
+        "rollback": "回滚",
+        "rollback_confirm_title": "确认回滚",
+        "rollback_confirm_message": "确定要回滚到快照 \"{reason}\" ({version}) 吗？当前的所有未保存变更将丢失。",
+        "rollback_success": "回滚成功",
+        "create_success": "快照创建成功",
+        "operation_failed": "操作失败",
+        "preview": "预览",
+        "preview_title": "快照预览: {version}"
+      },
+      "node_info": {
+        "title": "节点: {label}"
+      }
+    },
+    "Visualizer": {
+      "right_click_actions": "右键点击节点进行操作（拆分、关联）",
+      "shift_click_select": "Shift+点击可多选以合并"
+    },
+    "NodeActions": {
+      "common": {
+        "cancel": "取消"
+      },
+      "Split": {
+        "title": "拆分节点",
+        "description": "将此节点拆分为多个子节点。",
+        "name_label": "名称",
+        "name_placeholder": "子节点名称",
+        "type_label": "类型",
+        "types": {
+          "concept": "概念",
+          "fact": "事实",
+          "principle": "原理"
+        },
+        "content_label": "内容",
+        "content_placeholder": "内容描述",
+        "add_sub_node": "添加子节点",
+        "archive_original": "拆分后归档原节点",
+        "confirm": "确认拆分",
+        "processing": "拆分中..."
+      },
+      "Merge": {
+        "title": "合并节点",
+        "description": "合并 {count} 个节点: {names}",
+        "strategy_label": "合并策略",
+        "strategies": {
+          "create_new": "创建新父节点",
+          "merge_to_first": "合并到第一个选中节点"
+        },
+        "new_name_label": "新节点名称",
+        "new_name_placeholder": "合并后的节点名称",
+        "content_label": "内容 (可选)",
+        "content_placeholder": "合并后的内容摘要",
+        "confirm": "确认合并",
+        "processing": "合并中..."
+      },
+      "Link": {
+        "title": "关联节点",
+        "description": "创建对另一个节点的引用。",
+        "target_id_label": "目标节点 ID",
+        "target_id_placeholder": "目标节点 UUID",
+        "target_id_hint": "当前仅支持直接通过 ID 关联。",
+        "relation_label": "关系类型",
+        "relations": {
+          "related": "相关",
+          "prerequisite": "前置",
+          "part_of": "部分"
+        },
+        "confirm": "确认关联",
+        "processing": "关联中..."
+      }
+    },
+    "NodeContents": {
+      "loading": "加载内容中...",
+      "title": "关联内容",
+      "empty": "此节点暂无关联内容。",
+      "ai_auto": "AI 自动",
+      "manual": "手动",
+      "match": "匹配度",
+      "no_summary": "暂无摘要。",
+      "unlink_confirm": "确定要取消关联此内容吗？"
+    }
   },
   "Synonyms": {
     "title": "同义词管理",
@@ -213,10 +698,113 @@
     "confidence": "置信度",
     "source": "来源",
     "usage": "使用次数",
+    "sources": {
+      "manual": "手动添加",
+      "ai": "AI 生成",
+      "import": "导入"
+    },
     "actions": "操作",
     "delete_confirm": "确定删除该同义词吗？",
     "placeholder_canonical": "例如：人工智能",
-    "placeholder_synonym": "例如：AI"
+    "placeholder_synonym": "例如：AI",
+    "search_placeholder": "搜索同义词...",
+    "empty": "暂无同义词。"
+  },
+  "Contributions": {
+    "title": "贡献记录",
+    "description": "您的知识贡献历史与处理状态。",
+    "loading": "加载贡献记录中...",
+    "stats": {
+      "total": "总贡献",
+      "pending": "待处理",
+      "processed": "已采纳",
+      "rejected": "已拒绝"
+    },
+    "list": {
+      "extracted_concepts": "提取概念",
+      "count": "{count} 个",
+      "unknown_time": "未知时间"
+    },
+    "status": {
+      "processed": "已采纳",
+      "failed": "失败",
+      "pending": "待处理",
+      "rejected": "已拒绝"
+    },
+    "detail": {
+      "title": "贡献详情",
+      "type": "类型",
+      "status": "状态",
+      "original_input": "原始输入",
+      "rejection_reason": "拒绝原因",
+      "extracted_concepts": "提取的概念",
+      "no_concepts": "暂无提取的概念",
+      "content_preview": "内容预览",
+      "no_content": "(无提取内容)",
+      "close": "关闭"
+    }
+  },
+  "Metabolism": {
+    "title": "内容新陈代谢管理",
+    "description": "管理内容生命周期，清理陈旧内容",
+    "actions": {
+      "run": "立即执行新陈代谢",
+      "running": "执行中...",
+      "cleanup_selected": "清理选中"
+    },
+    "alerts": {
+      "run_failed": "执行失败，请查看日志",
+      "cleanup_success": "清理完成",
+      "cleanup_failed": "清理失败",
+      "confirm_cleanup": "确定要永久删除这 {count} 个项目吗？"
+    },
+    "stats": {
+      "processed": "已处理",
+      "deprecated": "转为废弃",
+      "archived": "转为归档"
+    },
+    "suggestions": {
+      "title": "清理建议"
+    },
+    "table": {
+      "title": "标题",
+      "score": "分数",
+      "age": "存在时间",
+      "reason": "建议原因",
+      "loading": "加载中...",
+      "empty": "暂无清理建议"
+    }
+  },
+  "Scheduler": {
+    "title": "任务调度",
+    "tasks": {
+      "title": "定时任务列表",
+      "headers": {
+        "name": "任务名",
+        "cron": "Cron",
+        "status": "状态",
+        "last_run": "上次运行",
+        "actions": "操作"
+      }
+    },
+    "executions": {
+      "title": "最近执行",
+      "empty": "无执行记录",
+      "unknown_task": "未知任务"
+    },
+    "status": {
+      "active": "活跃",
+      "paused": "暂停"
+    },
+    "actions": {
+      "pause": "暂停",
+      "resume": "恢复",
+      "run_now": "立即运行"
+    },
+    "alerts": {
+      "trigger_failed": "触发任务失败",
+      "toggle_failed": "切换任务状态失败"
+    }
   },
   "Status": {
     "active": "活跃",
@@ -230,5 +818,164 @@
     "network_error": "网络错误，请稍后重试",
     "not_found": "未找到资源",
     "unknown_error": "发生未知错误"
+  },
+  "Settings": {
+    "title": "系统配置",
+    "tabs": {
+      "general": "通用配置",
+      "ai": "AI 模型",
+      "history": "变更历史",
+      "tasks": "任务管理"
+    },
+    "loading": "加载配置中...",
+    "save_success": "已更新 {key}",
+    "save_failed": "保存配置失败",
+    "General": {
+      "title": "{group} 配置"
+    },
+    "Tasks": {
+      "title": "后台任务控制",
+      "batch_classify": {
+        "title": "批量自动分类",
+        "description": "对所有未处理的内容（ai_processed=false）触发 AI 自动分类、摘要生成和标签提取。",
+        "button": "立即触发",
+        "processing": "正在启动...",
+        "confirm": "确定要触发全量内容的批量自动分类吗？这可能需要较长时间。",
+        "started": "批量分类任务已启动",
+        "start_failed": "启动失败",
+        "trigger_failed": "触发失败"
+      }
+    },
+    "History": {
+      "columns": {
+        "time": "时间",
+        "config_key": "配置项",
+        "old_value": "旧值",
+        "new_value": "新值",
+        "operator": "操作人"
+      }
+    },
+    "AIConfig": {
+      "title": "AI 模型配置",
+      "enable_ai": "启用 AI 功能",
+      "strategy": {
+        "label": "调度策略 (Strategy)",
+        "local_first": {
+          "label": "本地优先 (Local First)",
+          "desc": "优先使用本地，失败时自动降级到云端"
+        },
+        "local_only": {
+          "label": "仅本地 (Local Only)",
+          "desc": "只使用本地模型，不连接外网"
+        },
+        "cloud_only": {
+          "label": "仅云端 (Cloud Only)",
+          "desc": "只使用云端服务"
+        }
+      },
+      "Local": {
+        "title": "🏠 本地模型配置 (Local AI)",
+        "base_url": "本地 Base URL",
+        "model_name": "本地模型名称",
+        "timeout": "超时时间 (秒)",
+        "test_connection": "测试本地连接"
+      },
+      "Cloud": {
+        "title": "☁️ 云端模型配置 (Cloud AI)",
+        "base_url": "Cloud API Base URL",
+        "base_url_hint": "兼容 OpenAI 接口的服务地址",
+        "api_key": "API Key",
+        "api_key_hint": "如显示为 *** 则表示已脱敏，无需修改。留空则禁用 AI。",
+        "model_name": "Cloud Model Name",
+        "test_connection": "测试云端连接"
+      },
+      "Params": {
+        "temperature": "温度 (Temperature)",
+        "temperature_levels": {
+          "precise": "精确 (0.0)",
+          "balanced": "均衡 (1.0)",
+          "creative": "创意 (2.0)"
+        },
+        "max_retries": "最大重试次数"
+      },
+      "Test": {
+        "success": "连接成功",
+        "failed": "连接失败",
+        "latency": "延迟"
+      },
+      "Actions": {
+        "save": "保存配置",
+        "test_current": "测试当前策略连接",
+        "saved": "配置已保存",
+        "save_failed": "保存失败",
+        "test_failed": "连接测试失败: {error}"
+      }
+    }
+  },
+  "Health": {
+    "title": "系统健康与进化",
+    "loading": "加载健康数据中...",
+    "optimize_strategy": "优化抓取策略",
+    "optimize_triggered": "优化已触发",
+    "optimize_failed": "优化触发失败",
+    "detecting": "检测中...",
+    "detect_now": "立即检测",
+    "overall": "总体评分",
+    "out_of_100": "/ 100",
+    "points": "分",
+    "depth_balance": "结构深度",
+    "structural_balance": "层级平衡性",
+    "content_coverage": "内容覆盖率",
+    "nodes_with_content": "有内容的节点",
+    "activity": "活跃度",
+    "recent_updates": "近期更新频率",
+    "suggestions": "优化建议",
+    "overall_score": "总体健康分",
+    "last_check": "上次检测",
+    "never": "从未",
+    "issues_title": "系统问题 (Issues)",
+    "no_issues": "系统运行良好，未发现问题。",
+    "Overview": {
+      "title": "系统健康概览",
+      "description": "健康报告功能正在开发中。",
+      "metrics": {
+        "overall": "整体评分",
+        "pyramid": "金字塔健康度",
+        "source": "信息源状态"
+      }
+    },
+    "ApprovalBacklog": {
+      "title": "审批积压",
+      "pending_items": "待处理事项",
+      "penalty": "健康分扣除",
+      "max_wait": "最长等待",
+      "days": "天",
+      "severe_backlog": "积压严重，建议优先处理"
+    },
+    "CrawlStats": {
+      "title": "抓取与校验统计",
+      "total": "总抓取量",
+      "success_rate": "成功率",
+      "validated": "校验通过",
+      "rejected": "校验失败",
+      "avg_time": "平均处理耗时"
+    },
+    "HotspotDistribution": {
+      "title": "热点分布趋势",
+      "empty": "暂无热点数据",
+      "mentions_7d": "7天提及"
+    },
+    "PyramidHealthCard": {
+      "title": "金字塔健康度",
+      "average_score": "平均分",
+      "empty": "暂无数据",
+      "id_prefix": "ID"
+    },
+    "SourceHealthSummary": {
+      "title": "信息源健康度",
+      "score": "综合评分",
+      "availability": "可用性",
+      "response_time": "平均响应时间"
+    }
   }
 }

@@ -1,11 +1,13 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { schedulerApi } from '@/lib/api';
 import { ScheduledTask, TaskExecution } from '@/lib/types';
 import { Clock, Play, Pause, RotateCw, Activity, CheckCircle, XCircle } from 'lucide-react';
 
 export default function SchedulerPage() {
+  const t = useTranslations('Scheduler');
   const [tasks, setTasks] = useState<ScheduledTask[]>([]);
   const [executions, setExecutions] = useState<TaskExecution[]>([]);
 
@@ -36,7 +38,7 @@ export default function SchedulerPage() {
       fetchData(); // Refresh to show running
     } catch (error) {
       console.error("Failed to trigger task", error);
-      alert("触发任务失败");
+      alert(t('alerts.trigger_failed'));
     }
   };
 
@@ -50,7 +52,7 @@ export default function SchedulerPage() {
       fetchData();
     } catch (error) {
       console.error("Failed to toggle task", error);
-      alert("切换任务状态失败");
+      alert(t('alerts.toggle_failed'));
     }
   };
 
@@ -59,7 +61,7 @@ export default function SchedulerPage() {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold flex items-center gap-2 text-gray-900 dark:text-white">
           <Clock className="w-6 h-6 text-blue-600" />
-          任务调度 (Scheduler)
+          {t('title')}
         </h1>
         <button 
           onClick={fetchData}
@@ -72,16 +74,16 @@ export default function SchedulerPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Task List */}
         <div className="lg:col-span-2 space-y-4">
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">定时任务列表</h2>
+          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">{t('tasks.title')}</h2>
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-700/50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">任务名</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cron</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">状态</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">上次运行</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">操作</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('tasks.headers.name')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('tasks.headers.cron')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('tasks.headers.status')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('tasks.headers.last_run')}</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('tasks.headers.actions')}</th>
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -98,7 +100,7 @@ export default function SchedulerPage() {
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                         task.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
                       }`}>
-                        {task.is_active ? '活跃' : '暂停'}
+                        {task.is_active ? t('status.active') : t('status.paused')}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -112,14 +114,14 @@ export default function SchedulerPage() {
                             ? 'text-yellow-600 hover:bg-yellow-50' 
                             : 'text-green-600 hover:bg-green-50'
                         }`}
-                        title={task.is_active ? "暂停" : "恢复"}
+                        title={task.is_active ? t('actions.pause') : t('actions.resume')}
                       >
                         {task.is_active ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                       </button>
                       <button 
                         onClick={() => handleTrigger(task.id)}
                         className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-md"
-                        title="立即运行"
+                        title={t('actions.run_now')}
                       >
                         <RotateCw className="w-4 h-4" />
                       </button>
@@ -133,11 +135,11 @@ export default function SchedulerPage() {
 
         {/* Recent Executions */}
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">最近执行</h2>
+          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">{t('executions.title')}</h2>
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div className="divide-y divide-gray-200 dark:divide-gray-700 max-h-[600px] overflow-y-auto">
               {executions.length === 0 ? (
-                <div className="p-4 text-center text-gray-500 text-sm">无执行记录</div>
+                <div className="p-4 text-center text-gray-500 text-sm">{t('executions.empty')}</div>
               ) : (
                 executions.map((exec) => {
                   const task = tasks.find(t => t.id === exec.task_id);
@@ -145,7 +147,7 @@ export default function SchedulerPage() {
                     <div key={exec.id} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50">
                       <div className="flex justify-between items-start mb-1">
                         <span className="font-medium text-sm text-gray-900 dark:text-white">
-                          {task?.task_name || '未知任务'}
+                          {task?.task_name || t('executions.unknown_task')}
                         </span>
                         <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium flex items-center gap-1 ${
                           exec.status === 'success' ? 'bg-green-100 text-green-800' :

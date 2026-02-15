@@ -44,7 +44,7 @@ export default function DashboardLayout({
         <div className="p-6 border-b border-border">
           <h1 className="text-xl font-bold text-primary flex items-center gap-2">
             <Activity className="w-6 h-6" />
-            AI 知识雷达
+            {t('appName')}
           </h1>
         </div>
         <nav className="flex-1 mt-6 px-3 space-y-1">
@@ -62,7 +62,7 @@ export default function DashboardLayout({
         <div className="p-4 border-t border-border space-y-4">
           <LanguageSwitcher />
           <p className="text-xs text-muted-foreground text-center">
-            v0.4.0 Iteration 4
+            {t('version')}
           </p>
         </div>
       </aside>

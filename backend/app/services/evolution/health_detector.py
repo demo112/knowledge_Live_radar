@@ -83,14 +83,18 @@ class HealthDetector:
         scores = {}
         issues = []
         
-        result = await self.db.execute(select(Pyramid))
+        # 1. 结构健康度 (Structure Health)
+        # 检查金字塔层级是否平衡，是否有孤立节点
+        result = await self.db.execute(select(Pyramid).where(Pyramid.is_deleted == False))
         pyramids = result.scalars().all()
         
         for pyramid in pyramids:
             score = 100.0
             # Check node count
             count_result = await self.db.execute(
-                select(func.count(PyramidNode.id)).where(PyramidNode.pyramid_id == pyramid.id)
+                select(func.count(PyramidNode.id))
+                .where(PyramidNode.pyramid_id == pyramid.id)
+                .where(PyramidNode.is_deleted == False)
             )
             node_count = count_result.scalar() or 0
             
@@ -99,7 +103,7 @@ class HealthDetector:
                 issues.append({
                     "type": "empty_pyramid",
                     "severity": "high",
-                    "description": f"Pyramid '{pyramid.name}' has no nodes",
+                    "description": f"金字塔 '{pyramid.name}' 没有节点",
                     "entity_id": str(pyramid.id)
                 })
             elif node_count < 3:
@@ -107,7 +111,7 @@ class HealthDetector:
                 issues.append({
                     "type": "sparse_pyramid",
                     "severity": "medium",
-                    "description": f"Pyramid '{pyramid.name}' has very few nodes ({node_count})",
+                    "description": f"金字塔 '{pyramid.name}' 节点过少 ({node_count})",
                     "entity_id": str(pyramid.id)
                 })
                 
@@ -116,7 +120,9 @@ class HealthDetector:
         return scores, issues
 
     async def evaluate_source_health(self) -> Tuple[float, List[Dict[str, Any]]]:
-        result = await self.db.execute(select(InformationSource))
+        result = await self.db.execute(
+            select(InformationSource).where(InformationSource.is_deleted == False)
+        )
         sources = result.scalars().all()
         if not sources:
             return 100.0, []
@@ -134,7 +140,7 @@ class HealthDetector:
                 issues.append({
                     "type": "source_failing",
                     "severity": "high" if source.error_count > 3 else "medium",
-                    "description": f"Source '{source.name}' failing ({source.error_count} times)",
+                    "description": f"信息源 '{source.name}' 连续失败 ({source.error_count} 次)",
                     "entity_id": str(source.id)
                 })
                 
@@ -158,7 +164,7 @@ class HealthDetector:
             issues.append({
                 "type": "no_new_content",
                 "severity": "medium",
-                "description": "No new content fetched in last 24 hours",
+                "description": "过去 24 小时未获取新内容",
                 "entity_id": None
             })
         elif new_content_count < 10: # Threshold
@@ -203,7 +209,7 @@ class HealthDetector:
             issues.append({
                 "type": "high_backlog",
                 "severity": "high",
-                "description": f"High approval backlog: {pending_count} pending proposals",
+                "description": f"审批积压严重：{pending_count} 个待处理提案",
                 "entity_id": None
             })
         elif pending_count > 20:
@@ -211,7 +217,7 @@ class HealthDetector:
             issues.append({
                 "type": "moderate_backlog",
                 "severity": "medium",
-                "description": f"Moderate approval backlog: {pending_count} pending proposals",
+                "description": f"审批积压中等：{pending_count} 个待处理提案",
                 "entity_id": None
             })
             

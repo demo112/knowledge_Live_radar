@@ -18,6 +18,22 @@
 3. **工程化治理** - 严格遵守 Rules 中定义的工程规范
 4. **AI 提议，人类决策** - 系统核心理念贯穿开发
 5. **止损优先** - 遵守 `problem-fixing` Skill 中的止损机制
+6. **禁止阻塞式命令** - 所有测试和验证命令必须非阻塞，执行完立即退出
+
+## ⚠️ 严格禁止的操作
+
+**绝对不允许执行以下命令：**
+- ❌ `python -m http.server` (任何端口)
+- ❌ `coverage serve`
+- ❌ `pytest-html-reporter serve`
+- ❌ 任何会输出 "Serving HTML report at http://localhost:xxxx" 的命令
+- ❌ 任何需要按 Ctrl+C 退出的命令
+- ❌ 任何阻塞终端的交互式命令
+
+**正确的做法：**
+- ✅ 只使用生成静态文件的命令：`pytest --cov=backend --cov-report=html --cov-report=term`
+- ✅ 命令执行完毕后应立即返回到命令提示符
+- ✅ 如需查看 HTML 报告，告诉用户文件位置，让用户自己用浏览器打开
 
 ---
 

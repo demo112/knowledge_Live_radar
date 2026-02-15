@@ -6,6 +6,7 @@ from sqlalchemy import select, desc
 from sqlalchemy.orm import selectinload
 from app.database import get_db
 from app.models.content import ContentItem, ContentNodeRelation
+from app.models.pyramid import PyramidNode
 from app.models.approval import Approval
 from app.schemas.common import SuccessResponse, PaginatedResponse, PaginatedData
 from app.schemas.content_input import UrlInput, TextInput, AnalysisRequest
@@ -13,22 +14,27 @@ from app.schemas.approval import ApprovalResponse
 from app.services.input_processor import InputProcessor
 from app.services.content_analyzer import ContentAnalyzer
 from app.schemas.content import ContentResponse
-from pydantic import BaseModel, ConfigDict
-from datetime import datetime
-
-# Remove local ContentResponse definition as we now import it
-# class ContentResponse(BaseModel):
-#     id: UUID
-#     title: str
-#     url: str
-#     summary: Optional[str] = None
-#     publish_time: Optional[datetime] = None
-#     status: str
-#     created_at: datetime
-#     
-#     model_config = ConfigDict(from_attributes=True)
+from app.core.ai.facade import ai_facade
+from app.schemas.ai import ContentClassificationRequest, ContentClassificationResponse
 
 router = APIRouter(prefix="/contents", tags=["contents"])
+
+@router.post("/classify", response_model=SuccessResponse[ContentClassificationResponse])
+async def classify_content_preview(
+    request: ContentClassificationRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    AI Classify content before creation (Preview).
+    """
+    # Fetch some context nodes (e.g., top-level concepts) to help AI
+    # This is a simplified context fetching
+    stmt = select(PyramidNode).limit(50)
+    result = await db.execute(stmt)
+    nodes = [{"id": str(n.id), "name": n.name, "description": n.description} for n in result.scalars()]
+    
+    classification = await ai_facade.classify_content(request.title or "", request.content, nodes)
+    return SuccessResponse(data=classification)
 
 @router.get("", response_model=PaginatedResponse[ContentResponse])
 async def get_contents(
@@ -38,7 +44,8 @@ async def get_contents(
     db: AsyncSession = Depends(get_db)
 ):
     stmt = select(ContentItem).options(
-        selectinload(ContentItem.validation_result)
+        selectinload(ContentItem.validation_result),
+        selectinload(ContentItem.node_relations).selectinload(ContentNodeRelation.node).selectinload(PyramidNode.pyramid)
     ).order_by(desc(ContentItem.created_at)).offset(skip).limit(limit)
     if source_id:
         stmt = stmt.where(ContentItem.source_id == source_id)
@@ -55,7 +62,11 @@ async def get_content(
     id: UUID,
     db: AsyncSession = Depends(get_db)
 ):
-    result = await db.execute(select(ContentItem).where(ContentItem.id == id))
+    stmt = select(ContentItem).where(ContentItem.id == id).options(
+        selectinload(ContentItem.validation_result),
+        selectinload(ContentItem.node_relations).selectinload(ContentNodeRelation.node).selectinload(PyramidNode.pyramid)
+    )
+    result = await db.execute(stmt)
     content = result.scalar_one_or_none()
     if not content:
         raise HTTPException(status_code=404, detail="未找到内容")

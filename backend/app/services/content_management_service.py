@@ -1,6 +1,7 @@
 import re
 import logging
-from typing import List
+import uuid
+from typing import List, Optional
 from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.content import ContentItem, ValidationResult, ContentNodeRelation
@@ -92,7 +93,6 @@ class ContentManagementService:
             if not dry_run and items_to_delete:
                 # Convert string IDs back to UUIDs if necessary, but sqlalchemy usually handles it.
                 # To be safe, we rely on the fact that CleanDetail.id is a string representation of the UUID.
-                import uuid
                 delete_ids = [uuid.UUID(item.id) for item in items_to_delete]
                 
                 # Delete logic
@@ -119,7 +119,7 @@ class ContentManagementService:
             logger.error(f"Batch clean failed: {e}", exc_info=True)
             raise
 
-    async def batch_delete(self, ids: List[str]) -> BatchDeleteData:
+    async def batch_delete(self, ids: List[uuid.UUID]) -> BatchDeleteData:
         """Batch delete content items by ID."""
         if not ids:
             return BatchDeleteData(deleted_count=0)
@@ -140,7 +140,7 @@ class ContentManagementService:
         
         return BatchDeleteData(deleted_count=result.rowcount)
 
-    async def batch_summarize(self, target_ids: List[str] = None, overwrite: bool = True) -> BatchSummarizeData:
+    async def batch_summarize(self, target_ids: Optional[List[uuid.UUID]] = None, overwrite: bool = True) -> BatchSummarizeData:
         """
         Trigger batch summarization.
         This method will be called by the router to start a background task.
@@ -161,7 +161,7 @@ class ContentManagementService:
             message=f"Summarization started for {len(items)} items."
         )
 
-async def run_batch_summarization(target_ids: List[str] = None, overwrite: bool = True):
+async def run_batch_summarization(target_ids: Optional[List[uuid.UUID]] = None, overwrite: bool = True):
     """
     Background task to process summarization.
     """

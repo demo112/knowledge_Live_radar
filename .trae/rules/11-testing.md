@@ -36,12 +36,43 @@
 
 ## 测试执行规范
 
-### 禁止启动阻塞式服务
-- 运行测试或生成覆盖率报告时，**禁止**启动任何本地 HTTP 服务器（如 `python -m http.server`、`coverage serve` 等）来展示报告
-- 覆盖率报告只允许生成静态文件（`coverage html` 或 `pytest --cov-report=html`），不得自动打开浏览器或启动服务
-- 测试命令必须是非交互式的，执行完毕后立即退出，不得阻塞终端
-- 正确示例：`pytest --cov=backend --cov-report=html --cov-report=term`
-- 错误示例：生成报告后执行 `python -m http.server 9323` 或任何 `Serving HTML report at http://localhost:xxxx` 的命令
+### 禁止启动阻塞式服务 ⚠️ 严格执行
+
+**绝对禁止的操作：**
+- ❌ 启动任何 HTTP 服务器（`python -m http.server`、`coverage serve`、`pytest-html-reporter serve` 等）
+- ❌ 自动打开浏览器查看报告
+- ❌ 任何会输出 `Serving HTML report at http://localhost:xxxx` 的命令
+- ❌ 任何需要按 Ctrl+C 退出的命令
+- ❌ 任何阻塞终端的交互式命令
+- ❌ Playwright `reporter: 'html'`（默认失败时启动服务器），必须使用 `reporter: [['html', { open: 'never' }]]`
+
+**正确的做法：**
+- ✅ 只生成静态 HTML 文件：`pytest --cov=backend --cov-report=html --cov-report=term`
+- ✅ 测试命令执行完毕后立即退出，返回到命令提示符
+- ✅ 报告文件保存到磁盘，不启动服务器
+
+**验证方法：**
+运行测试命令后，应该立即看到命令提示符（如 `$` 或 `%`），而不是看到 "Serving..." 或 "Press Ctrl+C" 等提示。
+
+**错误示例：**
+```bash
+# ❌ 错误：会启动服务器阻塞
+pytest --cov=backend --cov-report=html && python -m http.server 9323
+pytest-html report.html --self-contained-html --serve
+
+# ❌ 错误：会阻塞终端
+Serving HTML report at http://localhost:9323. Press Ctrl+C to quit.
+```
+
+**正确示例：**
+```bash
+# ✅ 正确：只生成文件，立即退出
+pytest --cov=backend --cov-report=html --cov-report=term
+pytest --html=report.html --self-contained-html
+
+# 命令执行后应该立即返回到提示符
+$ _
+```
 
 ## AI 服务测试
 - 使用 Mock 替代真实 AI 调用

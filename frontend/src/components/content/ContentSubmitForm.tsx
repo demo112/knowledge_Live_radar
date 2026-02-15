@@ -3,8 +3,10 @@
 import { useState } from 'react';
 import { contentApi } from '@/lib/api';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 export default function ContentSubmitForm() {
+  const t = useTranslations('Contents.Submit');
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'file' | 'url' | 'text'>('url');
   const [loading, setLoading] = useState(false);
@@ -17,9 +19,9 @@ export default function ContentSubmitForm() {
   const [file, setFile] = useState<File | null>(null);
 
   const TAB_NAMES = {
-    url: '链接',
-    text: '文本',
-    file: '文件'
+    url: t('tabs.url'),
+    text: t('tabs.text'),
+    file: t('tabs.file')
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -42,11 +44,11 @@ export default function ContentSubmitForm() {
         router.push('/contents');
         router.refresh();
       } else {
-        setError('提交失败，请重试。');
+        setError(t('alerts.failed'));
       }
     } catch (err: unknown) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setError((err as any).response?.data?.detail || '提交过程中发生错误。');
+      setError((err as any).response?.data?.detail || t('alerts.error'));
     } finally {
       setLoading(false);
     }
@@ -82,7 +84,7 @@ export default function ContentSubmitForm() {
         {activeTab === 'url' && (
           <div>
             <label htmlFor="url" className="block text-sm font-medium text-gray-700">
-              URL
+              {t('labels.url')}
             </label>
             <div className="mt-1">
               <input
@@ -103,7 +105,7 @@ export default function ContentSubmitForm() {
           <>
             <div>
               <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-                标题
+                {t('labels.title')}
               </label>
               <div className="mt-1">
                 <input
@@ -119,7 +121,7 @@ export default function ContentSubmitForm() {
             </div>
             <div>
               <label htmlFor="text" className="block text-sm font-medium text-gray-700">
-                内容
+                {t('labels.content')}
               </label>
               <div className="mt-1">
                 <textarea
@@ -139,7 +141,7 @@ export default function ContentSubmitForm() {
         {activeTab === 'file' && (
           <div>
             <label htmlFor="file" className="block text-sm font-medium text-gray-700">
-              文件
+              {t('labels.file')}
             </label>
             <div className="mt-1">
               <input
@@ -151,7 +153,7 @@ export default function ContentSubmitForm() {
                 required
               />
             </div>
-            <p className="mt-2 text-sm text-gray-500">支持的格式: PDF, Markdown, Text</p>
+            <p className="mt-2 text-sm text-gray-500">{t('hints.file_formats')}</p>
           </div>
         )}
 
@@ -161,7 +163,7 @@ export default function ContentSubmitForm() {
             disabled={loading}
             className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
           >
-            {loading ? '提交中...' : '提交'}
+            {loading ? t('actions.submitting') : t('actions.submit')}
           </button>
         </div>
       </form>

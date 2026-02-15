@@ -9,7 +9,7 @@ class SourceTemplateService:
         return [
             SourceTemplate(
                 id="arxiv_rss",
-                name="arXiv RSS Feed",
+                name="arXiv 订阅源",
                 description="订阅 arXiv 特定类别的最新论文更新",
                 source_type="RSS",
                 config_schema=[
@@ -28,7 +28,7 @@ class SourceTemplateService:
             ),
             SourceTemplate(
                 id="github_trending",
-                name="GitHub Trending",
+                name="GitHub 趋势",
                 description="订阅 GitHub 热门项目趋势",
                 source_type="API",
                 config_schema=[
@@ -58,8 +58,8 @@ class SourceTemplateService:
             ),
             SourceTemplate(
                 id="huggingface_daily",
-                name="HuggingFace Daily Papers",
-                description="HuggingFace 每日精选论文",
+                name="HuggingFace 每日论文",
+                description="获取 HuggingFace Daily Papers",
                 source_type="WEB",
                 config_schema=[],
                 default_config={
@@ -82,6 +82,63 @@ class SourceTemplateService:
                     )
                 ],
                 default_config={}
+            ),
+            SourceTemplate(
+                id="substack_newsletter",
+                name="Substack 专栏",
+                description="订阅 Substack 专栏文章",
+                source_type="RSS",
+                config_schema=[
+                    SourceTemplateConfigField(
+                        name="subdomain",
+                        label="Substack 子域名",
+                        type="text",
+                        default="example",
+                        description="例如: 'lilianweng' (lilianweng.substack.com)"
+                    )
+                ],
+                default_config={
+                    "url_template": "https://{subdomain}.substack.com/feed",
+                    "content_selector": "content:encoded"
+                }
+            ),
+            SourceTemplate(
+                id="github_release",
+                name="GitHub 版本发布",
+                description="监控 GitHub 项目版本发布",
+                source_type="API",
+                config_schema=[
+                    SourceTemplateConfigField(
+                        name="repo",
+                        label="仓库路径",
+                        type="text",
+                        default="owner/repo",
+                        description="例如: 'facebook/react'"
+                    )
+                ],
+                default_config={
+                    "url_template": "https://api.github.com/repos/{repo}/releases",
+                    "content_selector": "body"
+                }
+            ),
+            SourceTemplate(
+                id="website_sitemap",
+                name="网站 Sitemap",
+                description="通过 Sitemap 抓取网站更新",
+                source_type="Sitemap",
+                config_schema=[
+                    SourceTemplateConfigField(
+                        name="url",
+                        label="Sitemap URL",
+                        type="text",
+                        default="https://example.com/sitemap.xml",
+                        description="完整的 Sitemap XML 地址"
+                    )
+                ],
+                default_config={
+                    "url_template": "{url}",
+                    "content_selector": "loc"
+                }
             )
         ]
 
@@ -122,7 +179,7 @@ class SourceTemplateService:
             since = params.get("since", "daily")
             # 这里只是示例 URL，实际可能需要专门的 Fetcher 支持
             result["url"] = f"https://github.com/trending/{language}?since={since}"
-            result["name"] = f"GitHub Trending ({language})"
+            result["name"] = f"GitHub 趋势 ({language})"
             result["config"] = {
                 "fetcher_type": "github_trending", # 指示使用特定的 Fetcher 逻辑
                 "params": {"language": language, "since": since}
@@ -131,7 +188,7 @@ class SourceTemplateService:
         # 3. HuggingFace Daily
         elif template.id == "huggingface_daily":
             result["url"] = template.default_config["url"]
-            result["name"] = "HuggingFace Daily Papers"
+            result["name"] = "HuggingFace 每日论文"
             result["config"] = {
                 "content_selector": template.default_config.get("content_selector")
             }
@@ -145,7 +202,7 @@ class SourceTemplateService:
             # 尝试从 URL 提取名称作为默认名，或者让用户后续修改
             from urllib.parse import urlparse
             domain = urlparse(url).netloc
-            result["name"] = f"Blog ({domain})"
+            result["name"] = f"博客 ({domain})"
             result["config"] = {}
 
         return result

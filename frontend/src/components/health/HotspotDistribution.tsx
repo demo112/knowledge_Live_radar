@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslations } from 'next-intl';
 import { TrendingUp } from 'lucide-react';
 import { Hotspot } from '@/lib/types';
 
@@ -9,6 +10,7 @@ interface HotspotDistributionProps {
 }
 
 export default function HotspotDistribution({ distribution, hotspots, className = '' }: HotspotDistributionProps) {
+  const t = useTranslations('Health.HotspotDistribution');
   // Sort hotspots by heat_score or recent_7d_count
   const sortedHotspots = [...hotspots].sort((a, b) => (b.recent_7d_count || 0) - (a.recent_7d_count || 0)).slice(0, 5);
 
@@ -22,12 +24,20 @@ export default function HotspotDistribution({ distribution, hotspots, className 
     }
   };
 
+  const getStatusLabel = (status: string) => {
+    try {
+      return t(`status.${status}`);
+    } catch (e) {
+      return status;
+    }
+  };
+
   return (
     <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col ${className}`}>
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
         <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center gap-2">
           <TrendingUp className="w-5 h-5 text-purple-500" />
-          热点分布 (Hotspots)
+          {t('title')}
         </h3>
       </div>
       
@@ -49,7 +59,7 @@ export default function HotspotDistribution({ distribution, hotspots, className 
                 key={status} 
                 className={`${color} h-full`} 
                 style={{ width: `${percent}%` }} 
-                title={`${status}: ${count}`}
+                title={`${getStatusLabel(status)}: ${count}`}
               />
             );
           })}
@@ -64,7 +74,7 @@ export default function HotspotDistribution({ distribution, hotspots, className 
                 status === 'emerging' ? 'bg-blue-500' :
                 status === 'mature' ? 'bg-purple-500' : 'bg-gray-400'
               }`} />
-              <span className="capitalize text-gray-600 dark:text-gray-300">{status}: {count}</span>
+              <span className="capitalize text-gray-600 dark:text-gray-300">{getStatusLabel(status)}: {count}</span>
             </div>
           ))}
         </div>
@@ -72,7 +82,7 @@ export default function HotspotDistribution({ distribution, hotspots, className 
         {/* Top List */}
         <div className="space-y-4">
           {sortedHotspots.length === 0 ? (
-            <p className="text-sm text-gray-500 text-center py-4">暂无热点数据</p>
+            <p className="text-sm text-gray-500 text-center py-4">{t('empty')}</p>
           ) : (
             sortedHotspots.map((h) => (
               <div key={h.id} className="flex justify-between items-center border-b border-gray-100 dark:border-gray-700 pb-2 last:border-0 last:pb-0">
@@ -80,18 +90,19 @@ export default function HotspotDistribution({ distribution, hotspots, className 
                   <div className="font-medium text-sm text-gray-900 dark:text-white">{h.keyword}</div>
                   <div className="text-xs text-gray-500 flex gap-2 mt-1">
                     <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${getStatusColor(h.status)}`}>
-                      {h.status ? h.status.toUpperCase() : 'UNKNOWN'}
+                      {getStatusLabel(h.status)}
                     </span>
                     {h.growth_rate !== undefined && (
                       <span className={h.growth_rate >= 0 ? 'text-green-600' : 'text-red-600'}>
                          {h.growth_rate > 0 ? '+' : ''}{h.growth_rate.toFixed(1)}%
                       </span>
                     )}
+
                   </div>
                 </div>
                 <div className="text-right">
                   <div className="font-bold text-gray-900 dark:text-white">{h.recent_7d_count}</div>
-                  <div className="text-xs text-gray-500">7天提及</div>
+                  <div className="text-xs text-gray-500">{t('mentions_7d')}</div>
                 </div>
               </div>
             ))

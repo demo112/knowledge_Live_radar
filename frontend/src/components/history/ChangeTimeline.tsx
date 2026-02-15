@@ -1,6 +1,6 @@
 import React from 'react';
 import { ChangeItem } from '@/lib/types';
-import { CHANGE_STATUS_MAP, CHANGE_TYPE_MAP } from '@/lib/constants';
+import { useTranslations } from 'next-intl';
 
 interface Props {
   items: ChangeItem[];
@@ -8,8 +8,12 @@ interface Props {
 }
 
 export default function ChangeTimeline({ items, onSelect }: Props) {
+  const t = useTranslations('History');
+  const tTypes = useTranslations('History.types');
+  const tStatus = useTranslations('History.status');
+
   if (!items.length) {
-    return <div className="text-gray-500 text-center py-10">暂无变更历史</div>;
+    return <div className="text-gray-500 text-center py-10">{t('timeline.empty')}</div>;
   }
 
   const formatDate = (dateString: string) => {
@@ -35,7 +39,7 @@ export default function ChangeTimeline({ items, onSelect }: Props) {
             </svg>
           </span>
           <h3 className="flex items-center mb-1 text-lg font-semibold text-gray-900 dark:text-white">
-            {CHANGE_TYPE_MAP[item.type] || item.type}
+            {tTypes(item.type)}
             {item.applicant_id && (
                 <span className="bg-blue-100 text-blue-800 text-sm font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300 ml-3">
                     {item.applicant_id}
@@ -44,7 +48,7 @@ export default function ChangeTimeline({ items, onSelect }: Props) {
             <span className={`ml-2 text-sm font-medium px-2.5 py-0.5 rounded ${
                 item.status === 'executed' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
             }`}>
-                {CHANGE_STATUS_MAP[item.status] || item.status}
+                {tStatus(item.status)}
             </span>
           </h3>
           <time className="block mb-2 text-sm font-normal leading-none text-gray-400 dark:text-gray-500">
@@ -57,7 +61,7 @@ export default function ChangeTimeline({ items, onSelect }: Props) {
             onClick={() => onSelect(item)}
             className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:outline-none focus:ring-gray-200 focus:text-blue-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 dark:focus:ring-gray-700"
           >
-            查看详情
+            {t('timeline.details')}
             <svg className="w-3 h-3 ml-2 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
                 <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M1 5h12m0 0L9 1m4 4L9 9"/>
             </svg>

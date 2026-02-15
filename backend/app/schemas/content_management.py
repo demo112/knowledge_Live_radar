@@ -1,5 +1,6 @@
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel
+import uuid
 
 class BatchCleanRequest(BaseModel):
     dry_run: bool = False
@@ -20,7 +21,7 @@ class BatchCleanResponse(BaseModel):
     data: BatchCleanData
 
 class BatchSummarizeRequest(BaseModel):
-    target_ids: Optional[List[str]] = None
+    target_ids: Optional[List[uuid.UUID]] = None
     overwrite: bool = True
 
 class BatchSummarizeData(BaseModel):
@@ -32,7 +33,7 @@ class BatchSummarizeResponse(BaseModel):
     data: BatchSummarizeData
 
 class BatchDeleteRequest(BaseModel):
-    ids: List[str]
+    ids: List[uuid.UUID]
 
 class BatchDeleteData(BaseModel):
     deleted_count: int
@@ -59,7 +60,7 @@ class MetabolismSuggestionResponse(BaseModel):
     items: List[MetabolismSuggestionItem]
 
 class MetabolismCleanupRequest(BaseModel):
-    ids: List[str]
+    ids: List[uuid.UUID]
 
 class MetabolismCleanupResponse(BaseModel):
     deleted_count: int

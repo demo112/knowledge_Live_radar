@@ -2,7 +2,7 @@
 
 import {useLocale} from 'next-intl';
 import {usePathname, useRouter} from '@/i18n/routing';
-import { Select } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Globe } from 'lucide-react';
 import { ChangeEvent } from 'react';
 
@@ -11,8 +11,8 @@ export default function LanguageSwitcher() {
   const router = useRouter();
   const pathname = usePathname();
 
-  const handleLocaleChange = (e: ChangeEvent<HTMLSelectElement>) => {
-    router.replace(pathname, {locale: e.target.value});
+  const handleLocaleChange = (value: string) => {
+    router.replace(pathname, {locale: value});
   };
 
   return (
@@ -20,11 +20,15 @@ export default function LanguageSwitcher() {
       <Globe className="h-4 w-4 text-muted-foreground shrink-0" />
       <Select 
         value={locale} 
-        onChange={handleLocaleChange}
-        className="h-8 text-xs py-1"
+        onValueChange={handleLocaleChange}
       >
-        <option value="zh">中文</option>
-        <option value="en">English</option>
+        <SelectTrigger className="h-8 text-xs py-1 w-full">
+          <SelectValue placeholder="Language" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="zh">中文</SelectItem>
+          <SelectItem value="en">English</SelectItem>
+        </SelectContent>
       </Select>
     </div>
   );

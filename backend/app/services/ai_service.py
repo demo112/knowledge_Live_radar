@@ -233,7 +233,16 @@ class AIService:
             temperature=0.3
         )
         
-        return self._parse_json(response) if response else {}
+        if not response:
+            return {"summary": "", "key_points": []}
+            
+        result = self._parse_json(response)
+        
+        # Fallback if AI didn't return JSON but plain text
+        if not result and response:
+            return {"summary": response.strip(), "key_points": []}
+            
+        return result
 
     async def extract_concepts(self, title: str, content: str) -> List[Dict[str, str]]:
         """Extract concepts using prompt template."""

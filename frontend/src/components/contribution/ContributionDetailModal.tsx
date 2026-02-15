@@ -1,6 +1,7 @@
 import { Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
+import { useTranslations } from 'next-intl';
 
 interface ExtractedConcept {
   name?: string;
@@ -30,7 +31,19 @@ export default function ContributionDetailModal({
   onClose,
   contribution,
 }: ContributionDetailModalProps) {
+  const t = useTranslations('Contributions.detail');
+  const tStatus = useTranslations('Contributions.status');
+
   if (!contribution) return null;
+
+  const getStatusLabel = (status: string) => {
+    switch(status) {
+      case 'processed': return tStatus('processed');
+      case 'rejected': return tStatus('rejected');
+      case 'failed': return tStatus('failed');
+      default: return tStatus('pending');
+    }
+  };
 
   return (
     <Transition.Root show={isOpen} as={Fragment}>
@@ -72,34 +85,34 @@ export default function ContributionDetailModal({
                 <div>
                   <div className="mt-3 text-center sm:mt-0 sm:text-left">
                     <Dialog.Title as="h3" className="text-lg font-semibold leading-6 text-gray-900">
-                      贡献详情
+                      {t('title')}
                     </Dialog.Title>
                     <div className="mt-2 space-y-4">
                       {/* Basic Info */}
                       <div className="bg-gray-50 p-3 rounded-md">
                         <dl className="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
                           <div className="sm:col-span-1">
-                            <dt className="text-sm font-medium text-gray-500">类型</dt>
+                            <dt className="text-sm font-medium text-gray-500">{t('type')}</dt>
                             <dd className="mt-1 text-sm text-gray-900">{contribution.input_type.toUpperCase()}</dd>
                           </div>
                           <div className="sm:col-span-1">
-                            <dt className="text-sm font-medium text-gray-500">状态</dt>
+                            <dt className="text-sm font-medium text-gray-500">{t('status')}</dt>
                             <dd className="mt-1 text-sm text-gray-900">
                               <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
                                 ${contribution.status === 'processed' ? 'bg-green-100 text-green-800' : 
                                   contribution.status === 'failed' ? 'bg-red-100 text-red-800' : 
                                   'bg-yellow-100 text-yellow-800'}`}>
-                                {contribution.status}
+                                {getStatusLabel(contribution.status)}
                               </span>
                             </dd>
                           </div>
                           <div className="sm:col-span-2">
-                            <dt className="text-sm font-medium text-gray-500">原始输入</dt>
+                            <dt className="text-sm font-medium text-gray-500">{t('original_input')}</dt>
                             <dd className="mt-1 text-sm text-gray-900 break-all">{contribution.original_input}</dd>
                           </div>
                           {contribution.rejection_reason && (
                             <div className="sm:col-span-2">
-                              <dt className="text-sm font-medium text-red-500">拒绝原因</dt>
+                              <dt className="text-sm font-medium text-red-500">{t('rejection_reason')}</dt>
                               <dd className="mt-1 text-sm text-red-700">{contribution.rejection_reason}</dd>
                             </div>
                           )}
@@ -108,7 +121,7 @@ export default function ContributionDetailModal({
 
                       {/* Extracted Concepts */}
                       <div>
-                        <h4 className="text-sm font-medium text-gray-900">提取的概念</h4>
+                        <h4 className="text-sm font-medium text-gray-900">{t('extracted_concepts')}</h4>
                         {contribution.extracted_concepts && contribution.extracted_concepts.length > 0 ? (
                           <div className="mt-2 flex flex-wrap gap-2">
                             {contribution.extracted_concepts.map((concept, index) => (
@@ -121,15 +134,15 @@ export default function ContributionDetailModal({
                             ))}
                           </div>
                         ) : (
-                          <p className="mt-1 text-sm text-gray-500 italic">暂无提取的概念</p>
+                          <p className="mt-1 text-sm text-gray-500 italic">{t('no_concepts')}</p>
                         )}
                       </div>
 
                       {/* Extracted Content Preview */}
                       <div>
-                         <h4 className="text-sm font-medium text-gray-900">内容预览</h4>
+                         <h4 className="text-sm font-medium text-gray-900">{t('content_preview')}</h4>
                          <div className="mt-2 max-h-40 overflow-y-auto rounded-md bg-gray-50 p-3 text-xs text-gray-700 whitespace-pre-wrap">
-                           {contribution.extracted_content || '(无提取内容)'}
+                           {contribution.extracted_content || t('no_content')}
                          </div>
                       </div>
                     </div>
@@ -141,7 +154,7 @@ export default function ContributionDetailModal({
                     className="inline-flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
                     onClick={onClose}
                   >
-                    关闭
+                    {t('close')}
                   </button>
                 </div>
               </Dialog.Panel>

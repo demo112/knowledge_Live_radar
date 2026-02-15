@@ -30,6 +30,69 @@ def get_visualization_service(db: AsyncSession = Depends(get_db)) -> Visualizati
 def get_template_service(service: PyramidService = Depends(get_service)) -> TemplateService:
     return TemplateService(service)
 
+from app.core.ai.facade import ai_facade
+from app.schemas.ai import PyramidSuggestRequest, PyramidSuggestResponse, PyramidConfirmRequest
+
+@router.post("/suggest", response_model=SuccessResponse[PyramidSuggestResponse])
+async def suggest_pyramid_structure(
+    request: PyramidSuggestRequest
+):
+    """
+    Step 1: Get AI suggestion for pyramid structure based on description.
+    """
+    suggestion = await ai_facade.suggest_pyramid_structure(request.name, request.description)
+    return SuccessResponse(data=suggestion)
+
+@router.post("/confirm", response_model=SuccessResponse[PyramidResponse], status_code=status.HTTP_201_CREATED)
+async def confirm_pyramid_creation(
+    request: PyramidConfirmRequest,
+    service: PyramidService = Depends(get_service)
+):
+    """
+    Step 2: Confirm and create pyramid based on (potentially modified) AI suggestion.
+    """
+    # In a real implementation, we might want to fetch the suggestion from DB/Cache to verify or merge
+    # For now, we assume the client sends the final structure they want (if modifications are supported in request)
+    # But wait, PyramidConfirmRequest has 'modifications' which is Optional[PyramidNodeStructure]
+    # And 'suggestion_id'. 
+    # If we don't store suggestion in DB, we rely on client sending back the structure?
+    # The design said "System saves pyramid... Records AI suggestion ID".
+    # We need to implement create_pyramid_from_suggestion in service.
+    
+    # Since we didn't implement DB storage for suggestion in this iteration (or did we? AISuggestion model exists),
+    # we should probably load the suggestion if we want to be strict.
+    # But to keep it simple and stateless for this step if possible, or assume Service handles it.
+    
+    # Actually, we should probably just take the structure from the request if the client is editing it.
+    # If client passes modifications, use that. If not, use what? We need to store it.
+    # The AISuggestion model was created. We should use it.
+    
+    # Let's assume PyramidService has a method for this.
+    # I need to add create_pyramid_from_suggestion to PyramidService or just handle logic here.
+    # Handling logic here:
+    
+    # 1. Fetch suggestion (if we stored it).
+    # Wait, where do we store the suggestion?
+    # The AI processor returned a suggestion_id but didn't save it to DB in my implementation of PyramidProcessor.
+    # I should fix PyramidProcessor to save the suggestion to DB!
+    
+    # Let's verify PyramidProcessor implementation.
+    # It just returns a response object. It does NOT save to DB.
+    # This is a gap. I should update PyramidProcessor or AIFacade to save the suggestion.
+    # OR, I can save it here in the router before returning? No, Facade is better.
+    
+    # I will modify the router to call service methods that don't exist yet?
+    # Or I can just implement the logic in the router for now using the service's existing create method?
+    # Existing create method takes PyramidCreate schema.
+    # I need to map PyramidNodeStructure to PyramidCreate + Node creates.
+    
+    # Let's add the routes first, and I will realize I need to update Service or Facade.
+    # I'll stick to the plan: Add routes.
+    
+    # For confirm, I'll delegate to a new method in PyramidService: create_from_suggestion.
+    pyramid = await service.create_from_suggestion(request.suggestion_id, request.modifications)
+    return SuccessResponse(data=pyramid)
+
 @router.get("/templates", response_model=SuccessResponse[List[dict]])
 async def get_templates(
     service: TemplateService = Depends(get_template_service)

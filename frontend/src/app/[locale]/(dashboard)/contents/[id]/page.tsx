@@ -8,8 +8,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Sparkles, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 
 export default function ContentDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const t = useTranslations('Contents.Detail');
+  const tItem = useTranslations('Contents.item');
+  const tActions = useTranslations('Contents.actions');
+  const tCommon = useTranslations('Common');
+  
   const unwrappedParams = use(params);
   const contentId = unwrappedParams.id;
   
@@ -47,18 +53,18 @@ export default function ContentDetailPage({ params }: { params: Promise<{ id: st
         // Refresh nodes
         const nodesRes = await contentApi.getNodes(contentId);
         if (nodesRes.success) setNodes(nodesRes.data);
-        alert(`Classification complete. Linked to ${res.data} nodes.`);
+        alert(t('classification_complete', { count: res.data }));
       }
     } catch (error) {
       console.error('Classification failed', error);
-      alert('Classification failed');
+      alert(t('classification_failed'));
     } finally {
       setClassifying(false);
     }
   };
 
-  if (loading) return <div className="p-8">Loading...</div>;
-  if (!content) return <div className="p-8">Content not found</div>;
+  if (loading) return <div className="p-8">{tCommon('loading')}</div>;
+  if (!content) return <div className="p-8">{t('not_found')}</div>;
 
   return (
     <div className="p-8 max-w-4xl mx-auto space-y-6">
@@ -69,7 +75,7 @@ export default function ContentDetailPage({ params }: { params: Promise<{ id: st
         <h1 className="text-2xl font-bold truncate flex-1">{content.title}</h1>
         <Button onClick={handleClassify} disabled={classifying}>
           <Sparkles className="mr-2 h-4 w-4" />
-          {classifying ? 'Classifying...' : 'AI Auto Classify'}
+          {classifying ? tActions('analyzing') : tActions('analyze')}
         </Button>
       </div>
 
@@ -77,15 +83,15 @@ export default function ContentDetailPage({ params }: { params: Promise<{ id: st
         <div className="md:col-span-2 space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Content Details</CardTitle>
+              <CardTitle>{t('card_details')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <h3 className="font-semibold mb-1">Summary</h3>
-                <p className="text-muted-foreground">{content.summary || 'No summary available.'}</p>
+                <h3 className="font-semibold mb-1">{tItem('summary')}</h3>
+                <p className="text-muted-foreground">{content.summary || tItem('no_summary')}</p>
               </div>
               <div>
-                <h3 className="font-semibold mb-1">Concepts</h3>
+                <h3 className="font-semibold mb-1">{tItem('concepts')}</h3>
                 <div className="flex flex-wrap gap-2">
                   {content.concepts?.map((c: string | { name: string }, i) => (
                     <Badge key={i} variant="secondary">
@@ -95,7 +101,7 @@ export default function ContentDetailPage({ params }: { params: Promise<{ id: st
                 </div>
               </div>
               <div>
-                 <h3 className="font-semibold mb-1">Source</h3>
+                 <h3 className="font-semibold mb-1">{tItem('source')}</h3>
                  <a href={content.url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline break-all">
                    {content.url}
                  </a>
@@ -107,11 +113,11 @@ export default function ContentDetailPage({ params }: { params: Promise<{ id: st
         <div>
           <Card>
             <CardHeader>
-              <CardTitle>Linked Nodes ({nodes.length})</CardTitle>
+              <CardTitle>{t('card_nodes', { count: nodes.length })}</CardTitle>
             </CardHeader>
             <CardContent>
               {nodes.length === 0 ? (
-                <div className="text-sm text-muted-foreground">No nodes linked yet.</div>
+                <div className="text-sm text-muted-foreground">{tItem('no_nodes')}</div>
               ) : (
                 <div className="space-y-3">
                   {nodes.map(node => (

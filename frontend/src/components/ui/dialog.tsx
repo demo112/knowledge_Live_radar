@@ -11,7 +11,12 @@ const Dialog = ({ open, onOpenChange, children }: DialogProps) => {
   if (!open) return null
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-      <div className="bg-background rounded-lg shadow-lg w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+      <div 
+        role="dialog" 
+        aria-modal="true"
+        className="bg-background rounded-lg shadow-lg w-full max-w-lg max-h-[90vh] overflow-y-auto" 
+        onClick={(e) => e.stopPropagation()}
+      >
          {children}
       </div>
       <div className="absolute inset-0 -z-10" onClick={() => onOpenChange(false)} />

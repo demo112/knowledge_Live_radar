@@ -23,6 +23,29 @@ router = APIRouter(prefix="/sources", tags=["sources"])
 def get_service(db: AsyncSession = Depends(get_db)) -> SourceService:
     return SourceService(db)
 
+from app.core.ai.facade import ai_facade
+from app.schemas.ai import SourceAnalyzeRequest, SourceAnalyzeResponse
+
+@router.post("/analyze", response_model=SuccessResponse[SourceAnalyzeResponse])
+async def analyze_source(
+    request: SourceAnalyzeRequest
+):
+    """
+    AI Analyze a source URL before adding it.
+    """
+    # In a real scenario, we might want to fetch content first (CrawlEngine)
+    # But AIFacade.analyze_source takes url and sample_content.
+    # So we need to fetch here or inside facade.
+    # The Facade calls ContentProcessor which takes sample_content.
+    # So we need to crawl here.
+    
+    # Let's use CrawlEngine to preview
+    preview = await crawl_engine.preview_source(request.url)
+    sample_content = preview.content if preview else ""
+    
+    analysis = await ai_facade.analyze_source(request.url, sample_content)
+    return SuccessResponse(data=analysis)
+
 @router.get("/templates", response_model=SuccessResponse[List[SourceTemplate]])
 async def get_source_templates():
     """获取所有信息源配置模板"""

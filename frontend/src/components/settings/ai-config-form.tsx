@@ -1,8 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { configApi } from '@/lib/api';
 import { Save, Activity, RefreshCw, Eye, EyeOff, AlertTriangle, CheckCircle } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export default function AIConfigForm() {
+  const tSettings = useTranslations('Settings');
+  const t = useTranslations('Settings.AIConfig');
+  const tLocal = useTranslations('Settings.AIConfig.Local');
+  const tCloud = useTranslations('Settings.AIConfig.Cloud');
+  const tParams = useTranslations('Settings.AIConfig.Params');
+  const tActions = useTranslations('Settings.AIConfig.Actions');
+  const tTest = useTranslations('Settings.AIConfig.Test');
+
   const [configs, setConfigs] = useState<Record<string, unknown>>({
     'ai.api_key': '',
     'ai.base_url': 'https://api.siliconflow.cn/v1',
@@ -56,10 +65,10 @@ export default function AIConfigForm() {
       
       // Reload to get canonical values (and re-masked key)
       await loadConfigs();
-      alert('配置已保存');
+      alert(tActions('saved'));
     } catch (error) {
       console.error("Failed to save configs", error);
-      alert('保存失败');
+      alert(tActions('save_failed'));
     } finally {
       setSaving(false);
     }
@@ -73,14 +82,14 @@ export default function AIConfigForm() {
       setTestResult(result);
     } catch (error) {
       console.error("Test failed", error);
-      setTestResult({ success: false, message: '连接测试失败: ' + (error instanceof Error ? error.message : String(error)) });
+      setTestResult({ success: false, message: tActions('test_failed', { error: (error instanceof Error ? error.message : String(error)) }) });
     } finally {
       setTestingTarget(null);
     }
   };
 
   if (loading) {
-    return <div className="p-8 text-center text-gray-500">加载配置中...</div>;
+    return <div className="p-8 text-center text-gray-500">{tSettings('loading')}</div>;
   }
 
   return (
@@ -88,7 +97,7 @@ export default function AIConfigForm() {
       <div className="flex justify-between items-center border-b pb-4">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
           <Activity className="w-5 h-5 text-blue-500" />
-          AI 模型配置
+          {t('title')}
         </h2>
         <div className="flex items-center gap-2">
            <label className="flex items-center cursor-pointer relative">
@@ -99,7 +108,7 @@ export default function AIConfigForm() {
                onChange={(e) => handleChange('ai.enabled', e.target.checked)}
              />
              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-             <span className="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">启用 AI 功能</span>
+             <span className="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">{t('enable_ai')}</span>
            </label>
         </div>
       </div>
@@ -109,13 +118,13 @@ export default function AIConfigForm() {
         {/* Strategy Selection */}
         <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg border border-gray-100 dark:border-gray-700">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-            调度策略 (Strategy)
+            {t('strategy.label')}
           </label>
           <div className="flex gap-4">
             {[
-              { value: 'local_first', label: '本地优先 (Local First)', desc: '优先使用本地，失败时自动降级到云端' },
-              { value: 'local_only', label: '仅本地 (Local Only)', desc: '只使用本地模型，不连接外网' },
-              { value: 'cloud_only', label: '仅云端 (Cloud Only)', desc: '只使用云端服务' },
+              { value: 'local_first', label: t('strategy.local_first.label'), desc: t('strategy.local_first.desc') },
+              { value: 'local_only', label: t('strategy.local_only.label'), desc: t('strategy.local_only.desc') },
+              { value: 'cloud_only', label: t('strategy.cloud_only.label'), desc: t('strategy.cloud_only.desc') },
             ].map((option) => (
               <label key={option.value} className="flex items-start gap-2 cursor-pointer group">
                 <input
@@ -144,7 +153,7 @@ export default function AIConfigForm() {
           <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-4">
             <div className="flex justify-between items-center">
               <h3 className="text-md font-medium text-gray-900 dark:text-white flex items-center gap-2">
-                🏠 本地模型配置 (Local AI)
+                {tLocal('title')}
               </h3>
               <label className="flex items-center cursor-pointer">
                  <input 
@@ -160,8 +169,8 @@ export default function AIConfigForm() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Local Base URL
-                </label>
+            {tLocal('base_url')}
+          </label>
                 <input
                   type="text"
                   value={(configs['ai.local.base_url'] as string) || ''}
@@ -172,8 +181,8 @@ export default function AIConfigForm() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Local Model Name
-                </label>
+            {tLocal('model_name')}
+          </label>
                 <input
                   type="text"
                   value={(configs['ai.local.model'] as string) || ''}
@@ -184,8 +193,8 @@ export default function AIConfigForm() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Timeout (Seconds)
-                </label>
+            {tLocal('timeout')}
+          </label>
                 <input
                   type="number"
                   value={(configs['ai.local.timeout'] as number) || 5.0}
@@ -203,7 +212,7 @@ export default function AIConfigForm() {
                 className="flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 disabled:opacity-50 transition-colors dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
               >
                 {testingTarget === 'local' ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Activity className="w-3 h-3" />}
-                测试本地连接
+                {tLocal('test_connection')}
               </button>
             </div>
           </div>
@@ -213,13 +222,13 @@ export default function AIConfigForm() {
         {(configs['ai.strategy'] !== 'local_only') && (
           <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-4">
             <h3 className="text-md font-medium text-gray-900 dark:text-white flex items-center gap-2">
-              ☁️ 云端模型配置 (Cloud AI)
+              {tCloud('title')}
             </h3>
             
             {/* Base URL */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Cloud API Base URL
+                {tCloud('base_url')}
               </label>
               <input
                 type="text"
@@ -228,13 +237,13 @@ export default function AIConfigForm() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 placeholder="https://api.siliconflow.cn/v1"
               />
-              <p className="mt-1 text-xs text-gray-500">兼容 OpenAI 接口的服务地址</p>
+              <p className="mt-1 text-xs text-gray-500">{tCloud('base_url_hint')}</p>
             </div>
 
             {/* API Key */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                API Key
+                {tCloud('api_key')}
               </label>
               <div className="relative">
                 <input
@@ -252,13 +261,13 @@ export default function AIConfigForm() {
                   {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-              <p className="mt-1 text-xs text-gray-500">如显示为 *** 则表示已脱敏，无需修改。留空则禁用 AI。</p>
+              <p className="mt-1 text-xs text-gray-500">{tCloud('api_key_hint')}</p>
             </div>
 
             {/* Model */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Cloud Model Name
+                {tCloud('model_name')}
               </label>
               <input
                 type="text"
@@ -277,7 +286,7 @@ export default function AIConfigForm() {
                 className="flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 disabled:opacity-50 transition-colors dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
               >
                 {testingTarget === 'cloud' ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Activity className="w-3 h-3" />}
-                测试云端连接
+                {tCloud('test_connection')}
               </button>
             </div>
           </div>
@@ -288,7 +297,7 @@ export default function AIConfigForm() {
           {/* Temperature */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              温度 (Temperature): {configs['ai.temperature'] as number}
+              {tParams('temperature')}: {configs['ai.temperature'] as number}
             </label>
             <input
               type="range"
@@ -300,16 +309,16 @@ export default function AIConfigForm() {
               className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
             />
             <div className="flex justify-between text-xs text-gray-500 mt-1">
-              <span>精确 (0.0)</span>
-              <span>均衡 (1.0)</span>
-              <span>创意 (2.0)</span>
+              <span>{tParams('temperature_levels.precise')}</span>
+              <span>{tParams('temperature_levels.balanced')}</span>
+              <span>{tParams('temperature_levels.creative')}</span>
             </div>
           </div>
 
           {/* Max Retries */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              最大重试次数
+              {tParams('max_retries')}
             </label>
             <input
               type="number"
@@ -331,10 +340,10 @@ export default function AIConfigForm() {
         >
           {testResult.success ? <CheckCircle className="w-5 h-5 mt-0.5" /> : <AlertTriangle className="w-5 h-5 mt-0.5" />}
           <div>
-            <p className="font-medium">{testResult.success ? '连接成功' : '连接失败'}</p>
+            <p className="font-medium">{testResult.success ? tTest('success') : tTest('failed')}</p>
             <p className="text-sm mt-1">{testResult.message}</p>
             {testResult.latency_ms && (
-              <p className="text-xs mt-1 opacity-80">延迟: {testResult.latency_ms.toFixed(0)}ms</p>
+              <p className="text-xs mt-1 opacity-80">{tTest('latency')}: {testResult.latency_ms.toFixed(0)}ms</p>
             )}
           </div>
         </div>
@@ -348,7 +357,7 @@ export default function AIConfigForm() {
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors"
         >
           {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-          保存配置
+          {tActions('save')}
         </button>
 
         <button
@@ -357,7 +366,7 @@ export default function AIConfigForm() {
           className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 disabled:opacity-50 transition-colors dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
         >
           {testingTarget === 'auto' ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Activity className="w-4 h-4" />}
-          测试当前策略连接
+          {tActions('test_current')}
         </button>
       </div>
     </div>

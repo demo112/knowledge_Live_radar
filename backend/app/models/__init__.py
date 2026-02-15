@@ -30,3 +30,4 @@ from .notification import Notification
 from .notification_preference import NotificationPreference
 from .api_metric import APIMetric
 from .error_record import ErrorRecord
+from .ai_suggestion import AISuggestion

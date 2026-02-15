@@ -16,26 +16,22 @@ export class SourcesPage extends BasePage {
   readonly modalCancelButton: Locator;
 
   constructor(page: Page) {
-    super(page, '/sources');
+    super(page, '/zh/sources');
     this.addButton = page.getByRole('button', { name: '添加信息源' });
     this.sourceList = page.locator('ul > li');
     this.emptyState = page.getByText('未找到信息源');
 
     // Modal
-    this.modalTitle = page.getByRole('heading', { name: '添加新信息源' });
-    // Using getByLabel which is more robust if labels are correctly associated
-    // If not, we might need to fallback to getByRole or css
-    // In the code: <label>Name</label><input ...> - they are not linked with htmlFor/id
-    // So getByLabel won't work automatically unless wrapped.
-    // Code: <div><label>...</label><input></div>
-    // We'll use layout selector or placeholder if available? No placeholder.
-    // Let's use CSS for now based on the structure we saw
-    this.urlInput = page.locator('input[type="url"]');
-    this.nameInput = page.locator('input[type="text"]');
-    this.typeSelect = page.locator('select');
-    this.discoverButton = page.getByRole('button', { name: '发现' });
-    this.modalAddButton = page.getByRole('button', { name: '立即添加', exact: true });
-    this.modalCancelButton = page.getByRole('button', { name: '取消' });
+    const modal = page.getByRole('dialog');
+    this.modalTitle = modal.getByRole('heading', { name: '添加新信息源' });
+    
+    // Scoped to modal
+    this.urlInput = modal.locator('div.flex.gap-2 > input').first();
+    this.nameInput = modal.locator('div.mb-4 > input').first();
+    this.typeSelect = modal.locator('select');
+    this.discoverButton = modal.getByRole('button', { name: '发现' });
+    this.modalAddButton = modal.getByRole('button', { name: '立即添加', exact: true });
+    this.modalCancelButton = modal.getByRole('button', { name: '取消' });
   }
 
   async openAddModal() {
@@ -66,5 +62,19 @@ export class SourcesPage extends BasePage {
     });
 
     await sourceItem.getByRole('button', { name: '抓取' }).click();
+  }
+
+  async deleteSource(name: string) {
+    const sourceItem = this.page.locator('li').filter({ hasText: name });
+    
+    // Click delete button (using title or icon locator if needed, but title="删除" is in JSX)
+    await sourceItem.getByTitle('删除').click();
+
+    // Confirm modal
+    await this.page.getByRole('alertdialog').getByRole('button', { name: '删除', exact: true }).click();
+  }
+
+  async expectSourceNotVisible(name: string) {
+    await expect(this.page.getByRole('heading', { name: name })).not.toBeVisible();
   }
 }

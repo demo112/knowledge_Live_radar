@@ -2,12 +2,15 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { sourceApi, discoveryApi } from '@/lib/api';
 import { InformationSource, SourceTemplate } from '@/types';
 import SourceTemplateSelector from '@/components/sources/SourceTemplateSelector';
 import CrawlHistoryDialog from '@/components/sources/CrawlHistoryDialog';
 
 export default function SourcesPage() {
+  const t = useTranslations('Sources');
+  const tCommon = useTranslations('Common');
   const [sources, setSources] = useState<InformationSource[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -22,6 +25,16 @@ export default function SourcesPage() {
   const [testing, setTesting] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; id: string | null }>({ open: false, id: null });
+
+  const sourceTypeMap: Record<string, string> = {
+    RSS: t('types.rss'),
+    SITEMAP: t('types.sitemap'),
+    WEB: t('types.web'),
+    WECHAT_MP: t('types.wechat_mp'),
+    BILIBILI_USER: t('types.bilibili_user'),
+    JUEJIN_COLUMN: t('types.juejin_column'),
+    YOUTUBE_CHANNEL: t('types.youtube_channel')
+  };
 
   useEffect(() => {
     fetchSources();
@@ -75,7 +88,7 @@ export default function SourcesPage() {
         fetchSources();
       } else {
         console.error('Failed to delete source:', error);
-        alert('删除失败');
+        alert(t('alerts.delete_failed'));
       }
     } finally {
       setDeleteConfirm({ open: false, id: null });
@@ -113,7 +126,7 @@ export default function SourcesPage() {
       fetchSources();
     } catch (error) {
       console.error('Failed to save source:', error);
-      alert('保存失败');
+      alert(t('alerts.save_failed'));
     } finally {
       setSubmitting(false);
     }
@@ -127,13 +140,13 @@ export default function SourcesPage() {
       if (response.success && response.data.length > 0) {
         const discovered = response.data[0];
         setFormData({ ...formData, name: discovered.title, url: discovered.url, type: discovered.type });
-        alert(`已发现: ${discovered.title} (${discovered.type})`);
+        alert(t('alerts.discovered', { title: discovered.title, type: discovered.type }));
       } else {
-        alert('未找到信息源');
+        alert(t('alerts.discover_not_found'));
       }
     } catch (error) {
       console.error('Discovery failed:', error);
-      alert('发现失败');
+      alert(t('alerts.discover_failed'));
     } finally {
       setDiscovering(false);
     }
@@ -144,12 +157,12 @@ export default function SourcesPage() {
     try {
       const response = await sourceApi.crawl(id);
       if (response.success) {
-        alert(`抓取已开始。新增项目: ${response.data.items_new}`);
+        alert(t('alerts.crawl_started', { count: response.data.items_new }));
         fetchSources();
       }
     } catch (error) {
       console.error('Crawl failed:', error);
-      alert('抓取失败');
+      alert(t('alerts.crawl_failed'));
     } finally {
       setCrawling(null);
     }
@@ -160,24 +173,24 @@ export default function SourcesPage() {
     try {
       const response = await sourceApi.test(id);
       if (response.success) {
-        alert('测试成功！信息源可正常访问。');
+        alert(t('alerts.test_success'));
       } else {
-        alert(`测试失败: ${response.error?.message || '未知错误'}`);
+        alert(t('alerts.test_failed', { message: response.error?.message || t('alerts.test_failed_generic') }));
       }
     } catch (error) {
       console.error('Test failed:', error);
-      alert('测试失败');
+      alert(t('alerts.test_failed_generic'));
     } finally {
       setTesting(null);
     }
   };
 
-  if (loading && sources.length === 0) return <div className="p-8">加载中...</div>;
+  if (loading && sources.length === 0) return <div className="p-8">{tCommon('loading')}</div>;
 
   return (
     <div className="p-8">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">信息源</h1>
+        <h1 className="text-2xl font-bold">{t('title')}</h1>
         <div className="flex gap-3">
           <Link
             href="/sources/whitelist"
@@ -186,13 +199,13 @@ export default function SourcesPage() {
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            管理白名单
+            {t('manage_whitelist')}
           </Link>
           <button 
             className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded shadow-sm transition-colors"
             onClick={handleOpenCreateModal}
           >
-            添加信息源
+            {t('add_source')}
           </button>
         </div>
       </div>
@@ -211,7 +224,7 @@ export default function SourcesPage() {
                   </p>
                   <div className="mt-2 flex items-center text-xs text-gray-500 gap-4">
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full font-medium bg-blue-100 text-blue-800">
-                      {source.type}
+                      {sourceTypeMap[source.type] || source.type}
                     </span>
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full font-medium ${
                       source.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 
@@ -219,17 +232,17 @@ export default function SourcesPage() {
                       source.status === 'ADJUSTING' ? 'bg-orange-100 text-orange-800' :
                       'bg-gray-100 text-gray-800'
                     }`}>
-                      {source.status === 'ACTIVE' ? '正常' : 
-                       source.status === 'MONITORING' ? '监控中' :
-                       source.status === 'ADJUSTING' ? '需调整' :
+                      {source.status === 'ACTIVE' ? t('status.active') : 
+                       source.status === 'MONITORING' ? t('status.monitoring') :
+                       source.status === 'ADJUSTING' ? t('status.adjusting') :
                        source.status}
                     </span>
                     {source.template_id && (
                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full font-medium bg-purple-100 text-purple-800">
-                         模板
+                         {t('tags.template')}
                        </span>
                     )}
-                    <span>上次抓取: {source.last_crawled_at ? new Date(source.last_crawled_at).toLocaleString('zh-CN') : '从未'}</span>
+                    <span>{source.last_crawled_at ? t('last_crawled', { date: new Date(source.last_crawled_at).toLocaleString('zh-CN') }) : t('never')}</span>
                   </div>
                 </div>
                 <div className="ml-4 flex-shrink-0 flex items-center gap-3">
@@ -237,30 +250,30 @@ export default function SourcesPage() {
                     onClick={() => handleCrawl(source.id)}
                     disabled={!!crawling}
                     className="text-primary hover:text-primary/80 font-medium disabled:opacity-50"
-                    title="立即抓取"
+                    title={t('actions.crawl_title')}
                    >
-                     {crawling === source.id ? '抓取中...' : '抓取'}
+                     {crawling === source.id ? t('actions.crawling') : t('actions.crawl')}
                    </button>
                    <button 
                     onClick={() => handleTest(source.id)}
                     disabled={!!testing}
                     className="text-gray-600 hover:text-gray-900 font-medium disabled:opacity-50"
-                    title="测试连接"
+                    title={t('actions.test_title')}
                    >
-                     {testing === source.id ? '测试中...' : '测试'}
+                     {testing === source.id ? t('actions.testing') : t('actions.test')}
                    </button>
                    <button 
                     onClick={() => setHistoryDialog({ open: true, id: source.id })}
                     className="text-gray-600 hover:text-gray-900 font-medium"
-                    title="抓取历史"
+                    title={t('actions.history_title')}
                    >
-                     历史
+                     {t('actions.history')}
                    </button>
                    <div className="h-4 w-px bg-gray-300 mx-1"></div>
                    <button
                     onClick={() => handleOpenEditModal(source)}
                     className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                    title="编辑"
+                    title={tCommon('edit')}
                    >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -269,7 +282,7 @@ export default function SourcesPage() {
                    <button
                     onClick={() => handleDelete(source.id)}
                     className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
-                    title="删除"
+                    title={tCommon('delete')}
                    >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -280,29 +293,29 @@ export default function SourcesPage() {
             </li>
           ))}
           {sources.length === 0 && (
-            <li className="px-6 py-12 text-center text-gray-500">未找到信息源。</li>
+            <li className="px-6 py-12 text-center text-gray-500">{t('empty_list')}</li>
           )}
         </ul>
       </div>
 
       {/* Delete Confirmation Modal */}
       {deleteConfirm.open && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" role="alertdialog" aria-modal="true" aria-labelledby="delete-title">
           <div className="bg-white rounded-lg p-6 w-full max-w-sm shadow-xl">
-            <h3 className="text-lg font-bold mb-2">确认删除</h3>
-            <p className="text-gray-600 mb-6">确定要删除这个信息源吗？此操作不可撤销。</p>
+            <h3 id="delete-title" className="text-lg font-bold mb-2">{t('delete_confirm.title')}</h3>
+            <p className="text-gray-600 mb-6">{t('delete_confirm.message')}</p>
             <div className="flex justify-end space-x-3">
               <button
                 onClick={() => setDeleteConfirm({ open: false, id: null })}
                 className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded transition-colors"
               >
-                取消
+                {tCommon('cancel')}
               </button>
               <button
                 onClick={handleConfirmDelete}
                 className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
               >
-                删除
+                {tCommon('delete')}
               </button>
             </div>
           </div>
@@ -310,9 +323,9 @@ export default function SourcesPage() {
       )}
 
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto" role="dialog" aria-modal="true">
           <div className="bg-white rounded-lg p-6 w-full max-w-2xl shadow-xl my-8">
-            <h2 className="text-xl font-bold mb-4">{editingSource ? '编辑信息源' : '添加新信息源'}</h2>
+            <h2 className="text-xl font-bold mb-4">{editingSource ? t('modal.edit_title') : t('modal.create_title')}</h2>
             
             {!editingSource && (
               <div className="flex border-b border-gray-200 mb-6">
@@ -322,7 +335,7 @@ export default function SourcesPage() {
                   }`}
                   onClick={() => setUseTemplate(false)}
                 >
-                  自定义添加
+                  {t('modal.custom_add')}
                   {!useTemplate && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-primary"></span>}
                 </button>
                 <button
@@ -331,7 +344,7 @@ export default function SourcesPage() {
                   }`}
                   onClick={() => setUseTemplate(true)}
                 >
-                  使用模板添加
+                  {t('modal.template_add')}
                   {useTemplate && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-primary"></span>}
                 </button>
               </div>
@@ -339,14 +352,14 @@ export default function SourcesPage() {
 
             <form onSubmit={handleSubmit}>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">名称</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('form.name')}</label>
                 <input 
                   type="text" 
                   required
                   className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-primary/50 outline-none"
                   value={formData.name}
                   onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  placeholder="例如：技术博客"
+                  placeholder={t('form.name_placeholder')}
                 />
               </div>
 
@@ -367,7 +380,7 @@ export default function SourcesPage() {
               ) : (
                 <>
                   <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">URL / ID</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('form.url_id')}</label>
                     <div className="flex gap-2">
                         <input 
                         type="text" 
@@ -376,10 +389,10 @@ export default function SourcesPage() {
                         value={formData.url}
                         onChange={(e) => setFormData({...formData, url: e.target.value})}
                         placeholder={
-                          formData.type === 'WECHAT_MP' ? '输入公众号ID' :
-                          formData.type === 'BILIBILI_USER' ? '输入用户ID或主页链接' :
-                          formData.type === 'JUEJIN_COLUMN' ? '输入专栏ID' :
-                          'https://example.com/rss'
+                          formData.type === 'WECHAT_MP' ? t('form.placeholder_wechat') :
+                          formData.type === 'BILIBILI_USER' ? t('form.placeholder_bilibili') :
+                          formData.type === 'JUEJIN_COLUMN' ? t('form.placeholder_juejin') :
+                          t('form.placeholder_default')
                         }
                         />
                         <button 
@@ -388,25 +401,25 @@ export default function SourcesPage() {
                             disabled={discovering || !formData.url}
                             className="bg-secondary hover:bg-secondary/90 text-white px-3 py-2 rounded text-sm disabled:opacity-50"
                         >
-                            {discovering ? '发现中' : '发现'}
+                            {discovering ? t('form.discovering') : t('form.discover')}
                         </button>
                     </div>
                   </div>
                   
                   <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">类型</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('form.type')}</label>
                     <select 
                       className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-primary/50 outline-none"
                       value={formData.type}
                       onChange={(e) => setFormData({...formData, type: e.target.value})}
                     >
-                      <option value="RSS">RSS Feed</option>
-                      <option value="SITEMAP">Sitemap</option>
-                      <option value="WEB">Website Crawl</option>
-                      <option value="WECHAT_MP">微信公众号 (ID/URL)</option>
-                      <option value="BILIBILI_USER">Bilibili UP主 (ID/URL)</option>
-                      <option value="JUEJIN_COLUMN">掘金专栏 (ID/URL)</option>
-                      <option value="YOUTUBE_CHANNEL">YouTube 频道 (ID/URL)</option>
+                      <option value="RSS">{t('types.rss')}</option>
+                      <option value="SITEMAP">{t('types.sitemap')}</option>
+                      <option value="WEB">{t('types.web')}</option>
+                      <option value="WECHAT_MP">{t('types.wechat_mp_hint')}</option>
+                      <option value="BILIBILI_USER">{t('types.bilibili_user_hint')}</option>
+                      <option value="JUEJIN_COLUMN">{t('types.juejin_column_hint')}</option>
+                      <option value="YOUTUBE_CHANNEL">{t('types.youtube_channel_hint')}</option>
                     </select>
                   </div>
                 </>
@@ -419,14 +432,14 @@ export default function SourcesPage() {
                   className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded transition-colors"
                   disabled={submitting}
                 >
-                  取消
+                  {tCommon('cancel')}
                 </button>
                 <button 
                   type="submit"
                   className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded shadow-sm disabled:opacity-50 transition-colors"
                   disabled={submitting}
                 >
-                  {submitting ? '保存中...' : (editingSource ? '保存修改' : '立即添加')}
+                  {submitting ? t('form.saving') : (editingSource ? t('form.save_changes') : t('form.add_now'))}
                 </button>
               </div>
             </form>

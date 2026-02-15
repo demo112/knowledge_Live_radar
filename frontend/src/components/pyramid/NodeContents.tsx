@@ -7,12 +7,14 @@ import { Trash2, Link as LinkIcon, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { useTranslations } from 'next-intl';
 
 interface NodeContentsProps {
   nodeId: string;
 }
 
 export function NodeContents({ nodeId }: NodeContentsProps) {
+  const t = useTranslations('Pyramid.NodeContents');
   const [contents, setContents] = useState<ContentWithRelation[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -34,7 +36,7 @@ export function NodeContents({ nodeId }: NodeContentsProps) {
   }, [nodeId]);
 
   const handleUnlink = async (contentId: string) => {
-    if (!confirm('Are you sure you want to unlink this content?')) return;
+    if (!confirm(t('unlink_confirm'))) return;
     try {
       await nodeApi.unlinkContent(nodeId, contentId);
       setContents(prev => prev.filter(c => c.id !== contentId));
@@ -43,19 +45,19 @@ export function NodeContents({ nodeId }: NodeContentsProps) {
     }
   };
 
-  if (loading) return <div className="p-4 text-center text-muted-foreground">Loading contents...</div>;
+  if (loading) return <div className="p-4 text-center text-muted-foreground">{t('loading')}</div>;
 
   return (
     <Card className="mt-6">
       <CardHeader>
         <CardTitle className="text-lg flex items-center gap-2">
           <LinkIcon className="h-5 w-5" />
-          Associated Content ({contents.length})
+          {t('title')} ({contents.length})
         </CardTitle>
       </CardHeader>
       <CardContent>
         {contents.length === 0 ? (
-          <div className="text-muted-foreground text-sm">No content associated with this node.</div>
+          <div className="text-muted-foreground text-sm">{t('empty')}</div>
         ) : (
           <div className="space-y-4">
             {contents.map(content => (
@@ -68,16 +70,16 @@ export function NodeContents({ nodeId }: NodeContentsProps) {
                     </a>
                     <div className="flex items-center gap-2">
                       <Badge variant={content.relation_source === 'ai_auto' ? 'secondary' : 'outline'}>
-                        {content.relation_source === 'ai_auto' ? 'AI Auto' : 'Manual'}
+                        {content.relation_source === 'ai_auto' ? t('ai_auto') : t('manual')}
                       </Badge>
                       {content.relation_source === 'ai_auto' && (
                         <span className="text-xs text-muted-foreground">
-                          {(content.relation_confidence * 100).toFixed(0)}% match
+                          {(content.relation_confidence * 100).toFixed(0)}% {t('match')}
                         </span>
                       )}
                     </div>
                   </div>
-                  <p className="text-sm text-muted-foreground line-clamp-2">{content.summary || 'No summary available.'}</p>
+                  <p className="text-sm text-muted-foreground line-clamp-2">{content.summary || t('no_summary')}</p>
                   {content.concepts && content.concepts.length > 0 && (
                     <div className="flex gap-1 mt-1 flex-wrap">
                       {content.concepts.map((c: unknown, i) => (

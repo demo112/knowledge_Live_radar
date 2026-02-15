@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslations } from 'next-intl';
 import { Layers } from 'lucide-react';
 
 interface PyramidHealthCardProps {
@@ -7,6 +8,7 @@ interface PyramidHealthCardProps {
 }
 
 export default function PyramidHealthCard({ scores, className = '' }: PyramidHealthCardProps) {
+  const t = useTranslations('Health.PyramidHealthCard');
   const scoreValues = Object.values(scores);
   const averageScore = scoreValues.length > 0 
     ? scoreValues.reduce((a, b) => a + b, 0) / scoreValues.length 
@@ -15,21 +17,21 @@ export default function PyramidHealthCard({ scores, className = '' }: PyramidHea
   return (
     <div className={`bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 ${className}`}>
       <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1">
-        <Layers className="w-4 h-4" /> 金字塔结构健康度
+        <Layers className="w-4 h-4" /> {t('title')}
       </h3>
       <div className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">
         {averageScore.toFixed(1)}
       </div>
-      <p className="text-xs text-gray-400 mt-1">平均分</p>
+      <p className="text-xs text-gray-400 mt-1">{t('average_score')}</p>
       
       <div className="mt-4 space-y-2">
         {Object.entries(scores).length === 0 ? (
-          <p className="text-xs text-gray-400 italic">暂无金字塔数据</p>
+          <p className="text-xs text-gray-400 italic">{t('empty')}</p>
         ) : (
           Object.entries(scores).map(([id, score]) => (
             <div key={id} className="flex items-center justify-between text-sm">
               <span className="text-gray-600 dark:text-gray-300 truncate max-w-[150px]" title={id}>
-                ID: {id.substring(0, 8)}...
+                {t('id_prefix')}: {id.substring(0, 8)}...
               </span>
               <div className="flex items-center gap-2">
                 <div className="w-24 h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">

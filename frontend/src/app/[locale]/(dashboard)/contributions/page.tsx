@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { contributionApi } from '@/lib/api';
 import { Contribution, ContributionStats } from '@/lib/types';
 import ContributionDetailModal from '@/components/contribution/ContributionDetailModal';
 
 export default function ContributionsPage() {
+  const t = useTranslations('Contributions');
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [stats, setStats] = useState<ContributionStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -41,16 +43,25 @@ export default function ContributionsPage() {
     setIsModalOpen(true);
   };
 
-  if (loading) return <div>加载贡献记录中...</div>;
+  const getStatusLabel = (status: string) => {
+    switch(status) {
+      case 'processed': return t('status.processed');
+      case 'rejected': return t('status.rejected');
+      case 'failed': return t('status.failed');
+      default: return t('status.pending');
+    }
+  };
+
+  if (loading) return <div>{t('loading')}</div>;
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
       <div className="mb-8">
         <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
-          贡献记录
+          {t('title')}
         </h2>
         <p className="mt-1 text-sm text-gray-500">
-          您的知识贡献历史与处理状态。
+          {t('description')}
         </p>
       </div>
 
@@ -58,25 +69,25 @@ export default function ContributionsPage() {
         <div className="mb-8 grid grid-cols-1 gap-5 sm:grid-cols-3">
           <div className="bg-white overflow-hidden shadow rounded-lg">
             <div className="px-4 py-5 sm:p-6">
-              <dt className="text-sm font-medium text-gray-500 truncate">总贡献</dt>
+              <dt className="text-sm font-medium text-gray-500 truncate">{t('stats.total')}</dt>
               <dd className="mt-1 text-3xl font-semibold text-gray-900">{stats.total}</dd>
             </div>
           </div>
           <div className="bg-white overflow-hidden shadow rounded-lg">
             <div className="px-4 py-5 sm:p-6">
-              <dt className="text-sm font-medium text-gray-500 truncate">待处理</dt>
+              <dt className="text-sm font-medium text-gray-500 truncate">{t('stats.pending')}</dt>
               <dd className="mt-1 text-3xl font-semibold text-gray-900">{stats.by_status?.pending || 0}</dd>
             </div>
           </div>
           <div className="bg-white overflow-hidden shadow rounded-lg">
             <div className="px-4 py-5 sm:p-6">
-              <dt className="text-sm font-medium text-gray-500 truncate">已采纳</dt>
+              <dt className="text-sm font-medium text-gray-500 truncate">{t('stats.processed')}</dt>
               <dd className="mt-1 text-3xl font-semibold text-gray-900">{stats.by_status?.processed || 0}</dd>
             </div>
           </div>
           <div className="bg-white overflow-hidden shadow rounded-lg">
             <div className="px-4 py-5 sm:p-6">
-              <dt className="text-sm font-medium text-gray-500 truncate">已拒绝</dt>
+              <dt className="text-sm font-medium text-gray-500 truncate">{t('stats.rejected')}</dt>
               <dd className="mt-1 text-3xl font-semibold text-gray-900">{stats.by_status?.rejected || 0}</dd>
             </div>
           </div>
@@ -101,19 +112,19 @@ export default function ContributionsPage() {
                       ${contribution.status === 'processed' ? 'bg-green-100 text-green-800' : 
                         contribution.status === 'failed' ? 'bg-red-100 text-red-800' : 
                         'bg-yellow-100 text-yellow-800'}`}>
-                      {contribution.status}
+                      {getStatusLabel(contribution.status)}
                     </span>
                   </div>
                 </div>
                 <div className="mt-2 sm:flex sm:justify-between">
                   <div className="sm:flex">
                     <p className="flex items-center text-sm text-gray-500">
-                      提取概念: {contribution.extracted_concepts?.length || 0} 个
+                      {t('list.extracted_concepts')}: {t('list.count', {count: contribution.extracted_concepts?.length || 0})}
                     </p>
                   </div>
                   <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
                     <p>
-                      {new Date(contribution.created_at).toLocaleString()}
+                      {contribution.created_at ? new Date(contribution.created_at).toLocaleString('zh-CN') : t('list.unknown_time')}
                     </p>
                   </div>
                 </div>

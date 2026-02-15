@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { sourceApi } from '@/lib/api';
 
@@ -19,6 +20,8 @@ interface CrawlHistoryDialogProps {
 }
 
 export default function CrawlHistoryDialog({ sourceId, open, onOpenChange }: CrawlHistoryDialogProps) {
+  const t = useTranslations('Sources.history');
+  const tCommon = useTranslations('Common');
   const [history, setHistory] = useState<CrawlJob[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -27,6 +30,13 @@ export default function CrawlHistoryDialog({ sourceId, open, onOpenChange }: Cra
       loadHistory(sourceId);
     }
   }, [open, sourceId]);
+
+  const statusMap: Record<string, string> = {
+    COMPLETED: t('status.completed'),
+    FAILED: t('status.failed'),
+    IN_PROGRESS: t('status.in_progress'),
+    PENDING: t('status.pending')
+  };
 
   const loadHistory = async (id: string) => {
     setLoading(true);
@@ -46,22 +56,22 @@ export default function CrawlHistoryDialog({ sourceId, open, onOpenChange }: Cra
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>抓取历史</DialogTitle>
+          <DialogTitle>{t('title')}</DialogTitle>
         </DialogHeader>
         <div className="mt-4 max-h-[60vh] overflow-y-auto">
           {loading ? (
-            <div className="text-center py-4">加载中...</div>
+            <div className="text-center py-4">{tCommon('loading')}</div>
           ) : history.length === 0 ? (
-            <div className="text-center py-4 text-gray-500">暂无抓取记录</div>
+            <div className="text-center py-4 text-gray-500">{t('empty')}</div>
           ) : (
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">开始时间</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">获取数量</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">新增数量</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">耗时</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('table.status')}</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('table.started_at')}</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('table.items_fetched')}</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('table.items_new')}</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('table.duration')}</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -73,7 +83,7 @@ export default function CrawlHistoryDialog({ sourceId, open, onOpenChange }: Cra
                         job.status === 'FAILED' ? 'bg-red-100 text-red-800' :
                         'bg-blue-100 text-blue-800'
                       }`}>
-                        {job.status}
+                        {statusMap[job.status] || job.status}
                       </span>
                       {job.error_message && (
                         <div className="text-xs text-red-500 mt-1 max-w-xs truncate" title={job.error_message}>

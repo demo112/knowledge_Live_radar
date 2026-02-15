@@ -1,19 +1,22 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import ApprovalList from '@/components/approval/ApprovalList';
 import ApprovalHistory from '@/components/approval/ApprovalHistory';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function ApprovalPage() {
+  const t = useTranslations('Approval');
+
   return (
     <div className="max-w-7xl mx-auto">
       <div className="md:flex md:items-center md:justify-between mb-8">
         <div className="flex-1 min-w-0">
           <h2 className="text-2xl font-bold leading-7 text-foreground sm:text-3xl sm:truncate">
-            审批中心
+            {t('title')}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            审查并批准待处理的系统变更提案。
+            {t('description')}
           </p>
         </div>
       </div>
@@ -25,13 +28,13 @@ export default function ApprovalPage() {
               value="pending"
               className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary py-4 px-1 font-medium"
             >
-              待审批
+              {t('tabs.pending')}
             </TabsTrigger>
             <TabsTrigger 
               value="history"
               className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary py-4 px-1 font-medium"
             >
-              审批历史
+              {t('tabs.history')}
             </TabsTrigger>
           </TabsList>
         </div>

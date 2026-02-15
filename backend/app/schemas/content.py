@@ -25,6 +25,14 @@ class ContentUpdate(BaseModel):
     concepts: Optional[List[Any]] = None
     ai_processed: Optional[bool] = None
 
+class ContentNodeInfo(BaseModel):
+    id: UUID
+    name: str
+    pyramid_id: UUID
+    pyramid_name: str
+
+    model_config = {"from_attributes": True}
+
 class ValidationResultResponse(BaseModel):
     overall_score: Optional[int] = None
     hard_result: Optional[dict[str, Any]] = None
@@ -40,6 +48,7 @@ class ContentResponse(ContentBase):
     content_hash: Optional[str] = None
     created_at: datetime
     validation_result: Optional[ValidationResultResponse] = None
+    nodes: List[ContentNodeInfo] = Field(default_factory=list)
     
     model_config = {"from_attributes": True}
 

@@ -1,16 +1,23 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { configApi } from '@/lib/api';
+import { configApi, evolutionApi } from '@/lib/api';
 import { ConfigHistory } from '@/lib/types';
-import { Settings, Cpu } from 'lucide-react';
+import { Settings, Cpu, ListTodo, Play } from 'lucide-react';
 import AIConfigForm from '@/components/settings/ai-config-form';
+import { useTranslations } from 'next-intl';
 
 export default function SettingsPage() {
+  const t = useTranslations('Settings');
+  const tGeneral = useTranslations('Settings.General');
+  const tTasks = useTranslations('Settings.Tasks');
+  const tHistory = useTranslations('Settings.History');
+
   const [configs, setConfigs] = useState<Record<string, unknown>>({});
   const [history, setHistory] = useState<ConfigHistory[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'general' | 'ai' | 'history'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'ai' | 'history' | 'tasks'>('general');
+  const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -33,6 +40,25 @@ export default function SettingsPage() {
     fetchData();
   }, [activeTab]);
 
+  const handleBatchClassify = async () => {
+    if (!confirm(tTasks('batch_classify.confirm'))) return;
+    
+    setProcessing(true);
+    try {
+      const result = await evolutionApi.batchClassify();
+      if (result.success) {
+        alert(tTasks('batch_classify.started'));
+      } else {
+        alert(tTasks('batch_classify.start_failed'));
+      }
+    } catch (error) {
+      console.error('Failed to trigger batch classification', error);
+      alert(tTasks('batch_classify.trigger_failed'));
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   const handleSave = async (key: string, value: unknown) => {
     try {
       // Parse number if needed
@@ -48,10 +74,10 @@ export default function SettingsPage() {
       const newHistory = await configApi.getHistory();
       setHistory(newHistory);
       
-      alert(`Updated ${key}`);
+      alert(t('save_success', { key }));
     } catch (error: unknown) {
       console.error("Failed to save setting", error);
-      alert("保存配置失败");
+      alert(t('save_failed'));
     }
   };
 
@@ -72,41 +98,73 @@ export default function SettingsPage() {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold flex items-center gap-2 text-gray-900 dark:text-white">
           <Settings className="w-6 h-6 text-blue-600" />
-          系统配置
+          {t('title')}
         </h1>
         <div className="flex space-x-2">
            <button
              onClick={() => setActiveTab('general')}
              className={`px-3 py-2 rounded-md text-sm font-medium ${activeTab === 'general' ? 'bg-blue-100 text-blue-700' : 'text-gray-500 hover:text-gray-700'}`}
            >
-             通用配置
+             {t('tabs.general')}
            </button>
            <button
              onClick={() => setActiveTab('ai')}
              className={`px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2 ${activeTab === 'ai' ? 'bg-blue-100 text-blue-700' : 'text-gray-500 hover:text-gray-700'}`}
            >
              <Cpu className="w-4 h-4" />
-             AI 模型
+             {t('tabs.ai')}
            </button>
            <button
              onClick={() => setActiveTab('history')}
              className={`px-3 py-2 rounded-md text-sm font-medium ${activeTab === 'history' ? 'bg-blue-100 text-blue-700' : 'text-gray-500 hover:text-gray-700'}`}
            >
-             变更历史
+             {t('tabs.history')}
+           </button>
+           <button
+             onClick={() => setActiveTab('tasks')}
+             className={`px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2 ${activeTab === 'tasks' ? 'bg-blue-100 text-blue-700' : 'text-gray-500 hover:text-gray-700'}`}
+           >
+             <ListTodo className="w-4 h-4" />
+             {t('tabs.tasks')}
            </button>
         </div>
       </div>
 
-      {loading && activeTab !== 'ai' ? (
-        <div>加载配置中...</div>
+      {loading && activeTab !== 'ai' && activeTab !== 'tasks' ? (
+        <div>{t('loading')}</div>
       ) : activeTab === 'ai' ? (
         <AIConfigForm />
+      ) : activeTab === 'tasks' ? (
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-6">
+           <h2 className="text-lg font-semibold text-gray-900 dark:text-white border-b pb-4 mb-4">
+             {tTasks('title')}
+           </h2>
+           
+           <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg border border-gray-100 dark:border-gray-700">
+             <div className="flex justify-between items-center">
+               <div>
+                 <h3 className="font-medium text-gray-900 dark:text-white">{tTasks('batch_classify.title')}</h3>
+                 <p className="text-sm text-gray-500 mt-1">
+                   {tTasks('batch_classify.description')}
+                 </p>
+               </div>
+               <button
+                 onClick={handleBatchClassify}
+                 disabled={processing}
+                 className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors"
+               >
+                 <Play className="w-4 h-4" />
+                 {processing ? tTasks('batch_classify.processing') : tTasks('batch_classify.button')}
+               </button>
+             </div>
+           </div>
+        </div>
       ) : activeTab === 'general' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {Object.entries(configGroups).map(([group, items]) => (
             <div key={group} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white capitalize mb-4 border-b pb-2">
-                {group} 配置
+                {tGeneral('title', { group })}
               </h2>
               <div className="space-y-4">
                 {Object.entries(items).map(([key, value]) => (
@@ -138,11 +196,11 @@ export default function SettingsPage() {
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-700/50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">时间</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">配置项</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">旧值</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">新值</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作人</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{tHistory('columns.time')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{tHistory('columns.config_key')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{tHistory('columns.old_value')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{tHistory('columns.new_value')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{tHistory('columns.operator')}</th>
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">

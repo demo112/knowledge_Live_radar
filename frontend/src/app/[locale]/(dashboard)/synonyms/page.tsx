@@ -102,7 +102,7 @@ export default function SynonymsPage() {
       <div className="relative w-full max-w-sm">
         <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Search synonyms..."
+          placeholder={t('search_placeholder')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="pl-8"
@@ -117,7 +117,7 @@ export default function SynonymsPage() {
           </div>
         ) : filteredSynonyms.length === 0 ? (
           <div className="col-span-full text-center py-10 text-muted-foreground border border-dashed rounded-lg">
-            No synonyms found.
+            {t('empty')}
           </div>
         ) : (
           filteredSynonyms.map((item) => (
@@ -149,7 +149,11 @@ export default function SynonymsPage() {
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">{t('source')}:</span>
-                    <span className="capitalize">{item.source}</span>
+                    <span className="capitalize">
+                      {['manual', 'ai', 'import'].includes(item.source) 
+                        ? t(`sources.${item.source}`) 
+                        : item.source}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">{t('usage')}:</span>
