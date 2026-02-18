@@ -16,7 +16,11 @@ logger = logging.getLogger(__name__)
 class SourceDiscoveryService:
     def __init__(self, db: AsyncSession):
         self.db = db
-        self.ddgs = DDGS()
+        try:
+            self.ddgs = DDGS()
+        except Exception as e:
+            logger.error(f"Failed to initialize DDGS: {e}")
+            self.ddgs = None
 
     async def discover(self, pyramid_id: Optional[uuid.UUID] = None) -> int:
         """
@@ -32,15 +36,23 @@ class SourceDiscoveryService:
         logger.info(f"Starting source discovery task. Pyramid ID: {pyramid_id}")
         
         # 1. Get keywords
-        keywords = await self._get_keywords(pyramid_id)
-        if not keywords:
-            logger.info("No keywords found for discovery.")
+        try:
+            keywords = await self._get_keywords(pyramid_id)
+            if not keywords:
+                logger.info("No keywords found for discovery.")
+                return 0
+                
+            logger.info(f"Generated {len(keywords)} keywords for search.")
+        except Exception as e:
+            logger.error(f"Error getting keywords: {e}")
             return 0
-            
-        logger.info(f"Generated {len(keywords)} keywords for search.")
         
         # 2. Search
         candidates = []
+        if not self.ddgs:
+            logger.warning("Search engine not initialized, skipping search.")
+            return 0
+
         for kw in keywords:
             try:
                 # Search for blog RSS feeds
@@ -50,14 +62,20 @@ class SourceDiscoveryService:
                 
                 # Use synchronous DDGS in a way that doesn't block (ideally should be run in executor)
                 # For simplicity in this iteration, we run it directly as it's a background task
+                # Note: ddgs.text() might return None or raise exception depending on version/status
                 results = self.ddgs.text(query, region="cn-zh", max_results=5)
                 
                 if results:
                     for res in results:
+                        # Adapt to different versions of duckduckgo_search
+                        url = res.get("href") or res.get("url")
+                        if not url:
+                            continue
+                            
                         candidates.append({
-                            "url": res.get("href"),
-                            "name": res.get("title"),
-                            "description": res.get("body"),
+                            "url": url,
+                            "name": res.get("title") or "Unknown Title",
+                            "description": res.get("body") or res.get("description") or "",
                             "keyword": kw
                         })
             except Exception as e:

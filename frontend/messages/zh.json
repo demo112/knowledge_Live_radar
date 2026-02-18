@@ -111,11 +111,14 @@
   "Common": {
     "language": "语言",
     "loading": "加载中...",
+    "processing": "处理中...",
     "save": "保存",
     "cancel": "取消",
     "delete": "删除",
     "edit": "编辑",
     "create": "创建",
+    "add": "添加",
+    "ignore": "忽略",
     "back": "返回",
     "submit": "提交",
     "confirm": "确认",
@@ -537,29 +540,8 @@
       "type": "类型",
       "status": "状态",
       "last_crawled": "上次抓取",
+      "url": "链接地址",
       "actions": "操作"
-    },
-    "discovery": {
-      "started": "已触发 {count} 个发现任务"
-    },
-    "add_source": "添加信息源",
-    "create_source": "添加信息源",
-    "edit_source": "编辑信息源",
-    "manual_config": "手动配置",
-    "use_template": "使用模板",
-    "empty_list": "未找到信息源。",
-    "last_crawled": "上次抓取: {date}",
-    "never": "从未",
-    "tabs": {
-      "managed": "已管理",
-      "discovery": "发现"
-    },
-    "columns": {
-      "name": "名称",
-      "type": "类型",
-      "status": "状态",
-      "last_crawled": "上次抓取",
-      "url": "链接地址"
     },
     "discovery": {
       "started": "发现任务已启动，共发现 {count} 个"
