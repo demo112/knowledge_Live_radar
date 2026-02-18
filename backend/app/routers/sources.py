@@ -1,11 +1,12 @@
 from typing import List, Optional
 from uuid import UUID
 from fastapi import APIRouter, Depends, status, Body, BackgroundTasks, HTTPException
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, desc
 from app.database import get_db
 from app.services.source_service import SourceService
-from app.schemas.source import SourceCreate, SourceUpdate, SourceResponse, DiscoverRequest, DiscoveredSource
+from app.schemas.source import SourceCreate, SourceUpdate, SourceResponse, DiscoverRequest, DiscoveredSource, DiscoveryEvent
 from app.schemas.common import SuccessResponse, PaginatedResponse, PaginatedData
 from app.services.content_processor import content_processor
 from app.services.lifecycle_manager import lifecycle_manager
@@ -24,6 +25,28 @@ def get_service(db: AsyncSession = Depends(get_db)) -> SourceService:
     return SourceService(db)
 
 # ... (Previous existing imports and endpoints: analyze, templates, crawl, etc.)
+
+@router.get("/discover/stream", response_class=StreamingResponse)
+async def discover_sources_stream(
+    pyramid_id: Optional[UUID] = None,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Stream source discovery events (SSE).
+    """
+    async def event_generator():
+        service = SourceDiscoveryService(db)
+        try:
+            async for event in service.discover_stream(pyramid_id):
+                # Format as SSE data
+                yield f"data: {event.model_dump_json()}\n\n"
+        except Exception as e:
+            # Send error event
+            import json
+            error_data = json.dumps({"event": "error", "data": {"message": str(e)}})
+            yield f"data: {error_data}\n\n"
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 @router.post("/discover", response_model=SuccessResponse[dict])
 async def discover_sources(

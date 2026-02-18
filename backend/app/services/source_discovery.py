@@ -24,121 +24,123 @@ class SourceDiscoveryService:
 
     async def discover(self, pyramid_id: Optional[uuid.UUID] = None) -> int:
         """
-        Execute source discovery task.
-        1. Get keywords from pyramid nodes
-        2. Search using DuckDuckGo
-        3. Filter and validate results
-        4. Create approval proposals
-        
-        Returns:
-            Number of new proposals created
+        Execute source discovery task (Synchronous wrapper).
         """
-        logger.info(f"Starting source discovery task. Pyramid ID: {pyramid_id}")
+        count = 0
+        async for event in self.discover_stream(pyramid_id):
+            if event.event == "result":
+                count = event.data.get("count", 0)
+        return count
+
+    async def discover_stream(self, pyramid_id: Optional[uuid.UUID] = None):
+        """
+        Execute source discovery task with streaming events.
+        Yields DiscoveryEvent.
+        """
+        from app.schemas.source import DiscoveryEvent, DiscoveryStage, DiscoveryStatus
         
-        # 1. Get keywords
+        # 1. Extract Keywords
+        yield DiscoveryEvent(event="stage_update", data={"stage": DiscoveryStage.EXTRACT, "status": DiscoveryStatus.RUNNING, "label": "提取关键词..."})
         try:
             keywords = await self._get_keywords(pyramid_id)
             if not keywords:
-                logger.info("No keywords found for discovery.")
-                return 0
-                
-            logger.info(f"Generated {len(keywords)} keywords for search.")
+                yield DiscoveryEvent(event="log", data={"message": "No keywords found.", "level": "warning"})
+                yield DiscoveryEvent(event="stage_update", data={"stage": DiscoveryStage.EXTRACT, "status": DiscoveryStatus.COMPLETED})
+                return
+            
+            yield DiscoveryEvent(event="log", data={"message": f"Generated {len(keywords)} keywords.", "level": "info"})
+            yield DiscoveryEvent(event="stage_update", data={"stage": DiscoveryStage.EXTRACT, "status": DiscoveryStatus.COMPLETED})
         except Exception as e:
             logger.error(f"Error getting keywords: {e}")
-            return 0
-        
+            yield DiscoveryEvent(event="error", data={"message": str(e)})
+            return
+
         # 2. Search
+        yield DiscoveryEvent(event="stage_update", data={"stage": DiscoveryStage.SEARCH, "status": DiscoveryStatus.RUNNING, "label": "执行搜索..."})
         candidates = []
         if not self.ddgs:
-            logger.warning("Search engine not initialized, skipping search.")
-            return 0
+            yield DiscoveryEvent(event="error", data={"message": "Search engine not initialized"})
+            return
 
-        for kw in keywords:
+        total_keywords = len(keywords)
+        for i, kw in enumerate(keywords):
             try:
-                # Search for blog RSS feeds
-                # query format: "{keyword} 博客 RSS"
-                query = f"{kw} 博客 RSS"
-                logger.debug(f"Searching for: {query}")
+                yield DiscoveryEvent(event="progress", data={"current": i+1, "total": total_keywords, "percentage": int((i+1)/total_keywords*100), "message": f"Searching: {kw}"})
                 
-                # Use synchronous DDGS in a way that doesn't block (ideally should be run in executor)
-                # For simplicity in this iteration, we run it directly as it's a background task
-                # Note: ddgs.text() might return None or raise exception depending on version/status
-                results = self.ddgs.text(query, region="cn-zh", max_results=5)
+                query = f"{kw} 博客 RSS"
+                import asyncio
+                # Use synchronous DDGS in executor
+                results = await asyncio.get_running_loop().run_in_executor(
+                    None,
+                    lambda: self.ddgs.text(query, region="cn-zh", max_results=5)
+                )
                 
                 if results:
+                    found_count = 0
                     for res in results:
-                        # Adapt to different versions of duckduckgo_search
                         url = res.get("href") or res.get("url")
-                        if not url:
-                            continue
-                            
+                        if not url: continue
                         candidates.append({
                             "url": url,
                             "name": res.get("title") or "Unknown Title",
                             "description": res.get("body") or res.get("description") or "",
                             "keyword": kw
                         })
+                        found_count += 1
+                    yield DiscoveryEvent(event="log", data={"message": f"Found {found_count} results for '{kw}'", "level": "info"})
             except Exception as e:
                 logger.error(f"Error searching for {kw}: {e}")
+                yield DiscoveryEvent(event="log", data={"message": f"Error searching '{kw}': {str(e)}", "level": "error"})
                 continue
-                
-        logger.info(f"Found {len(candidates)} candidate URLs.")
         
-        # 3. Filter and Create Proposals
-        created_count = 0
+        yield DiscoveryEvent(event="stage_update", data={"stage": DiscoveryStage.SEARCH, "status": DiscoveryStatus.COMPLETED})
+
+        # 3. Filter
+        yield DiscoveryEvent(event="stage_update", data={"stage": DiscoveryStage.FILTER, "status": DiscoveryStatus.RUNNING, "label": "过滤结果..."})
+        yield DiscoveryEvent(event="log", data={"message": f"Filtering {len(candidates)} candidates...", "level": "info"})
+        
+        valid_candidates = []
+        skipped_count = 0
         for candidate in candidates:
-            if not candidate.get("url"):
-                continue
-                
-            # Basic validation
+            if not candidate.get("url"): continue
+            
+            # Check exist
             url = candidate["url"]
-            name = candidate["name"]
-            
-            # Check if exists in InformationSource
-            exists_source = await self.db.execute(
-                select(InformationSource).where(InformationSource.url == url)
-            )
+            exists_source = await self.db.execute(select(InformationSource).where(InformationSource.url == url))
             if exists_source.scalar_one_or_none():
+                skipped_count += 1
                 continue
                 
-            # Check if exists in Approval (pending)
-            exists_approval = await self.db.execute(
-                select(Approval).where(
-                    and_(
-                        Approval.type == "create_source",
-                        Approval.status == "pending",
-                        # We need to check inside the JSON data, but for simplicity/performance 
-                        # we might skip strict JSON check or check if we can extract URL from data
-                        # Ideally Approval should have a unique constraint or we search by some field
-                        # Here we iterate or use a more complex query if needed.
-                        # For now, let's rely on application logic check.
-                    )
-                )
-            )
-            
-            # Since URL is in JSON data, we fetch pending approvals and check in python
-            # This is not efficient for large datasets but acceptable for "pending" list which should be small
+            # Check pending
+            exists_approval = await self.db.execute(select(Approval).where(and_(Approval.type == "create_source", Approval.status == "pending")))
             is_pending = False
-            pending_approvals = exists_approval.scalars().all()
-            for approval in pending_approvals:
+            for approval in exists_approval.scalars().all():
                 if approval.data and approval.data.get("url") == url:
                     is_pending = True
                     break
-            
             if is_pending:
+                skipped_count += 1
                 continue
-                
-            # Create Approval
+            
+            valid_candidates.append(candidate)
+            
+        yield DiscoveryEvent(event="log", data={"message": f"Skipped {skipped_count} existing/pending sources.", "level": "info"})
+        yield DiscoveryEvent(event="stage_update", data={"stage": DiscoveryStage.FILTER, "status": DiscoveryStatus.COMPLETED})
+
+        # 4. Proposal
+        yield DiscoveryEvent(event="stage_update", data={"stage": DiscoveryStage.PROPOSAL, "status": DiscoveryStatus.RUNNING, "label": "生成提案..."})
+        created_count = 0
+        for candidate in valid_candidates:
             try:
                 new_approval = Approval(
                     id=uuid.uuid4(),
                     type="create_source",
                     status="pending",
                     data={
-                        "url": url,
-                        "name": name,
+                        "url": candidate["url"],
+                        "name": candidate["name"],
                         "description": candidate.get("description"),
-                        "source_type": "RSS", # Default to RSS, user can change
+                        "source_type": "RSS",
                         "reason": f"与节点 '{candidate['keyword']}' 相关",
                         "tags": [candidate['keyword']]
                     },
@@ -150,11 +152,12 @@ class SourceDiscoveryService:
                 self.db.add(new_approval)
                 created_count += 1
             except Exception as e:
-                logger.error(f"Failed to create approval for {url}: {e}")
+                logger.error(f"Failed to create approval: {e}")
                 
         await self.db.commit()
-        logger.info(f"Source discovery completed. Created {created_count} new proposals.")
-        return created_count
+        yield DiscoveryEvent(event="result", data={"count": created_count, "summary": f"Created {created_count} proposals"})
+        yield DiscoveryEvent(event="stage_update", data={"stage": DiscoveryStage.PROPOSAL, "status": DiscoveryStatus.COMPLETED})
+        yield DiscoveryEvent(event="finish", data={})
 
     async def _get_keywords(self, pyramid_id: Optional[uuid.UUID]) -> List[str]:
         """

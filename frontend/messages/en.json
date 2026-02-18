@@ -1,14 +1,37 @@
 {
   "Common": {
+    "language": "Language",
     "loading": "Loading...",
+    "processing": "Processing...",
     "save": "Save",
     "cancel": "Cancel",
     "delete": "Delete",
     "edit": "Edit",
     "create": "Create",
+    "add": "Add",
+    "ignore": "Ignore",
     "back": "Back",
     "submit": "Submit",
-    "confirm": "Confirm"
+    "confirm": "Confirm",
+    "close": "Close",
+    "actions": {
+      "create": "Create",
+      "edit": "Edit",
+      "delete": "Delete",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "columns": {
+      "actions": "Actions"
+    },
+    "status": {
+      "no_data": "No Data",
+      "loading": "Loading..."
+    },
+    "alerts": {
+      "confirm_delete": "Confirm Delete",
+      "delete_warning": "Are you sure you want to delete this item? This action cannot be undone."
+    }
   },
   "Navigation": {
     "dashboard": "Dashboard",
@@ -23,6 +46,23 @@
     "scheduler": "Scheduler",
     "metabolism": "Metabolism",
     "settings": "Settings"
+  },
+  "Sources": {
+    "title": "Information Sources",
+    "discovery": {
+      "started": "Discovery task started, found {count} items",
+      "empty": "No discovered sources pending approval",
+      "title": "Discover New Sources",
+      "stages": {
+        "extract": "Keywords",
+        "search": "Search",
+        "filter": "Filter",
+        "proposal": "Proposal",
+        "finish": "Done"
+      },
+      "progress": "Progress",
+      "logs": "Activity Log"
+    }
   },
   "Dashboard": {
       "title": "System Overview",
@@ -485,6 +525,237 @@
       "latency": "Latency",
       "tokens": "Tokens",
       "error": "Error"
+    }
+  },
+  "Sources": {
+    "title": "Data Sources",
+    "manage_whitelist": "Manage Whitelist",
+    "add_source": "Add Source",
+    "edit_source": "Edit Source",
+    "create_source": "Add Source",
+    "manual_config": "Manual Config",
+    "use_template": "Use Template",
+    "no_data": "No Data",
+    "empty_list": "No sources found.",
+    "last_crawled": "Last Crawled: {date}",
+    "never": "Never",
+    "tabs": {
+      "managed": "Managed",
+      "discovery": "Discovery"
+    },
+    "columns": {
+      "name": "Name",
+      "type": "Type",
+      "status": "Status",
+      "last_crawled": "Last Crawled",
+      "actions": "Actions"
+    },
+    "types": {
+      "rss": "RSS Feed",
+      "sitemap": "Sitemap",
+      "web": "Web Crawl",
+      "wechat_mp": "WeChat MP",
+      "bilibili_user": "Bilibili User",
+      "juejin_column": "Juejin Column",
+      "youtube_channel": "YouTube Channel",
+      "wechat_mp_hint": "WeChat MP (ID/URL)",
+      "bilibili_user_hint": "Bilibili User (ID/URL)",
+      "juejin_column_hint": "Juejin Column (ID/URL)",
+      "youtube_channel_hint": "YouTube Channel (ID/URL)"
+    },
+    "status": {
+      "active": "Active",
+      "monitoring": "Monitoring",
+      "adjusting": "Adjusting",
+      "discovered": "Discovered",
+      "inactive": "Inactive"
+    },
+    "tags": {
+      "template": "Template"
+    },
+    "discovery": {
+      "started": "Started {count} discovery tasks"
+    },
+    "actions": {
+      "crawl": "Crawl",
+      "crawl_now": "Crawl Now",
+      "crawling": "Crawling...",
+      "crawl_title": "Crawl Now",
+      "crawl_desc": "Trigger an immediate crawl",
+      "test": "Test",
+      "testing": "Testing...",
+      "test_title": "Test Connection",
+      "history": "History",
+      "history_title": "Crawl History",
+      "edit_title": "Edit Source",
+      "edit_desc": "Modify source configuration",
+      "delete_title": "Delete Source",
+      "delete_desc": "Remove this source and its data"
+    },
+    "alerts": {
+      "operation_failed": "Operation Failed",
+      "discovered": "Discovered: {title} ({type})",
+      "discover_not_found": "Source not found",
+      "discover_failed": "Discovery failed",
+      "crawl_started": "Crawl started. Added items: {count}",
+      "crawl_failed": "Crawl failed",
+      "test_success": "Test success! Source is accessible.",
+      "test_failed": "Test failed: {message}",
+      "test_failed_generic": "Test failed",
+      "delete_failed": "Delete failed",
+      "save_failed": "Save failed"
+    },
+    "delete_confirm": {
+      "title": "Confirm Delete",
+      "message": "Are you sure you want to delete this source? This action cannot be undone."
+    },
+    "modal": {
+      "edit_title": "Edit Source",
+      "create_title": "Add New Source",
+      "custom_add": "Custom Add",
+      "template_add": "Use Template"
+    },
+    "form": {
+      "name": "Name",
+      "name_placeholder": "e.g. Tech Blog",
+      "url_id": "URL / ID",
+      "placeholder_wechat": "Enter WeChat MP ID",
+      "placeholder_bilibili": "Enter User ID or Profile URL",
+      "placeholder_juejin": "Enter Column ID",
+      "placeholder_default": "https://example.com/rss",
+      "discovering": "Discovering...",
+      "discover": "Discover",
+      "type": "Type",
+      "saving": "Saving...",
+      "save_changes": "Save Changes",
+      "add_now": "Add Now"
+    },
+    "history": {
+      "title": "Crawl History",
+      "empty": "No crawl history",
+      "status": {
+        "completed": "Completed",
+        "failed": "Failed",
+        "in_progress": "In Progress",
+        "pending": "Pending"
+      },
+      "table": {
+        "status": "Status",
+        "started_at": "Started At",
+        "items_fetched": "Items Fetched",
+        "items_new": "New Items",
+        "duration": "Duration"
+      }
+    },
+    "Add": {
+      "title": "Add Source",
+      "description": "Add a new information source to monitor.",
+      "steps": {
+        "input": "Input",
+        "analyzing": "Analyzing",
+        "review": "Review"
+      },
+      "url_card": {
+        "title": "Source URL",
+        "description": "Enter the URL of the website, RSS feed, or API endpoint.",
+        "label": "URL",
+        "placeholder": "https://example.com/feed.xml",
+        "analyze_btn": "Analyze Source"
+      },
+      "analyzing_card": {
+        "title": "Analyzing Source",
+        "description": "AI is analyzing the source content and relevance.",
+        "steps": {
+          "fetching": "Fetching source content...",
+          "analyzing": "Analyzing content structure...",
+          "evaluating": "Evaluating relevance...",
+          "generating": "Generating metadata..."
+        }
+      },
+      "review_card": {
+        "title": "Analysis Result",
+        "description": "Review the AI analysis result and configure source settings.",
+        "ai_analysis": "AI Analysis",
+        "analysis_complete": "Analysis complete.",
+        "confidence": "Confidence",
+        "name_label": "Source Name",
+        "type_label": "Source Type",
+        "types": {
+          "web": "Website",
+          "rss": "RSS Feed",
+          "api": "API",
+          "user": "User Manual"
+        },
+        "interval_label": "Check Interval",
+        "intervals": {
+          "hourly": "Hourly",
+          "every_4h": "Every 4 Hours",
+          "every_12h": "Every 12 Hours",
+          "daily": "Every 24 Hours"
+        },
+        "summary_label": "Source Summary",
+        "no_summary": "No summary available.",
+        "confirm_btn": "Confirm Add Source"
+      },
+      "alerts": {
+        "input_url": "Please enter a URL",
+        "analyze_failed": "Analysis failed",
+        "analyze_error": "Error analyzing source",
+        "success": "Source added successfully",
+        "create_error": "Error creating source"
+      }
+    },
+    "TemplateSelector": {
+      "loading": "Loading templates...",
+      "select_title": "Select Template",
+      "config_title": "Configure Parameters",
+      "select_placeholder": "Please select"
+    },
+    "Whitelist": {
+      "title": "Whitelist Management",
+      "tabs": {
+        "allowed": "Allowed Domains",
+        "discovered": "Discovered Domains"
+      },
+      "columns": {
+        "domain": "Domain",
+        "credibility": "Credibility",
+        "reason": "Reason",
+        "count": "Count",
+        "status": "Status",
+        "rss": "RSS",
+        "actions": "Actions"
+      },
+      "actions": {
+        "add": "Add Domain",
+        "remove": "Remove",
+        "add_to_whitelist": "Add to Whitelist",
+        "add_reason_discovered": "Added from discovery list",
+        "confirm_remove": "Are you sure you want to remove this domain?"
+      },
+      "status": {
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "pending": "Pending"
+      },
+      "empty": {
+        "allowed": "No data",
+        "discovered": "No new domains discovered"
+      },
+      "modal": {
+        "title": "Add Whitelist Domain",
+        "domain_label": "Domain",
+        "domain_placeholder": "example.com or *.example.com",
+        "credibility_label": "Credibility (0-100)",
+        "reason_label": "Reason",
+        "cancel": "Cancel",
+        "save": "Save"
+      },
+      "alerts": {
+        "add_success": "Added to whitelist",
+        "add_failed": "Add failed",
+        "remove_failed": "Remove failed"
+      }
     }
   }
 }

@@ -1,7 +1,25 @@
-from typing import Optional, Any
+from typing import Optional, Any, Dict
 from uuid import UUID
 from datetime import datetime
+from enum import Enum
 from pydantic import BaseModel, Field
+
+class DiscoveryStage(str, Enum):
+    EXTRACT = "extract"
+    SEARCH = "search"
+    FILTER = "filter"
+    PROPOSAL = "proposal"
+    FINISH = "finish"
+
+class DiscoveryStatus(str, Enum):
+    PENDING = "pending"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+class DiscoveryEvent(BaseModel):
+    event: str = Field(..., description="Event type: stage_update, log, progress, result, error")
+    data: Dict[str, Any]
 
 class InformationSourceBase(BaseModel):
     name: str = Field(..., max_length=100)
