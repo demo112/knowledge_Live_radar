@@ -128,14 +128,14 @@ TEMPLATES = {
         ]
     },
     "diwta": {
-        "name": "DIWTA Model",
-        "description": "Data, Information, Wisdom, Truth, Action",
+        "name": "DIWTA 模型",
+        "description": "数据 (Data) - 信息 (Information) - 智慧 (Wisdom) - 真理 (Truth) - 行动 (Action)",
         "nodes": [
-            {"title": "Action", "level": 0, "children": [
-                {"title": "Truth", "level": 1, "children": [
-                    {"title": "Wisdom", "level": 2, "children": [
-                        {"title": "Information", "level": 3, "children": [
-                             {"title": "Data", "level": 4, "children": []}
+            {"title": "行动 (Action)", "level": 0, "children": [
+                {"title": "真理 (Truth)", "level": 1, "children": [
+                    {"title": "智慧 (Wisdom)", "level": 2, "children": [
+                        {"title": "信息 (Information)", "level": 3, "children": [
+                             {"title": "数据 (Data)", "level": 4, "children": []}
                         ]}
                     ]}
                 ]}
@@ -143,15 +143,15 @@ TEMPLATES = {
         ]
     },
     "bloom": {
-        "name": "Bloom's Taxonomy",
-        "description": "Educational learning objectives",
+        "name": "布鲁姆分类法",
+        "description": "教育学习目标分类 (Bloom's Taxonomy)",
         "nodes": [
-            {"title": "Creating", "level": 0, "children": [
-                {"title": "Evaluating", "level": 1, "children": [
-                    {"title": "Analyzing", "level": 2, "children": [
-                        {"title": "Applying", "level": 3, "children": [
-                            {"title": "Understanding", "level": 4, "children": [
-                                {"title": "Remembering", "level": 5, "children": []}
+            {"title": "创造 (Creating)", "level": 0, "children": [
+                {"title": "评价 (Evaluating)", "level": 1, "children": [
+                    {"title": "分析 (Analyzing)", "level": 2, "children": [
+                        {"title": "应用 (Applying)", "level": 3, "children": [
+                            {"title": "理解 (Understanding)", "level": 4, "children": [
+                                {"title": "记忆 (Remembering)", "level": 5, "children": []}
                             ]}
                         ]}
                     ]}
@@ -188,7 +188,8 @@ class TemplateService:
         nodes = template_data.get("nodes", [])
         await self._create_nodes_recursive(pyramid.id, nodes, None)
         
-        return pyramid
+        # 3. Reload pyramid with nodes to avoid lazy loading error
+        return await self.pyramid_service.get_pyramid_details(pyramid.id)
 
     async def export_template(self, pyramid_id: UUID) -> Dict[str, Any]:
         """Export a pyramid structure as a template"""
