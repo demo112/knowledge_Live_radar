@@ -4,6 +4,7 @@ import { useEffect, useState, use, useCallback } from 'react';
 import { pyramidApi, nodeApi } from '@/lib/api';
 import { PyramidDetail, HealthReport, VisualizationData, SplitRequest, MergeRequest, LinkRequest } from '@/types';
 import HealthDashboard from '@/components/pyramid/HealthDashboard';
+import EvolutionPanel from '@/components/pyramid/EvolutionPanel';
 import PyramidVisualizer from '@/components/pyramid/PyramidVisualizer';
 import { SplitNodeDialog, MergeNodesDialog, LinkNodeDialog } from '@/components/pyramid/NodeActions';
 import PyramidHistory from '@/components/pyramid/PyramidHistory';
@@ -167,66 +168,75 @@ export default function PyramidDetailPage({ params }: { params: Promise<{ id: st
       {/* Content */}
       <div className="flex-grow overflow-hidden flex flex-col space-y-4">
         {activeTab === 'view' ? (
-          <>
-            {/* Health Dashboard */}
-            {healthReport && <HealthDashboard report={healthReport} />}
-
-            {/* Visualization */}
-            <div className="relative flex-grow border rounded-lg overflow-hidden">
-              {visData && (
-                <PyramidVisualizer
-                  initialNodes={visData.nodes}
-                  initialEdges={visData.edges}
-                  onNodeContextMenu={onNodeContextMenu}
-                  onSelectionChange={setSelectedNodes}
-                />
-              )}
-              
-              {/* Merge Button Overlay */}
-              {selectedNodes.length > 1 && (
-                <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10">
-                  <Button onClick={() => setMergeOpen(true)} className="shadow-lg">
-                    <GitMerge className="mr-2 h-4 w-4" />
-                    {t('actions.merge_nodes', { count: selectedNodes.length })}
-                  </Button>
-                </div>
-              )}
-
-              {/* Context Menu */}
-              {contextMenu && (
-                <div
-                  className="fixed z-50 bg-white border rounded shadow-md py-1 min-w-[120px]"
-                  style={{ top: contextMenu.y, left: contextMenu.x }}
-                >
-                  <button
-                    className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
-                    onClick={() => handleMenuAction('split')}
-                  >
-                    {t('actions.split_node')}
-                  </button>
-                  <button
-                    className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
-                    onClick={() => handleMenuAction('link')}
-                  >
-                    {t('actions.link_node')}
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Selected Node Details */}
-            {selectedNodes.length === 1 && (
-              <div className="border rounded-lg p-4 bg-card text-card-foreground shadow-sm animate-in slide-in-from-bottom-5">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-semibold text-lg">{t('node_info.title', { label: selectedNodes[0].data.label })}</h3>
-                  <span className="text-xs text-muted-foreground font-mono">{selectedNodes[0].id}</span>
-                </div>
-                <NodeContents nodeId={selectedNodes[0].id} />
+          <div className="flex flex-col h-full space-y-4">
+            {healthReport && (
+              <div className="flex-shrink-0">
+                <HealthDashboard report={healthReport} />
               </div>
             )}
-          </>
+
+            <div className="flex-grow flex flex-row space-x-4 overflow-hidden h-full pb-2">
+              {/* Left: Visualization */}
+              <div className="flex-grow relative border rounded-lg overflow-hidden flex flex-col bg-white shadow-sm min-w-0">
+                {visData ? (
+                  <PyramidVisualizer
+                    initialNodes={visData.nodes}
+                    initialEdges={visData.edges}
+                    onNodeContextMenu={onNodeContextMenu}
+                    onSelectionChange={setSelectedNodes}
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full text-gray-400">
+                    {loading ? tCommon('loading') : t('no_data')}
+                  </div>
+                )}
+                
+                {/* Merge Button Overlay */}
+                {selectedNodes.length > 1 && (
+                  <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10">
+                    <Button onClick={() => setMergeOpen(true)} className="shadow-lg">
+                      <GitMerge className="mr-2 h-4 w-4" />
+                      {t('actions.merge_nodes', { count: selectedNodes.length })}
+                    </Button>
+                  </div>
+                )}
+
+                {/* Context Menu */}
+                {contextMenu && (
+                  <div
+                    className="fixed bg-white border shadow-lg rounded-md py-1 z-50 min-w-[120px]"
+                    style={{ top: contextMenu.y, left: contextMenu.x }}
+                  >
+                    <button
+                      className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
+                      onClick={() => handleMenuAction('split')}
+                    >
+                      {t('actions.split_node')}
+                    </button>
+                    <button
+                      className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
+                      onClick={() => handleMenuAction('link')}
+                    >
+                      {t('actions.link_content')}
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Right: Sidebar */}
+              <div className="w-96 flex-shrink-0 flex flex-col space-y-4 overflow-y-auto pr-1">
+                <EvolutionPanel pyramidId={pyramidId} onUpdate={fetchData} />
+                
+                {selectedNodes.length === 1 && (
+                  <NodeContents nodeId={selectedNodes[0].id} />
+                )}
+              </div>
+            </div>
+          </div>
         ) : (
-          <PyramidHistory pyramidId={pyramid.id} />
+          <div className="h-full overflow-y-auto">
+            <PyramidHistory pyramidId={pyramidId} />
+          </div>
         )}
       </div>
 

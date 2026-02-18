@@ -1,5 +1,113 @@
 {
+  "Health": {
+    "title": "系统健康与进化",
+    "loading": "正在生成健康报告...",
+    "optimize_strategy": "优化策略",
+    "optimize_triggered": "优化策略已触发",
+    "optimize_failed": "触发优化失败",
+    "detect_now": "立即检测",
+    "detecting": "检测中...",
+    "overall_score": "总体健康分",
+    "overall": "总体评分",
+    "out_of_100": "/ 100",
+    "depth_balance": "结构深度",
+    "structural_balance": "层级平衡性",
+    "content_coverage": "内容覆盖率",
+    "nodes_with_content": "有内容的节点",
+    "activity": "活跃度",
+    "recent_updates": "近期更新频率",
+    "last_check": "上次检查",
+    "never": "从未",
+    "issues_title": "发现的问题",
+    "no_issues": "暂无问题，系统运行良好。",
+    "points": "分",
+    "executed": "已执行",
+    "rejected": "已拒绝",
+    "unknown_target": "未知目标",
+    "accept": "接受",
+    "reject": "拒绝",
+    "execute": "执行",
+    "suggestions": "优化建议",
+    "actions": {
+      "create_node": "创建节点",
+      "delete_node": "删除节点",
+      "update_node": "更新节点",
+      "split_node": "拆分节点",
+      "merge_node": "合并节点",
+      "link_content": "关联内容",
+      "update_strategy": "更新策略",
+      "archive_content": "归档内容"
+    },
+    "categories": {
+      "source": "信息源",
+      "content": "内容质量",
+      "pyramid": "金字塔结构",
+      "system": "系统状态",
+      "approval": "审批流程",
+      "undefined": "未知分类"
+    },
+    "types": {
+      "source_failing": "来源失效",
+      "no_new_content": "无新内容",
+      "low_quality": "质量低下",
+      "high_risk": "高风险",
+      "structure_imbalance": "结构失衡",
+      "orphan_node": "孤立节点",
+      "backlog_high": "积压严重",
+      "system_error": "系统错误"
+    },
+    "Overview": {
+      "title": "健康概览",
+      "description": "查看系统的整体健康状况和关键指标。",
+      "metrics": {
+        "overall": "总体评分",
+        "pyramid": "金字塔健康",
+        "source": "信息源健康"
+      }
+    },
+    "SourceHealthSummary": {
+      "title": "信息源健康度",
+      "score": "健康分",
+      "availability": "可用性",
+      "response_time": "响应时间"
+    },
+    "ApprovalBacklog": {
+      "title": "审批积压",
+      "pending_items": "待处理项",
+      "penalty": "扣分",
+      "max_wait": "最长等待",
+      "days": "天",
+      "severe_backlog": "积压严重"
+    },
+    "CrawlStats": {
+      "title": "抓取统计",
+      "total": "总抓取",
+      "success_rate": "成功率",
+      "validated": "已校验",
+      "rejected": "已拒绝",
+      "avg_time": "平均耗时",
+      "seconds": "秒"
+    },
+    "HotspotDistribution": {
+      "title": "热点分布",
+      "status": {
+        "trending": "爆发中",
+        "emerging": "新兴",
+        "mature": "成熟",
+        "cooling": "衰退"
+      },
+      "empty": "暂无热点数据",
+      "mentions_7d": "7日热度"
+    },
+    "PyramidHealthCard": {
+      "title": "金字塔结构健康",
+      "average_score": "平均分",
+      "empty": "暂无金字塔",
+      "id_prefix": "ID"
+    }
+  },
   "Common": {
+    "language": "语言",
     "loading": "加载中...",
     "save": "保存",
     "cancel": "取消",
@@ -34,7 +142,212 @@
     "synonyms": "同义词库",
     "scheduler": "调度管理",
     "metabolism": "内容代谢",
-    "settings": "设置"
+    "settings": "设置",
+    "aiMonitor": "AI 监控"
+  },
+  "Settings": {
+    "title": "设置",
+    "loading": "加载设置中...",
+    "save_success": "设置 {key} 保存成功",
+    "save_failed": "保存失败",
+    "tabs": {
+      "general": "通用设置",
+      "ai": "AI 设置",
+      "history": "历史记录",
+      "tasks": "任务管理"
+    },
+    "General": {
+      "title": "{group} 设置",
+      "health": {
+        "check_interval_hours": "健康检查间隔 (小时)"
+      },
+      "hotspot": {
+        "emerging_threshold": "新兴热点阈值",
+        "trending_growth_rate": "爆发增长率",
+        "mature_growth_rate_threshold": "成熟增长率阈值",
+        "cooling_days_threshold": "冷却天数阈值",
+        "archive_days_threshold": "归档天数阈值"
+      },
+      "drift": {
+        "similarity_threshold": "漂移相似度阈值"
+      },
+      "crawl": {
+        "default_timeout_seconds": "默认抓取超时 (秒)",
+        "max_retries": "最大重试次数"
+      },
+      "restructure": {
+        "max_node_content": "节点内容最大长度",
+        "max_hierarchy_depth": "最大层级深度",
+        "max_siblings": "最大同级节点数"
+      },
+      "ai": {
+        "api_key": "API 密钥",
+        "base_url": "基础 URL",
+        "model": "模型名称",
+        "temperature": "温度",
+        "max_retries": "最大重试次数",
+        "timeout": "超时 (秒)",
+        "enabled": "启用 AI",
+        "local": {
+            "base_url": "本地基础 URL",
+            "model": "本地模型",
+            "timeout": "本地超时 (秒)",
+            "enabled": "启用本地 AI"
+        },
+        "strategy": "策略"
+      }
+    },
+    "Tasks": {
+      "title": "任务管理",
+      "batch_classify": {
+        "title": "批量分类任务",
+        "description": "触发后台任务，对所有未分类的内容进行 AI 自动分类。",
+        "button": "立即运行",
+        "processing": "正在请求...",
+        "confirm": "确定要触发批量分类吗？这可能需要一些时间。",
+        "started": "任务已启动",
+        "start_failed": "启动失败",
+        "trigger_failed": "触发失败"
+      }
+    },
+    "History": {
+      "title": "历史记录",
+      "columns": {
+        "time": "时间",
+        "config_key": "配置项",
+        "old_value": "旧值",
+        "new_value": "新值",
+        "operator": "操作人"
+      }
+    },
+    "AIConfig": {
+      "title": "AI 模型配置",
+      "enable_ai": "启用 AI 功能",
+      "enable_local": "启用本地模型",
+      "strategy": {
+        "label": "调度策略 (Strategy)",
+        "local_first": {
+          "label": "本地优先 (Local First)",
+          "desc": "优先使用本地，失败时自动降级到云端"
+        },
+        "local_only": {
+          "label": "仅本地 (Local Only)",
+          "desc": "只使用本地模型，不连接外网"
+        },
+        "cloud_only": {
+          "label": "仅云端 (Cloud Only)",
+          "desc": "只使用云端服务"
+        }
+      },
+      "Local": {
+        "title": "🏠 本地模型配置 (Local AI)",
+        "base_url": "本地 Base URL",
+        "model_name": "本地模型名称",
+        "timeout": "超时时间 (秒)",
+        "test_connection": "测试本地连接"
+      },
+      "Cloud": {
+        "title": "☁️ 云端模型配置 (Cloud AI)",
+        "base_url": "Cloud API Base URL",
+        "base_url_hint": "兼容 OpenAI 接口的服务地址",
+        "api_key": "API Key",
+        "api_key_hint": "如显示为 *** 则表示已脱敏，无需修改。留空则禁用 AI。",
+        "model_name": "Cloud Model Name",
+        "test_connection": "测试云端连接"
+      },
+      "Params": {
+        "temperature": "温度 (Temperature)",
+        "temperature_levels": {
+          "precise": "精确 (0.0)",
+          "balanced": "均衡 (1.0)",
+          "creative": "创意 (2.0)"
+        },
+        "max_retries": "最大重试次数"
+      },
+      "Test": {
+        "success": "连接成功",
+        "failed": "连接失败",
+        "latency": "延迟"
+      },
+      "Actions": {
+        "save": "保存配置",
+        "test_current": "测试当前策略连接",
+        "saved": "配置已保存",
+        "save_failed": "保存失败",
+        "test_failed": "连接测试失败: {error}"
+      }
+    }
+  },
+  "AIMonitor": {
+    "title": "AI 监控",
+    "actions": {
+        "test_connection": "测试连接",
+        "configure": "配置",
+        "clean_old_metrics": "清理旧数据",
+        "confirm_clean": "确定要清理 30 天前的指标数据吗？"
+    },
+    "toasts": {
+      "connection_success": "连接成功",
+      "connection_failed": "连接失败",
+      "service_reachable": "AI 服务可访问",
+      "service_unreachable": "无法连接到 AI 服务",
+      "connection_error": "连接错误",
+      "test_failed": "测试连接失败"
+    },
+    "modules": {
+      "pyramid": "金字塔",
+      "source": "信息源",
+      "content": "内容",
+      "approval": "审批",
+      "system": "系统",
+      "search": "搜索",
+      "crawler": "抓取",
+      "ai": "AI"
+    },
+    "status": {
+      "success": "成功",
+      "error": "失败"
+    },
+    "pagination": {
+      "showing": "显示 {count} / {total} 条结果",
+      "prev": "上一页",
+      "next": "下一页"
+    },
+    "Stats": {
+      "total_requests": "总请求数",
+      "success_rate": "成功率",
+      "total_tokens": "总 Token 数",
+      "avg_latency": "平均延迟",
+      "model_performance": "模型性能",
+      "model": "模型",
+      "requests": "请求数"
+    },
+    "Filters": {
+      "module_placeholder": "按模块筛选...",
+      "model_placeholder": "按模型筛选...",
+      "provider_placeholder": "提供商",
+      "provider_all": "全部",
+      "provider_cloud": "云端",
+      "provider_local": "本地",
+      "status_placeholder": "状态",
+      "status_all": "全部",
+      "status_success": "成功",
+      "status_error": "失败",
+      "reset": "重置",
+      "search": "搜索"
+    },
+    "Table": {
+      "loading": "加载中...",
+      "empty": "暂无数据",
+      "time": "时间",
+      "status": "状态",
+      "module": "模块",
+      "model": "模型",
+      "provider": "提供商",
+      "latency": "延迟",
+      "tokens": "Token",
+      "error": "错误信息"
+    }
   },
   "Approval": {
     "title": "审批中心",
@@ -195,14 +508,23 @@
     "status": {
       "active": "正常",
       "monitoring": "监控中",
-      "adjusting": "需调整"
+      "adjusting": "需调整",
+      "discovered": "已发现",
+      "inactive": "未激活"
     },
     "tags": {
       "template": "模板"
     },
     "actions": {
+      "crawl": "抓取",
+      "crawling": "抓取中...",
       "crawl_title": "立即抓取",
       "crawl_desc": "触发一次立即抓取任务",
+      "test": "测试",
+      "testing": "测试中...",
+      "test_title": "测试连接",
+      "history": "历史",
+      "history_title": "抓取历史",
       "edit_title": "编辑源",
       "edit_desc": "修改源配置",
       "delete_title": "删除源",
@@ -625,6 +947,16 @@
       "right_click_actions": "右键点击节点进行操作（拆分、关联）",
       "shift_click_select": "Shift+点击可多选以合并"
     },
+    "NodeContents": {
+      "title": "关联内容",
+      "empty": "暂无关联内容",
+      "ai_auto": "AI 自动",
+      "manual": "人工关联",
+      "match": "匹配度",
+      "no_summary": "暂无摘要",
+      "unlink_confirm": "确定要取消关联此内容吗？",
+      "loading": "加载内容中..."
+    },
     "NodeActions": {
       "common": {
         "cancel": "取消"
@@ -704,7 +1036,7 @@
       "import": "导入"
     },
     "actions": "操作",
-    "delete_confirm": "确定删除该同义词吗？",
+    "delete_confirm": "确定要删除这个同义词吗？",
     "placeholder_canonical": "例如：人工智能",
     "placeholder_synonym": "例如：AI",
     "search_placeholder": "搜索同义词...",
@@ -742,6 +1074,11 @@
       "content_preview": "内容预览",
       "no_content": "(无提取内容)",
       "close": "关闭"
+    },
+    "types": {
+      "url": "链接",
+      "text": "文本",
+      "file": "文件"
     }
   },
   "Metabolism": {
@@ -804,8 +1141,19 @@
     "alerts": {
       "trigger_failed": "触发任务失败",
       "toggle_failed": "切换任务状态失败"
+    },
+    "types": {
+      "content_crawl": "内容抓取",
+      "source_health": "源健康检查",
+      "system_health": "系统健康检测",
+      "hotspot_lifecycle": "热点生命周期",
+      "drift_detection": "漂移检测",
+      "strategy_optimization": "策略优化",
+      "cluster_discovery": "聚类发现",
+      "content_metabolism": "内容代谢"
     }
-  },
+  }
+},
   "Status": {
     "active": "活跃",
     "paused": "暂停",
@@ -818,6 +1166,35 @@
     "network_error": "网络错误，请稍后重试",
     "not_found": "未找到资源",
     "unknown_error": "发生未知错误"
+  },
+  "evolution": {
+    "title": "进化面板",
+    "description": "AI 驱动的金字塔结构优化建议",
+    "analyze_now": "立即分析",
+    "analyzing": "分析中...",
+    "no_suggestions": "暂无优化建议",
+    "apply": "采纳",
+    "reject": "拒绝",
+    "confidence": "置信度",
+    "reason": "理由",
+    "fetch_error": "获取建议失败",
+    "analysis_complete": "分析完成",
+    "analysis_error": "分析失败",
+    "apply_success": "应用成功",
+    "apply_error": "应用失败",
+    "reject_success": "已拒绝建议",
+    "reject_error": "拒绝失败",
+    "actions": {
+      "create_node": "创建节点",
+      "delete_node": "删除节点",
+      "update_node": "更新节点",
+      "split_node": "拆分节点",
+      "merge_node": "合并节点",
+      "link_content": "关联内容",
+      "move_node": "移动节点",
+      "update_strategy": "更新策略",
+      "archive_content": "归档内容"
+    }
   },
   "Settings": {
     "title": "系统配置",
@@ -858,6 +1235,7 @@
     "AIConfig": {
       "title": "AI 模型配置",
       "enable_ai": "启用 AI 功能",
+      "enable_local": "启用本地模型",
       "strategy": {
         "label": "调度策略 (Strategy)",
         "local_first": {
@@ -910,72 +1288,6 @@
         "save_failed": "保存失败",
         "test_failed": "连接测试失败: {error}"
       }
-    }
-  },
-  "Health": {
-    "title": "系统健康与进化",
-    "loading": "加载健康数据中...",
-    "optimize_strategy": "优化抓取策略",
-    "optimize_triggered": "优化已触发",
-    "optimize_failed": "优化触发失败",
-    "detecting": "检测中...",
-    "detect_now": "立即检测",
-    "overall": "总体评分",
-    "out_of_100": "/ 100",
-    "points": "分",
-    "depth_balance": "结构深度",
-    "structural_balance": "层级平衡性",
-    "content_coverage": "内容覆盖率",
-    "nodes_with_content": "有内容的节点",
-    "activity": "活跃度",
-    "recent_updates": "近期更新频率",
-    "suggestions": "优化建议",
-    "overall_score": "总体健康分",
-    "last_check": "上次检测",
-    "never": "从未",
-    "issues_title": "系统问题 (Issues)",
-    "no_issues": "系统运行良好，未发现问题。",
-    "Overview": {
-      "title": "系统健康概览",
-      "description": "健康报告功能正在开发中。",
-      "metrics": {
-        "overall": "整体评分",
-        "pyramid": "金字塔健康度",
-        "source": "信息源状态"
-      }
-    },
-    "ApprovalBacklog": {
-      "title": "审批积压",
-      "pending_items": "待处理事项",
-      "penalty": "健康分扣除",
-      "max_wait": "最长等待",
-      "days": "天",
-      "severe_backlog": "积压严重，建议优先处理"
-    },
-    "CrawlStats": {
-      "title": "抓取与校验统计",
-      "total": "总抓取量",
-      "success_rate": "成功率",
-      "validated": "校验通过",
-      "rejected": "校验失败",
-      "avg_time": "平均处理耗时"
-    },
-    "HotspotDistribution": {
-      "title": "热点分布趋势",
-      "empty": "暂无热点数据",
-      "mentions_7d": "7天提及"
-    },
-    "PyramidHealthCard": {
-      "title": "金字塔健康度",
-      "average_score": "平均分",
-      "empty": "暂无数据",
-      "id_prefix": "ID"
-    },
-    "SourceHealthSummary": {
-      "title": "信息源健康度",
-      "score": "综合评分",
-      "availability": "可用性",
-      "response_time": "平均响应时间"
     }
   }
 }
