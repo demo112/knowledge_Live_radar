@@ -60,8 +60,7 @@ export function InputBox({ onContentAdded }: { onContentAdded?: () => void }) {
       if (data.success) {
         setAnalysis(data.data);
       }
-    } catch (error) {
-      console.error(error);
+    } catch {
       toast({ title: t('analyze_failed'), variant: 'destructive' });
     } finally {
       setIsAnalyzing(false);
@@ -101,7 +100,7 @@ export function InputBox({ onContentAdded }: { onContentAdded?: () => void }) {
         setIsExpanded(false);
         if (onContentAdded) onContentAdded();
       }
-    } catch (error) {
+    } catch {
       toast({ title: t('submit_failed'), variant: 'destructive' });
     } finally {
       setIsSubmitting(false);
@@ -119,7 +118,7 @@ export function InputBox({ onContentAdded }: { onContentAdded?: () => void }) {
         </div>
       </CardHeader>
       <CardContent className="pb-3">
-        <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="w-full">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'text' | 'url')} className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-4">
             <TabsTrigger value="text"><FileText className="h-4 w-4 mr-2"/> {t('text_tab')}</TabsTrigger>
             <TabsTrigger value="url"><LinkIcon className="h-4 w-4 mr-2"/> {t('url_tab')}</TabsTrigger>

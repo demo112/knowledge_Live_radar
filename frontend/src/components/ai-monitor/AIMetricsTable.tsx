@@ -10,6 +10,7 @@ interface AIMetricsTableProps {
 
 export function AIMetricsTable({ metrics, loading }: AIMetricsTableProps) {
   const t = useTranslations('AIMonitor.Table');
+  const tCommon = useTranslations('AIMonitor');
 
   if (loading) {
     return <div className="p-4 text-center">{t('loading')}</div>;
@@ -42,10 +43,10 @@ export function AIMetricsTable({ metrics, loading }: AIMetricsTableProps) {
               </td>
               <td className="px-4 py-3">
                 <Badge variant={metric.status === 'success' ? 'default' : 'destructive'}>
-                  {metric.status}
+                  {tCommon(`status.${metric.status}`)}
                 </Badge>
               </td>
-              <td className="px-4 py-3">{metric.module || '-'}</td>
+              <td className="px-4 py-3">{metric.module ? tCommon(`modules.${metric.module}`) : '-'}</td>
               <td className="px-4 py-3">{metric.model}</td>
               <td className="px-4 py-3">{metric.provider}</td>
               <td className="px-4 py-3">{metric.latency.toFixed(2)}s</td>

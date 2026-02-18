@@ -33,6 +33,7 @@ export default function ContributionDetailModal({
 }: ContributionDetailModalProps) {
   const t = useTranslations('Contributions.detail');
   const tStatus = useTranslations('Contributions.status');
+  const tTypes = useTranslations('Contributions.types');
 
   if (!contribution) return null;
 
@@ -78,7 +79,7 @@ export default function ContributionDetailModal({
                     className="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                     onClick={onClose}
                   >
-                    <span className="sr-only">Close</span>
+                    <span className="sr-only">{t('close')}</span>
                     <XMarkIcon className="h-6 w-6" aria-hidden="true" />
                   </button>
                 </div>
@@ -93,7 +94,9 @@ export default function ContributionDetailModal({
                         <dl className="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
                           <div className="sm:col-span-1">
                             <dt className="text-sm font-medium text-gray-500">{t('type')}</dt>
-                            <dd className="mt-1 text-sm text-gray-900">{contribution.input_type.toUpperCase()}</dd>
+                            <dd className="mt-1 text-sm text-gray-900">
+                                {tTypes(contribution.input_type.toLowerCase()) || contribution.input_type.toUpperCase()}
+                            </dd>
                           </div>
                           <div className="sm:col-span-1">
                             <dt className="text-sm font-medium text-gray-500">{t('status')}</dt>

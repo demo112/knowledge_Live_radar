@@ -249,7 +249,10 @@ function DiscoveredTab() {
                   item.evaluation_status === 'REJECTED' ? 'bg-red-100 text-red-800' :
                   'bg-yellow-100 text-yellow-800'
                 }`}>
-                  {item.evaluation_status}
+                  {item.evaluation_status === 'APPROVED' ? t('status.approved') :
+                   item.evaluation_status === 'REJECTED' ? t('status.rejected') :
+                   item.evaluation_status === 'PENDING' ? t('status.pending') :
+                   item.evaluation_status}
                 </span>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.has_rss ? '✅' : '❌'}</td>

@@ -170,7 +170,7 @@ export default function SettingsPage() {
                 {Object.entries(items).map(([key, value]) => (
                   <div key={key} className="flex flex-col space-y-1">
                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      {key.split('.').slice(1).join(' ')}
+                      {tGeneral(key)}
                     </label>
                     <div className="flex gap-2">
                       <input

@@ -1,6 +1,6 @@
 import React from 'react';
 import { HealthReport } from '@/types';
-import { Activity, Layers, CheckCircle, Info } from 'lucide-react';
+import { Activity, Layers, CheckCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTranslations } from 'next-intl';
 
@@ -10,7 +10,7 @@ interface HealthDashboardProps {
 }
 
 const HealthDashboard: React.FC<HealthDashboardProps> = ({ report, isLoading }) => {
-  const t = useTranslations('Pyramid.Health');
+  const t = useTranslations('Health');
 
   if (isLoading) {
     return <div className="animate-pulse h-32 bg-gray-100 rounded-lg"></div>;
@@ -20,7 +20,7 @@ const HealthDashboard: React.FC<HealthDashboardProps> = ({ report, isLoading }) 
     return null;
   }
 
-  const { score, details, suggestions } = report;
+  const { score, details } = report;
 
   const getScoreColor = (score: number) => {
     if (score >= 80) return 'text-green-600';
@@ -79,27 +79,6 @@ const HealthDashboard: React.FC<HealthDashboardProps> = ({ report, isLoading }) 
         </Card>
       </div>
 
-      {/* Suggestions */}
-      {suggestions.length > 0 && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Info className="h-4 w-4 text-blue-500" />
-              {t('suggestions')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-2">
-              {suggestions.map((suggestion, index) => (
-                <li key={index} className="text-sm text-gray-600 flex items-start gap-2">
-                  <span className="mt-1">•</span>
-                  <span>{t(suggestion)}</span>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };

@@ -21,6 +21,9 @@ interface PyramidVisualizerProps {
   onSelectionChange: (nodes: Node[]) => void;
 }
 
+const nodeTypes = {};
+const edgeTypes = {};
+
 const PyramidVisualizer: React.FC<PyramidVisualizerProps> = ({
   initialNodes,
   initialEdges,
@@ -61,6 +64,8 @@ const PyramidVisualizer: React.FC<PyramidVisualizerProps> = ({
         onEdgesChange={onEdgesChange}
         onNodeContextMenu={onNodeContextMenuHandler}
         onSelectionChange={onSelectionChangeHandler}
+        nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         connectionMode={ConnectionMode.Loose}
         fitView
         attributionPosition="bottom-right"

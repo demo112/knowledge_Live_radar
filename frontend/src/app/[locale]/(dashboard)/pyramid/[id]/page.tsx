@@ -175,9 +175,14 @@ export default function PyramidDetailPage({ params }: { params: Promise<{ id: st
               </div>
             )}
 
-            <div className="flex-grow flex flex-row space-x-4 overflow-hidden h-full pb-2">
-              {/* Left: Visualization */}
-              <div className="flex-grow relative border rounded-lg overflow-hidden flex flex-col bg-white shadow-sm min-w-0">
+            <div className="flex-grow flex flex-col space-y-4 overflow-hidden h-full pb-2">
+              {/* Top: Evolution Panel */}
+              <div className="flex-shrink-0 max-h-[300px] overflow-y-auto">
+                <EvolutionPanel pyramidId={pyramidId} onUpdate={fetchData} />
+              </div>
+
+              {/* Middle: Visualization */}
+              <div className="flex-grow relative border rounded-lg overflow-hidden flex flex-col bg-white shadow-sm min-w-0 min-h-[400px]">
                 {visData ? (
                   <PyramidVisualizer
                     initialNodes={visData.nodes}
@@ -223,14 +228,12 @@ export default function PyramidDetailPage({ params }: { params: Promise<{ id: st
                 )}
               </div>
 
-              {/* Right: Sidebar */}
-              <div className="w-96 flex-shrink-0 flex flex-col space-y-4 overflow-y-auto pr-1">
-                <EvolutionPanel pyramidId={pyramidId} onUpdate={fetchData} />
-                
-                {selectedNodes.length === 1 && (
+              {/* Bottom: Node Contents */}
+              {selectedNodes.length === 1 && (
+                <div className="flex-shrink-0 max-h-[300px] overflow-y-auto">
                   <NodeContents nodeId={selectedNodes[0].id} />
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
         ) : (

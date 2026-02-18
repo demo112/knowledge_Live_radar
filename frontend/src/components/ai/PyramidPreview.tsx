@@ -1,9 +1,9 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { ChevronRight, Folder, FileText } from 'lucide-react';
+import { Folder, FileText } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-interface PyramidNodeStructure {
+export interface PyramidNodeStructure {
   name: string;
   description?: string;
   children?: PyramidNodeStructure[];

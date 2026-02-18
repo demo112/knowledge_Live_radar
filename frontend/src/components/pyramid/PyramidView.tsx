@@ -17,6 +17,9 @@ interface PyramidViewProps {
   data: PyramidDetail;
 }
 
+const nodeTypes = {};
+const edgeTypes = {};
+
 const PyramidView: React.FC<PyramidViewProps> = ({ data }) => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -78,6 +81,8 @@ const PyramidView: React.FC<PyramidViewProps> = ({ data }) => {
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
+        nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         fitView
       >
         <Background />

@@ -70,8 +70,9 @@ export default function SourceAddPage() {
       } else {
         throw new Error(data.error?.message || t('alerts.analyze_failed'));
       }
-    } catch (error: any) {
-      toast({ title: t('alerts.analyze_error'), description: error.message, variant: 'destructive' });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      toast({ title: t('alerts.analyze_error'), description: message, variant: 'destructive' });
       setStep('input');
     } finally {
       setIsThinking(false);
@@ -99,8 +100,9 @@ export default function SourceAddPage() {
         toast({ title: t('alerts.success') });
         router.push('/sources');
       }
-    } catch (error: any) {
-      toast({ title: t('alerts.create_error'), description: error.message, variant: 'destructive' });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      toast({ title: t('alerts.create_error'), description: message, variant: 'destructive' });
     }
   };
 

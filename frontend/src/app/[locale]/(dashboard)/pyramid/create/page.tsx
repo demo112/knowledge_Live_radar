@@ -7,10 +7,16 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { AIReasoningDisplay } from '@/components/ai/AIReasoningDisplay';
-import { PyramidPreview } from '@/components/ai/PyramidPreview';
+import { PyramidPreview, PyramidNodeStructure } from '@/components/ai/PyramidPreview';
 import { Loader2, ArrowLeft, Wand2, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
+
+interface Suggestion {
+  suggestion_id: string;
+  reasoning: string;
+  structure: PyramidNodeStructure;
+}
 
 export default function CreatePyramidPage() {
   const t = useTranslations('Pyramid.Create');
@@ -19,7 +25,7 @@ export default function CreatePyramidPage() {
   
   const [step, setStep] = useState<'input' | 'analyzing' | 'review' | 'creating'>('input');
   const [formData, setFormData] = useState({ name: '', description: '' });
-  const [suggestion, setSuggestion] = useState<any>(null);
+  const [suggestion, setSuggestion] = useState<Suggestion | null>(null);
   const [isThinking, setIsThinking] = useState(false);
 
   const handleGenerate = async () => {
@@ -47,8 +53,9 @@ export default function CreatePyramidPage() {
       } else {
         throw new Error(data.error?.message || t('alerts.unknown_error'));
       }
-    } catch (error: any) {
-      toast({ title: t('alerts.generate_error'), description: error.message, variant: 'destructive' });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t('alerts.unknown_error');
+      toast({ title: t('alerts.generate_error'), description: message, variant: 'destructive' });
       setStep('input');
     } finally {
       setIsThinking(false);
@@ -78,8 +85,9 @@ export default function CreatePyramidPage() {
       } else {
         throw new Error(data.error?.message || t('alerts.unknown_error'));
       }
-    } catch (error: any) {
-      toast({ title: t('alerts.create_error'), description: error.message, variant: 'destructive' });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t('alerts.unknown_error');
+      toast({ title: t('alerts.create_error'), description: message, variant: 'destructive' });
       setStep('review');
     }
   };

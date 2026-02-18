@@ -27,7 +27,7 @@ export default function HotspotDistribution({ distribution, hotspots, className 
   const getStatusLabel = (status: string) => {
     try {
       return t(`status.${status}`);
-    } catch (e) {
+    } catch {
       return status;
     }
   };

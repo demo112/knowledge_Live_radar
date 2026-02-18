@@ -145,7 +145,7 @@ export default function HealthPage() {
                           <div key={idx} className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-100 dark:border-red-900/50">
                               <div className="flex justify-between">
                                   <span className="font-medium text-sm text-red-800 dark:text-red-300">
-                                      [{issue.category}] {issue.type}
+                                      [{t(`categories.${issue.category}`)}] {t(`types.${issue.type}`)}
                                   </span>
                                   <span className="text-xs bg-red-200 dark:bg-red-800 text-red-800 dark:text-red-200 px-1.5 py-0.5 rounded font-medium">
                                       -{issue.severity} {t('points')}

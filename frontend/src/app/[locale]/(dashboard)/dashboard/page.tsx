@@ -106,7 +106,7 @@ export default function DashboardPage() {
             </div>
             <div className="h-80 w-full">
                 {trend && trend.trends.length > 0 ? (
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height="100%" minWidth={100} minHeight={100}>
                         <LineChart data={trend.trends}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
                             <XAxis 
