@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { MergeRequest, SplitRequest, LinkRequest, SynonymCreate } from '../types';
+import { MetricFilters, PaginatedAIMetrics, AIStats } from '../types/ai-monitor';
 
 const isServer = typeof window === 'undefined';
 // Server-side calls should go directly to the backend
@@ -62,6 +63,22 @@ export const pyramidApi = {
   },
   getHealth: async (pyramidId: string) => {
     const response = await api.get(`/pyramids/${pyramidId}/health`);
+    return response.data;
+  },
+  analyze: async (pyramidId: string, mode: 'health' | 'structure' | 'all' = 'health') => {
+    const response = await api.post(`/pyramids/${pyramidId}/analyze`, null, { params: { mode } });
+    return response.data;
+  },
+  getSuggestions: async (pyramidId: string) => {
+    const response = await api.get(`/pyramids/${pyramidId}/suggestions`);
+    return response.data;
+  },
+  applySuggestion: async (pyramidId: string, suggestionId: string) => {
+    const response = await api.post(`/pyramids/${pyramidId}/suggestions/${suggestionId}/apply`);
+    return response.data;
+  },
+  rejectSuggestion: async (pyramidId: string, suggestionId: string, reason?: string) => {
+    const response = await api.post(`/pyramids/${pyramidId}/suggestions/${suggestionId}/reject`, { reason });
     return response.data;
   },
   getVisualization: async (pyramidId: string) => {
@@ -439,6 +456,25 @@ export const configApi = {
   }
 };
 
+export const suggestionApi = {
+  getAll: async (params?: { pyramid_id?: string; source_id?: string; status?: string }) => {
+    const response = await api.get('/suggestions', { params });
+    return response.data;
+  },
+  approve: async (id: string) => {
+    const response = await api.post(`/suggestions/${id}/approve`);
+    return response.data;
+  },
+  reject: async (id: string, reason?: string) => {
+    const response = await api.post(`/suggestions/${id}/reject`, null, { params: { reason } });
+    return response.data;
+  },
+  execute: async (id: string) => {
+    const response = await api.post(`/suggestions/${id}/execute`);
+    return response.data;
+  }
+};
+
 export const contentManagementApi = {
   batchClean: async (dryRun: boolean = false, chineseRatioThreshold: number = 0.2) => {
     const response = await api.post('/contents/batch/clean', { 
@@ -456,6 +492,22 @@ export const contentManagementApi = {
   },
   batchDelete: async (ids: string[]) => {
     const response = await api.post('/contents/batch/delete', { ids });
+    return response.data;
+  }
+};
+
+export const aiMonitorApi = {
+  getMetrics: async (params: MetricFilters) => {
+    const response = await api.get<PaginatedAIMetrics>('/ai-monitor/metrics', { params });
+    return response.data;
+  },
+  getStats: async (start_time?: string, end_time?: string) => {
+    const params = { start_time, end_time };
+    const response = await api.get<AIStats>('/ai-monitor/stats', { params });
+    return response.data;
+  },
+  cleanMetrics: async (days: number) => {
+    const response = await api.post('/ai-monitor/clean', { days });
     return response.data;
   }
 };

@@ -12,12 +12,14 @@ import {
   History,
   Repeat,
   Settings,
-  Wrench
+  Wrench,
+  Cpu
 } from 'lucide-react';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 const NAV_ITEMS = [
   { href: '/dashboard', labelKey: 'dashboard', icon: LayoutDashboard },
+  { href: '/ai-monitor', labelKey: 'aiMonitor', icon: Cpu },
   { href: '/pyramid', labelKey: 'pyramid', icon: Layers },
   { href: '/sources', labelKey: 'sources', icon: Globe },
   { href: '/contents', labelKey: 'contents', icon: FileText },

@@ -8,7 +8,7 @@ from app.routers import (
     input, whitelist, dashboard, health,
     hotspots, drift, strategy, scheduler, config, evolution,
     contributions, synonyms, classification, notifications,
-    content_management
+    content_management, suggestions, ai_monitor
 )
 
 # Configure Logging
@@ -22,7 +22,7 @@ from app.services.scheduler.scheduler_service import scheduler_service
 from app.services.scheduler.crawl_manager import crawl_manager
 from app.services.scheduler import tasks
 from app.services.scheduler.task_registry import TaskRegistry
-from app.services.prompt_loader import prompt_loader
+from app.services.prompt_loader import prompt_loader_service
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -41,7 +41,7 @@ async def lifespan(app: FastAPI):
     await crawl_manager.start()
     
     # Load AI Prompts
-    await prompt_loader.load_initial_prompts()
+    await prompt_loader_service.load_initial_prompts()
     
     # Register Scheduled Tasks (Create in DB if not exist)
     # 1. Content Crawl (Every 30 mins)
@@ -132,6 +132,8 @@ app.include_router(classification.router, prefix=settings.API_V1_STR)
 app.include_router(notifications.router, prefix=settings.API_V1_STR)
 app.include_router(content_management.router, prefix=settings.API_V1_STR)
 app.include_router(content_management.metabolism_router, prefix=settings.API_V1_STR)
+app.include_router(suggestions.router, prefix=settings.API_V1_STR)
+app.include_router(ai_monitor.router, prefix=settings.API_V1_STR)
 
 @app.get("/")
 async def root():
