@@ -18,7 +18,7 @@ const ParamsPreview = ({ suggestion }: { suggestion: AISuggestion }) => {
     return (
       <div className="mt-2 p-3 bg-blue-50 border border-blue-100 rounded text-sm text-blue-900">
         <span className="font-semibold block mb-1">💡 预生成描述:</span>
-        {params.description}
+        {String(params.description)}
       </div>
     );
   }
@@ -27,8 +27,8 @@ const ParamsPreview = ({ suggestion }: { suggestion: AISuggestion }) => {
     return (
       <div className="mt-2 p-3 bg-green-50 border border-green-100 rounded text-sm text-green-900">
         <div className="font-semibold mb-1">📡 将添加信息源:</div>
-        <div>名称: {params.name}</div>
-        {params.description && <div>描述: {params.description}</div>}
+        <div>名称: {String(params.name)}</div>
+        {params.description ? <div>描述: {String(params.description)}</div> : null}
         <div className="text-gray-500 italic mt-1 text-xs">⚠️ URL 待配置</div>
       </div>
     );
