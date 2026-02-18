@@ -10,6 +10,7 @@ from app.services.visualization_service import VisualizationService
 from app.schemas.pyramid import PyramidCreate, PyramidUpdate, PyramidResponse, PyramidDetailResponse, PyramidNodeCreate, PyramidNodeResponse, NodeMergeRequest
 from app.schemas.common import SuccessResponse, PaginatedResponse, PaginatedData
 from app.schemas.snapshot import SnapshotSummaryResponse, SnapshotResponse, SnapshotCreateRequest
+from app.schemas.suggestion import SuggestionResponse, SuggestionRejectRequest
 
 router = APIRouter(prefix="/pyramids", tags=["pyramids"])
 
@@ -246,6 +247,65 @@ async def get_pyramid_health(
     evaluator: HealthEvaluator = Depends(get_health_evaluator)
 ):
     result = await evaluator.evaluate_pyramid(id)
+    return SuccessResponse(data=result)
+
+@router.post("/{id}/analyze", response_model=SuccessResponse[dict])
+async def analyze_pyramid(
+    id: UUID,
+    mode: str = "health",
+    service: PyramidService = Depends(get_service),
+    evaluator: HealthEvaluator = Depends(get_health_evaluator)
+):
+    """
+    Trigger AI analysis for pyramid.
+    
+    Args:
+        mode: Analysis mode. "health" (default), "structure", or "all".
+    """
+    result = {}
+    
+    if mode in ["health", "all"]:
+        result["health"] = await evaluator.analyze_with_ai(id)
+        
+    if mode in ["structure", "all"]:
+        suggestions = await service.analyze_structure(id)
+        # Return summary of generated suggestions
+        result["structure"] = {
+            "generated_count": len(suggestions),
+            "suggestion_ids": [s.id for s in suggestions] if suggestions else []
+        }
+        
+    return SuccessResponse(data=result)
+
+@router.get("/{id}/suggestions", response_model=SuccessResponse[List[SuggestionResponse]])
+async def get_suggestions(
+    id: UUID,
+    service: PyramidService = Depends(get_service)
+):
+    """Get pending optimization suggestions"""
+    suggestions = await service.get_optimization_suggestions(id)
+    return SuccessResponse(data=suggestions)
+
+@router.post("/{id}/suggestions/{suggestion_id}/apply", response_model=SuccessResponse[dict])
+async def apply_suggestion(
+    id: UUID,
+    suggestion_id: UUID,
+    service: PyramidService = Depends(get_service)
+):
+    """Apply an optimization suggestion"""
+    # Verify pyramid ownership logic could be added here if needed
+    result = await service.apply_suggestion(suggestion_id)
+    return SuccessResponse(data=result)
+
+@router.post("/{id}/suggestions/{suggestion_id}/reject", response_model=SuccessResponse[dict])
+async def reject_suggestion(
+    id: UUID,
+    suggestion_id: UUID,
+    request: SuggestionRejectRequest,
+    service: PyramidService = Depends(get_service)
+):
+    """Reject an optimization suggestion"""
+    result = await service.reject_suggestion(suggestion_id, request.reason)
     return SuccessResponse(data=result)
 
 @router.get("/{id}/visualization", response_model=SuccessResponse[dict])

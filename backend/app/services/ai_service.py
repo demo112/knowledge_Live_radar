@@ -1,3 +1,32 @@
+"""
+⚠️ 已废弃 - DEPRECATED
+
+此模块已废弃，请使用新架构 `app.core.ai`。
+
+废弃时间: 2026-02-18
+替代方案:
+- 底层调用: from app.core.ai.client import ai_client
+- 高级操作: from app.core.ai.facade import ai_facade
+
+迁移指南:
+- ai_service.chat_completion() → ai_client.chat_completion()
+- ai_service.validate_content_soft() → ai_facade.validate_content_soft()
+- ai_service.generate_summary() → ai_facade.generate_summary()
+- ai_service.extract_concepts() → ai_facade.extract_concepts()
+- ai_service.generate_tags() → ai_facade.generate_tags()
+- ai_service._parse_json() → ai_client.parse_json()
+
+此文件将在未来版本中移除。
+"""
+
+import warnings
+
+warnings.warn(
+    "app.services.ai_service 已废弃，请使用 app.core.ai.client 或 app.core.ai.facade",
+    DeprecationWarning,
+    stacklevel=2
+)
+
 from openai import AsyncOpenAI
 from app.services.config.configuration_service import configuration_service
 import logging
@@ -13,13 +42,12 @@ class AIService:
     def __init__(self):
         self._cloud_client = None
         self._local_client = None
-        self._local_semaphore = asyncio.Semaphore(1)  # Limit local concurrency
+        self._local_semaphore = asyncio.Semaphore(1)
         self._last_config = {}
         self._initialize_clients()
         self.prompt_manager = PromptManager()
 
     def _initialize_clients(self):
-        # Fetch current config
         cloud_enabled = configuration_service.get("ai.enabled")
         cloud_api_key = configuration_service.get("ai.api_key")
         cloud_base_url = configuration_service.get("ai.base_url")
@@ -37,13 +65,11 @@ class AIService:
             "local_timeout": local_timeout
         }
 
-        # Only re-initialize if config changed
         if current_config == self._last_config and (self._cloud_client or self._local_client):
             return
 
         self._last_config = current_config
         
-        # Initialize Cloud Client
         if cloud_enabled and cloud_api_key:
             try:
                 self._cloud_client = AsyncOpenAI(
@@ -58,13 +84,12 @@ class AIService:
             if cloud_enabled:
                  logger.warning("Cloud AI enabled but API Key not set.")
 
-        # Initialize Local Client
         if local_enabled:
             try:
                 self._local_client = AsyncOpenAI(
-                    api_key="ollama", # Ollama doesn't strictly need a key
+                    api_key="ollama",
                     base_url=local_base_url,
-                    timeout=local_timeout # Set global timeout for local client
+                    timeout=local_timeout
                 )
             except Exception as e:
                 logger.error(f"Failed to initialize Local AI client: {e}")
@@ -74,19 +99,14 @@ class AIService:
 
     @property
     def client(self):
-        # Backward compatibility property
         self._initialize_clients()
         return self._cloud_client if self._cloud_client else self._local_client
 
     async def chat_completion(self, messages: List[Dict[str, Any]], model: Optional[str] = None, temperature: Optional[float] = None, max_retries: Optional[int] = None) -> Optional[str]:
-        """
-        Send a chat completion request with strategy-based routing and fallback.
-        """
         self._initialize_clients()
         
         strategy = configuration_service.get("ai.strategy", "local_first")
         
-        # Defaults
         temperature = temperature if temperature is not None else configuration_service.get("ai.temperature")
         max_retries = max_retries if max_retries is not None else configuration_service.get("ai.max_retries")
 
@@ -94,13 +114,11 @@ class AIService:
             return await self._call_cloud(messages, model, temperature, max_retries)
         elif strategy == "local_only":
             return await self._call_local(messages, model, temperature, max_retries)
-        else: # local_first
+        else:
             try:
-                # Try local first
                 result = await self._call_local(messages, model, temperature, max_retries)
                 if result:
                     return result
-                # If result is None (handled error inside _call_local but returned None), fallback
                 logger.warning("Local LLM returned None, falling back to Cloud...")
                 return await self._call_cloud(messages, model, temperature, max_retries)
             except Exception as e:
@@ -111,13 +129,10 @@ class AIService:
         if not self._local_client:
             if configuration_service.get("ai.strategy") == "local_only":
                 logger.error("Local AI not initialized but strategy is local_only.")
-            # If local_first, returning None triggers fallback in caller if we caught it, 
-            # but raising exception is better for clarity
             raise ValueError("Local client not initialized")
             
         target_model = model or configuration_service.get("ai.local.model")
         
-        # Use semaphore for local concurrency
         async with self._local_semaphore:
             try:
                 logger.info(f"Sending request to Local LLM: {target_model}")
@@ -128,7 +143,6 @@ class AIService:
                 )
                 return response.choices[0].message.content
             except Exception as e:
-                # Re-raise to trigger fallback
                 raise e
 
     async def _call_cloud(self, messages, model, temperature, max_retries):
@@ -165,18 +179,15 @@ class AIService:
         return None
 
     def _parse_json(self, text: str) -> Dict[str, Any]:
-        """Extract and parse JSON from text."""
         try:
             return json.loads(text)
         except json.JSONDecodeError:
-            # Try extracting from code blocks
             match = re.search(r'```json\s*(.*?)\s*```', text, re.DOTALL)
             if match:
                 try:
                     return json.loads(match.group(1))
                 except json.JSONDecodeError:
                     pass
-            # Try finding first { and last }
             start = text.find('{')
             end = text.rfind('}')
             if start != -1 and end != -1:
@@ -189,7 +200,6 @@ class AIService:
             return {}
 
     async def validate_content_soft(self, title: str, content: str) -> Dict[str, Any]:
-        """Soft validation using prompt template."""
         if not (self._cloud_client or self._local_client) and not (configuration_service.get("ai.enabled") or configuration_service.get("ai.local.enabled")):
             return {"score": 100, "reason": "Skipped (AI disabled)"}
 
@@ -217,7 +227,6 @@ class AIService:
         return result
 
     async def generate_summary(self, title: str, content: str) -> Dict[str, Any]:
-        """Generate summary using prompt template."""
         if not (self._cloud_client or self._local_client) and not (configuration_service.get("ai.enabled") or configuration_service.get("ai.local.enabled")):
             return {"summary": "", "key_points": []}
 
@@ -238,14 +247,12 @@ class AIService:
             
         result = self._parse_json(response)
         
-        # Fallback if AI didn't return JSON but plain text
         if not result and response:
             return {"summary": response.strip(), "key_points": []}
             
         return result
 
     async def extract_concepts(self, title: str, content: str) -> List[Dict[str, str]]:
-        """Extract concepts using prompt template."""
         if not (self._cloud_client or self._local_client) and not (configuration_service.get("ai.enabled") or configuration_service.get("ai.local.enabled")):
             return []
 
@@ -265,7 +272,6 @@ class AIService:
         return result.get("concepts", [])
 
     async def generate_tags(self, title: str, content: str) -> List[str]:
-        """Generate tags using prompt template."""
         if not (self._cloud_client or self._local_client) and not (configuration_service.get("ai.enabled") or configuration_service.get("ai.local.enabled")):
             return []
 

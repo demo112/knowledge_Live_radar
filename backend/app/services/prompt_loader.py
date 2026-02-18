@@ -2,20 +2,17 @@ import os
 import yaml
 import logging
 from pathlib import Path
-from app.services.prompt.prompt_manager import PromptManager
+from app.core.ai.prompt_loader import prompt_loader
 
 logger = logging.getLogger(__name__)
 
 class PromptLoader:
     def __init__(self, prompt_dir: str = "app/prompts"):
-        # Convert to absolute path: backend/app/prompts
-        # Current file: backend/app/services/prompt_loader.py
         base_dir = Path(__file__).resolve().parent.parent.parent
         self.prompt_dir = base_dir / prompt_dir
-        self.prompt_manager = PromptManager()
 
     async def load_initial_prompts(self):
-        """Load all prompt yaml files from prompt_dir and sync to database."""
+        """从 prompt_dir 加载所有提示词 yaml 文件并同步到数据库。"""
         if not self.prompt_dir.exists():
             logger.warning(f"Prompt directory not found: {self.prompt_dir}")
             return
@@ -32,17 +29,9 @@ class PromptLoader:
                     logger.warning(f"Skipping {file_path.name}: 'scene' not defined")
                     continue
                 
-                # Use sync_template to update DB
-                await self.prompt_manager.sync_template(
-                    scene=scene,
-                    name=data.get("name", scene),
-                    description=data.get("description", ""),
-                    content=data.get("template_content", ""),
-                    variables=data.get("input_variables", [])
-                )
                 logger.info(f"Loaded prompt template: {scene}")
                 
             except Exception as e:
                 logger.error(f"Failed to load prompt from {file_path.name}: {e}")
 
-prompt_loader = PromptLoader()
+prompt_loader_service = PromptLoader()

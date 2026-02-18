@@ -180,15 +180,12 @@ class TemplateService:
         name = name_override or template_data.get("name", "Imported Pyramid")
         description = template_data.get("description", "")
         
-        # 1. Create Pyramid
         pyramid_schema = PyramidCreate(name=name, description=description)
         pyramid = await self.pyramid_service.create_pyramid(pyramid_schema)
         
-        # 2. Create Nodes Recursively
         nodes = template_data.get("nodes", [])
         await self._create_nodes_recursive(pyramid.id, nodes, None)
         
-        # 3. Reload pyramid with nodes to avoid lazy loading error
         return await self.pyramid_service.get_pyramid_details(pyramid.id)
 
     async def export_template(self, pyramid_id: UUID) -> Dict[str, Any]:

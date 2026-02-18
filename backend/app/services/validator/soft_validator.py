@@ -1,5 +1,6 @@
 from .base import BaseValidator
-from app.services.ai_service import ai_service
+from app.core.ai.facade import ai_facade
+from app.core.ai.client import ai_client
 from typing import Dict, Any, Tuple
 import logging
 
@@ -10,20 +11,15 @@ class SoftValidator(BaseValidator):
         self.criteria = criteria
 
     async def validate(self, content: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
-        if not ai_service.client:
-            logger.warning("AI Service unavailable, skipping soft validation")
-            return True, {"reason": "Skipped (AI unavailable)"}
-
         text = (content.get("content", "") or "")[:3000]
         title = content.get("title", "") or ""
         
         try:
-            result = await ai_service.validate_content_soft(title, text)
+            result = await ai_facade.validate_content_soft(title, text)
             
             score = result.get("score", 0)
             reason = result.get("reason", "")
             
-            # Pass if score >= 60
             is_valid = score >= 60
             
             return is_valid, {

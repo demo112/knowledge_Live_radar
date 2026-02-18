@@ -50,15 +50,24 @@ class ProposalGenerator:
         if match.match_type == MatchType.NEW:
             # Propose creating a new node
             # For now, we don't have a parent, so it might be a root node or require manual placement
+            
+            concept_name = match.details.split("'")[1] if "'" in match.details else "Unknown"
+            
+            reason = await ai_facade.generate_proposal_reason(
+                match_type="NEW",
+                concept_name=concept_name,
+                content_title=content_item.title
+            )
+
             return Approval(
                 type="create_node",
                 status="pending",
                 source_content_id=content_item.id,
                 generated_by="ai",
                 confidence_score=confidence,
-                reason=f"New concept extracted from content: {match.details}",
+                reason=reason,
                 data={
-                    "name": match.details.split("'")[1] if "'" in match.details else "Unknown", # Hacky extraction from details string, improve later by passing Concept object
+                    "name": concept_name,
                     "pyramid_id": str(pyramid_id),
                     "description": "Extracted from content", # We should pass concept description here
                     "parent_id": None 
@@ -70,7 +79,27 @@ class ProposalGenerator:
             if not match.node_id:
                 logger.warning(f"Match type {match.match_type} but no node_id provided")
                 return None
-                
+            
+            # Need to fetch node name for reason generation
+            # Since we don't have it easily here, we can query it or pass it if possible.
+            # But creating a query here might be slow.
+            # Let's assume match.details contains it or we skip node name in reason call if not critical.
+            # match.details: "Exact match with node '{node.name}'"
+            node_name = "Unknown"
+            if "'" in match.details:
+                node_name = match.details.split("'")[-2]
+
+            reason = await ai_facade.generate_proposal_reason(
+                match_type=match.match_type.value,
+                concept_name=content_item.title, # Using title as concept proxy? Or concept.name if available?
+                # match doesn't have concept name directly accessible easily without passing Concept object.
+                # But ProposalGenerator.generate_proposals_from_matches is called with match list.
+                # Concept object is not passed to create_proposal_for_match.
+                # I will use content_item.title as context.
+                content_title=content_item.title,
+                node_name=node_name
+            )
+
             return Approval(
                 type="link_content",
                 status="pending",
@@ -78,7 +107,7 @@ class ProposalGenerator:
                 target_id=match.node_id,
                 generated_by="ai",
                 confidence_score=confidence,
-                reason=f"Content matches existing node: {match.details}",
+                reason=reason,
                 data={
                     "node_id": str(match.node_id),
                     "content_id": str(content_item.id)

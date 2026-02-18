@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.services.crawl_engine import crawl_engine
 from app.services.validator import HardValidator, SoftValidator, CrossValidator
-from app.services.ai_service import ai_service
+from app.core.ai.facade import ai_facade
 from app.services.evolution_engine import EvolutionEngine
 from app.services.source_lifecycle_manager import SourceLifecycleManager
 from app.models.source import InformationSource
@@ -18,10 +18,6 @@ logger = logging.getLogger(__name__)
 
 class ContentProcessor:
     async def process_source(self, source: InformationSource, session: AsyncSession, job: CrawlJob = None) -> CrawlJob:
-        """
-        Process a source: fetch, validate, save.
-        """
-        # Create job record if not provided
         if not job:
             job = CrawlJob(
                 source_id=source.id, 
@@ -32,7 +28,6 @@ class ContentProcessor:
             await session.commit()
             await session.refresh(job)
         else:
-            # Ensure job is attached to session and running
             job = await session.merge(job)
             job.status = "RUNNING"
             job.started_at = datetime.now(timezone.utc)
@@ -41,11 +36,9 @@ class ContentProcessor:
         lifecycle_manager = SourceLifecycleManager(session)
         
         try:
-            # 1. Fetch
             items = await crawl_engine.crawl_source(source)
             job.items_fetched = len(items)
             
-            # Initialize validators
             hard_validator = HardValidator(db=session)
             soft_validator = SoftValidator()
             cross_validator = CrossValidator(session)
@@ -57,37 +50,29 @@ class ContentProcessor:
             classified_items_count = 0
             
             for item_data in items:
-                # 2. Validation
-                
-                # Cross Validation (Deduplication)
                 is_unique, cross_details = await cross_validator.validate(item_data)
                 if not is_unique:
                     duplicate_count += 1
                     continue
                 
-                # Hard Validation
                 is_valid_hard, hard_details = await hard_validator.validate(item_data)
                 if not is_valid_hard:
                     failed_count += 1
-                    # Maybe save as REJECTED content? For now just skip.
                     continue
                     
-                # Soft Validation (AI)
                 is_valid_soft, soft_details = await soft_validator.validate(item_data)
                 if not is_valid_soft:
                     failed_count += 1
                     continue
                 
-                # 3. AI Enhancement
                 title = item_data.get("title", "")
                 text = item_data.get("content", "")[:3000]
                 
-                ai_summary_data = await ai_service.generate_summary(title, text)
+                ai_summary_data = await ai_facade.generate_summary(title, text)
                 summary = ai_summary_data.get("summary", "")
-                ai_tags = await ai_service.generate_tags(title, text)
-                ai_concepts = await ai_service.extract_concepts(title, text)
+                ai_tags = await ai_facade.generate_tags(title, text)
+                ai_concepts = await ai_facade.extract_concepts(title, text)
                 
-                # 3. Save
                 content = ContentItem(
                     source_id=source.id,
                     url=item_data.get("url"),
@@ -101,9 +86,8 @@ class ContentProcessor:
                     ai_processed=bool(summary)
                 )
                 session.add(content)
-                await session.flush() # Get ID
+                await session.flush()
                 
-                # Save validation result
                 val_result = ValidationResult(
                     content_id=content.id,
                     hard_result=hard_details,
@@ -113,10 +97,8 @@ class ContentProcessor:
                 )
                 session.add(val_result)
                 
-                # 4. Auto Discovery (Extract links)
                 await auto_discovery.process_content_links(content.content_text, session)
                 
-                # 5. Auto Classification (Evolution)
                 try:
                     linked_count = await evolution_engine.auto_classify_content(content)
                     if linked_count > 0:
@@ -133,7 +115,6 @@ class ContentProcessor:
             job.status = "COMPLETED"
             job.ended_at = datetime.now(timezone.utc)
             
-            # Notify lifecycle manager of success
             await lifecycle_manager.on_crawl_success(str(source.id))
             
             await session.commit()
@@ -145,7 +126,6 @@ class ContentProcessor:
             job.error_message = str(e)
             job.ended_at = datetime.now(timezone.utc)
             
-            # Notify lifecycle manager of rate limit
             await lifecycle_manager.on_rate_limit(str(source.id))
             
             await session.commit()
@@ -156,7 +136,6 @@ class ContentProcessor:
             job.error_message = str(e)
             job.ended_at = datetime.now(timezone.utc)
             
-            # Notify lifecycle manager of failure
             await lifecycle_manager.on_crawl_failure(str(source.id), str(e))
             
             await session.commit()

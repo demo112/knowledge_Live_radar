@@ -7,7 +7,7 @@ from pypdf import PdfReader
 import docx
 import markdown
 from bs4 import BeautifulSoup
-from app.services.ai_service import AIService
+from app.core.ai.client import ai_client
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +49,6 @@ class InputParser:
         try:
             content = await file.read()
             text = content.decode("utf-8")
-            # Convert MD to HTML then to text to strip tags
             html = markdown.markdown(text)
             soup = BeautifulSoup(html, "html.parser")
             return soup.get_text()
@@ -76,7 +75,6 @@ class InputParser:
             content = await file.read()
             base64_image = base64.b64encode(content).decode('utf-8')
             
-            # Determine mime type
             mime_type = "image/jpeg"
             if file.content_type:
                 mime_type = file.content_type
@@ -89,11 +87,6 @@ class InputParser:
                 elif ext == 'webp':
                     mime_type = "image/webp"
             
-            ai_service = AIService()
-            if not ai_service.client:
-                logger.warning("AI Service not enabled, cannot perform OCR")
-                return "[OCR Unavailable: AI Service disabled]"
-                
             prompt = "请提取这张图片中的所有文字内容。直接输出文字，不要包含任何解释或Markdown格式。"
             
             messages = [
@@ -111,7 +104,7 @@ class InputParser:
                 }
             ]
             
-            result = await ai_service.chat_completion(messages)
+            result = await ai_client.chat_completion(messages)
             return result if result else "[OCR Failed: No response from AI]"
             
         except Exception as e:

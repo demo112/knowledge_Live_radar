@@ -40,6 +40,10 @@ class Settings(BaseSettings):
     HOTSPOT_TRENDING_GROWTH: float = 20.0
     HOTSPOT_CLUSTER_THRESHOLD: int = 3
 
+    # Firecrawl
+    FIRECRAWL_API_URL: str = "http://localhost:3002"
+    FIRECRAWL_API_KEY: Optional[str] = None
+
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
 settings = Settings()

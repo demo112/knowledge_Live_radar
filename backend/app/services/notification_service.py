@@ -147,5 +147,41 @@ class NotificationService:
             source_type="ai_service",
         )
 
+    async def notify_suggestion_status_change(
+        self, suggestion, old_status: str, new_status: str
+    ):
+        action_type_display = {
+            "create_node": "创建节点",
+            "delete_node": "删除节点",
+            "update_node": "更新节点",
+            "split_node": "拆分节点",
+            "merge_node": "合并节点",
+            "link_content": "关联内容",
+            "update_strategy": "更新策略",
+            "archive_content": "归档内容",
+        }.get(suggestion.action_type, suggestion.action_type)
+
+        status_display = {
+            "pending": "待审批",
+            "approved": "已审批",
+            "rejected": "已拒绝",
+            "executed": "已执行",
+        }
+
+        title = f"AI建议状态变更: {status_display.get(old_status, old_status)} → {status_display.get(new_status, new_status)}"
+        message = (
+            f"AI建议 ({action_type_display}) "
+            f"状态从 {status_display.get(old_status, old_status)} 变更为 {status_display.get(new_status, new_status)}。"
+            f"原因: {suggestion.reason or '无'}"
+        )
+        level = "info" if new_status == "executed" else "warning"
+        await self.send(
+            title=title,
+            message=message,
+            level=level,
+            source_type="ai_suggestion",
+            source_id=str(suggestion.id),
+        )
+
 
 notification_service = NotificationService()

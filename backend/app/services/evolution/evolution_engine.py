@@ -9,9 +9,8 @@ from app.models.health_report import HealthReportType
 from app.models.pyramid import Pyramid
 from app.services.evolution.health_detector import HealthDetector
 from app.services.evolution.strategy_adapter import StrategyAdapter
-from app.services.evolution.restructure_advisor import RestructureAdvisor
-from app.services.evolution.drift_detector import DriftDetector
 from app.services.evolution.hotspot_manager import HotspotManager
+from app.services.pyramid_service import PyramidService
 
 logger = logging.getLogger(__name__)
 
@@ -69,20 +68,19 @@ class EvolutionEngine:
                 pyramids_result = await db.execute(select(Pyramid))
                 pyramids = pyramids_result.scalars().all()
                 
-                restructure = RestructureAdvisor(db)
-                drift = DriftDetector(db)
+                pyramid_service = PyramidService(db)
                 
                 total_structure_proposals = 0
                 total_drift_proposals = 0
                 
                 for pyramid in pyramids:
                     try:
-                        # Structure Analysis
-                        s_proposals = await restructure.analyze_and_propose(pyramid.id)
+                        # Structure Analysis via PyramidService
+                        s_proposals = await pyramid_service.analyze_structure(pyramid.id)
                         total_structure_proposals += len(s_proposals)
                         
-                        # Drift Analysis
-                        d_proposals = await drift.detect_drift(pyramid.id)
+                        # Drift Analysis via PyramidService
+                        d_proposals = await pyramid_service.detect_drift(pyramid.id)
                         total_drift_proposals += len(d_proposals)
                         
                     except Exception as p_exc:

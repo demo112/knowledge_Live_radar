@@ -1,174 +1,145 @@
 import uuid
 import logging
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.models.pyramid import PyramidNode
-from app.models.approval import Approval
+from app.models.ai_suggestion import AISuggestion
+from app.core.ai.facade import ai_facade
 
 logger = logging.getLogger(__name__)
 
+
 class RestructureAdvisor:
     """
-    Analyzes pyramid structure and suggests refactoring actions.
-    """
+    金字塔结构分析与重构建议生成器。
     
-    # Thresholds
-    MAX_CHILDREN = 10
-    MAX_DEPTH = 5
-    MIN_CHILDREN = 2 
+    通过 AI 分析金字塔健康状态，生成结构优化建议。
+    阈值作为上下文参考传递给 AI，由 AI 综合判断是否需要调整。
+    """
     
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def analyze_and_propose(self, pyramid_id: uuid.UUID) -> List[Approval]:
+    async def analyze_and_propose(self, pyramid_id: uuid.UUID) -> List[AISuggestion]:
         """
-        Analyze the pyramid structure and generate restructuring proposals.
+        分析金字塔结构并生成重构提案。
+        
+        Args:
+            pyramid_id: 金字塔 ID
+            
+        Returns:
+            生成的 AI 建议列表
         """
-        logger.info(f"Starting structure analysis for pyramid {pyramid_id}")
+        logger.info(f"开始分析金字塔结构: {pyramid_id}")
         
-        proposals = []
+        result = await ai_facade.analyze_pyramid_health(str(pyramid_id), self.db)
         
-        # 1. Fetch all nodes for the pyramid
-        nodes = await self._fetch_nodes(pyramid_id)
-        if not nodes:
-            logger.warning(f"No nodes found for pyramid {pyramid_id}")
+        if result.get("error"):
+            logger.error(f"AI 分析失败: {result['error']}")
             return []
-            
-        # 2. Build tree structure in memory for analysis
-        node_map = {n.id: n for n in nodes}
-        children_map: Dict[uuid.UUID, List[PyramidNode]] = {n.id: [] for n in nodes}
         
-        # Root nodes (parent_id is None) are handled implicitly as they won't appear in children lists of others
-        for n in nodes:
-            if n.parent_id and n.parent_id in children_map:
-                children_map[n.parent_id].append(n)
-                
-        # 3. Analyze for issues
+        suggestions = result.get("suggestions", [])
+        if not suggestions:
+            logger.info(f"金字塔 {pyramid_id} 无需结构调整")
+            return []
         
-        # Check for Overloaded Nodes (Too many children)
-        for node in nodes:
-            children_count = len(children_map[node.id])
-            if children_count > self.MAX_CHILDREN:
-                proposals.append(self._create_split_proposal(node, children_count))
-                
-        # Check for Deep Hierarchy
-        for node in nodes:
-            if node.level > self.MAX_DEPTH:
-                proposals.append(self._create_flatten_proposal(node))
-
-        # Check for Sparse Nodes (Too few children, not leaf)
-        # We only check nodes that HAVE children but very few. 
-        # Leaf nodes (0 children) are normal.
-        for node in nodes:
-            children_count = len(children_map[node.id])
-            if 0 < children_count < self.MIN_CHILDREN:
-                 proposals.append(self._create_merge_proposal(node, children_count))
-
-        # 4. Save proposals
-        # First, check if similar pending proposals already exist to avoid duplicates
-        existing_proposals = await self._fetch_pending_structure_proposals(pyramid_id)
-        existing_keys = set((p.type, p.target_id) for p in existing_proposals)
+        existing_suggestions = await self._fetch_pending_structure_suggestions(pyramid_id)
+        existing_keys = set((s.action_type, s.target_id) for s in existing_suggestions)
         
-        saved_proposals = []
-        for p in proposals:
-            if (p.type, p.target_id) not in existing_keys:
-                self.db.add(p)
-                saved_proposals.append(p)
-            
-        if saved_proposals:
+        saved_suggestions = []
+        for suggestion in suggestions:
+            ai_suggestion = self._suggestion_to_ai_suggestion(suggestion, pyramid_id)
+            if ai_suggestion and (ai_suggestion.action_type, ai_suggestion.target_id) not in existing_keys:
+                self.db.add(ai_suggestion)
+                saved_suggestions.append(ai_suggestion)
+        
+        if saved_suggestions:
             await self.db.commit()
-            for p in saved_proposals:
-                await self.db.refresh(p)
-            logger.info(f"Generated {len(saved_proposals)} restructuring proposals")
+            for s in saved_suggestions:
+                await self.db.refresh(s)
+            logger.info(f"生成了 {len(saved_suggestions)} 条重构建议")
         else:
-            logger.info("No new restructuring proposals generated")
+            logger.info("无新增重构建议")
             
-        return saved_proposals
+        return saved_suggestions
 
-    async def _fetch_nodes(self, pyramid_id: uuid.UUID) -> List[PyramidNode]:
-        result = await self.db.execute(
-            select(PyramidNode)
-            .where(PyramidNode.pyramid_id == pyramid_id)
-            .where(PyramidNode.is_deleted == False)
+    async def _fetch_pending_structure_suggestions(self, pyramid_id: uuid.UUID) -> List[AISuggestion]:
+        """获取金字塔的待处理结构建议"""
+        action_types = ["split_node", "move_node", "merge_node", "create_node", "delete_node", "update_node"]
+        
+        # Directly query by pyramid_id if available in AISuggestion (it is)
+        stmt = (
+            select(AISuggestion)
+            .where(AISuggestion.status == "pending")
+            .where(AISuggestion.action_type.in_(action_types))
+            .where(AISuggestion.pyramid_id == pyramid_id)
         )
-        return result.scalars().all()
+        result = await self.db.execute(stmt)
+        return list(result.scalars().all())
 
-    async def _fetch_pending_structure_proposals(self, pyramid_id: uuid.UUID) -> List[Approval]:
-        # Ideally we filter by pyramid_id in JSON data, but for now we'll fetch all pending structure proposals
-        # and filter in memory or assume the number isn't huge.
-        # A better way is to check target_id which maps to node_id, and check that node's pyramid_id.
-        # But for simplicity/speed, let's just fetch pending proposals of structure types.
+    def _suggestion_to_ai_suggestion(self, suggestion: Dict[str, Any], pyramid_id: uuid.UUID) -> Optional[AISuggestion]:
+        """
+        将 AI 建议转换为 AISuggestion 对象。
         
-        types = ["split_node", "move_node", "merge_node"]
-        result = await self.db.execute(
-            select(Approval)
-            .where(Approval.status == "pending")
-            .where(Approval.type.in_(types))
-        )
-        all_pending = result.scalars().all()
+        Args:
+            suggestion: AI 返回的建议字典
+            pyramid_id: 金字塔 ID
+            
+        Returns:
+            AISuggestion 对象，如果转换失败则返回 None
+        """
+        action_type = suggestion.get("action_type", "")
+        target_id_str = suggestion.get("target_id")
         
-        # Filter strictly for this pyramid if needed. 
-        # Since target_id is the node_id, we can verify if the node belongs to this pyramid.
-        # But we already fetched nodes.
+        if not target_id_str:
+            # Some actions like create_node might not have target_id yet if it's new
+            # But usually they refer to parent_id or something.
+            # Let's assume target_id is required for existing nodes.
+            if action_type != "create_node":
+                logger.warning(f"建议缺少 target_id: {suggestion}")
+                return None
         
-        # Optimization: We know the nodes belonging to this pyramid.
-        # So we can just check if target_id is in our list of node IDs.
-        node_ids = (await self.db.execute(
-            select(PyramidNode.id)
-            .where(PyramidNode.pyramid_id == pyramid_id)
-        )).scalars().all()
-        node_id_set = set(node_ids)
+        target_id = None
+        if target_id_str:
+            try:
+                target_id = uuid.UUID(target_id_str)
+            except ValueError:
+                logger.warning(f"无效的 target_id: {target_id_str}")
+                return None
         
-        return [p for p in all_pending if p.target_id in node_id_set]
-
-    def _create_split_proposal(self, node: PyramidNode, count: int) -> Approval:
-        return Approval(
-            type="split_node",
+        type_mapping = {
+            "split_node": "split_node",
+            "merge_node": "merge_node",
+            "move_node": "move_node",
+            "update_node": "update_node",
+            "create_node": "create_node",
+            "delete_node": "delete_node",
+        }
+        
+        mapped_action_type = type_mapping.get(action_type, action_type)
+        
+        # Ensure params is a dict
+        params = suggestion.get("params", {})
+        if not isinstance(params, dict):
+            params = {}
+            
+        # Inject pyramid_id into params if not present
+        if "pyramid_id" not in params:
+            params["pyramid_id"] = str(pyramid_id)
+            
+        return AISuggestion(
+            type="structure_optimization",
+            action_type=mapped_action_type,
+            target_type="pyramid_node",
+            target_id=target_id,
+            target_name=suggestion.get("target_name"),
+            pyramid_id=pyramid_id,
             status="pending",
-            target_id=node.id,
-            generated_by="ai",
-            confidence_score=0.8,
-            reason=f"Node '{node.name}' has too many children ({count} > {self.MAX_CHILDREN}). Suggest splitting into sub-categories.",
-            data={
-                "node_id": str(node.id),
-                "node_name": node.name,
-                "pyramid_id": str(node.pyramid_id),
-                "current_children_count": count,
-                "suggested_action": "group_children_by_topic"
-            }
-        )
-
-    def _create_flatten_proposal(self, node: PyramidNode) -> Approval:
-        return Approval(
-            type="move_node",
-            status="pending",
-            target_id=node.id,
-            generated_by="ai",
-            confidence_score=0.7,
-            reason=f"Node '{node.name}' is too deep (level {node.level} > {self.MAX_DEPTH}). Suggest moving up.",
-            data={
-                "node_id": str(node.id),
-                "node_name": node.name,
-                "pyramid_id": str(node.pyramid_id),
-                "current_level": node.level,
-                "suggested_parent_level": node.level - 2
-            }
-        )
-        
-    def _create_merge_proposal(self, node: PyramidNode, count: int) -> Approval:
-        return Approval(
-            type="merge_node",
-            status="pending",
-            target_id=node.id,
-            generated_by="ai",
-            confidence_score=0.6,
-            reason=f"Node '{node.name}' has too few children ({count} < {self.MIN_CHILDREN}). Suggest merging with siblings.",
-            data={
-                "node_id": str(node.id),
-                "node_name": node.name,
-                "pyramid_id": str(node.pyramid_id),
-                "current_children_count": count
-            }
+            confidence=suggestion.get("confidence", 0.7),
+            reason=suggestion.get("reason", ""),
+            params=params,
+            data=suggestion,  # Store full raw suggestion in data
+            input_hash=str(uuid.uuid4())[:8] # Simple hash for now
         )

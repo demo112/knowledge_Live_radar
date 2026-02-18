@@ -1,6 +1,7 @@
 import logging
 import re
 from typing import List, Dict, Any
+from urllib.parse import quote
 from .rss import RSSFetcher
 
 logger = logging.getLogger(__name__)
@@ -13,7 +14,9 @@ class RSSHubFetcher(RSSFetcher):
 
     def _get_rsshub_path(self, url: str) -> str:
         if self.source_type == "WECHAT_MP":
-            return f"/wechat/gzh/{url}"
+            # Encode the nickname for URL (handling Chinese characters)
+            encoded_url = quote(url)
+            return f"/wechat/gzh/{encoded_url}"
         elif self.source_type == "BILIBILI_USER":
             user_id = self._extract_bilibili_id(url)
             return f"/bilibili/user/video/{user_id}"

@@ -1,3 +1,27 @@
+"""
+⚠️ 已废弃 - DEPRECATED
+
+此模块已废弃，请使用新架构 `app.core.ai.prompt_loader`。
+
+废弃时间: 2026-02-18
+替代方案:
+- from app.core.ai.prompt_loader import prompt_loader
+
+迁移指南:
+- PromptManager.get_prompt_for_scene() → prompt_loader.render_prompt()
+- PromptManager.sync_template() → 直接使用 prompt_loader（新架构使用文件系统而非数据库）
+
+此文件将在未来版本中移除。
+"""
+
+import warnings
+
+warnings.warn(
+    "app.services.prompt.prompt_manager 已废弃，请使用 app.core.ai.prompt_loader",
+    DeprecationWarning,
+    stacklevel=2
+)
+
 import logging
 import uuid
 from typing import List, Optional, Dict, Any
@@ -10,7 +34,6 @@ from app.database import AsyncSessionLocal
 from app.models.prompt_template import PromptTemplate
 from app.models.prompt_version import PromptVersion
 from app.models.ab_test import ABTest
-# from app.services.ai_service import ai_service # Avoid circular import
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +50,6 @@ class PromptManager:
 
     async def create_version(self, template_id: str, content: str, variables: List[str], created_by: str) -> PromptVersion:
         async with AsyncSessionLocal() as session:
-            # Get latest version number
             stmt = select(PromptVersion.version).where(PromptVersion.template_id == template_id).order_by(desc(PromptVersion.version)).limit(1)
             last_version = await session.scalar(stmt) or 0
             
@@ -56,15 +78,11 @@ class PromptManager:
             if not version:
                 raise ValueError("Version not found")
             
-            # Format prompt
-            # Assuming simple f-string format or jinja2
-            # content: "Hello {name}"
             try:
                 formatted_prompt = version.content.format(**test_input)
             except KeyError as e:
                 raise ValueError(f"Missing variable: {e}")
                 
-            # Call AI
             start_time = datetime.now()
             try:
                 from app.services.ai_service import ai_service
@@ -89,13 +107,9 @@ class PromptManager:
             stmt = select(PromptTemplate).where(PromptTemplate.scene == scene)
             template = await session.scalar(stmt)
             if not template or not template.current_version_id:
-                # Fallback or error
                 logger.warning(f"No active template for scene {scene}")
-                return "" # Or raise
+                return ""
             
-            # Check for active A/B test
-            # ...
-            # Get current version content
             current_version = await session.get(PromptVersion, template.current_version_id)
             if not current_version:
                  return ""
@@ -104,12 +118,10 @@ class PromptManager:
                 return current_version.content.format(**variables)
             except KeyError as e:
                 logger.error(f"Missing variable for scene {scene}: {e}")
-                return current_version.content # Return raw content or raise
+                return current_version.content
 
     async def sync_template(self, scene: str, name: str, description: str, content: str, variables: List[str]) -> PromptTemplate:
-        """Sync template from file to database. Create or update if content changed."""
         async with AsyncSessionLocal() as session:
-            # 1. Check template
             stmt = select(PromptTemplate).where(PromptTemplate.scene == scene)
             template = await session.scalar(stmt)
             
@@ -120,24 +132,19 @@ class PromptManager:
                 await session.refresh(template)
                 logger.info(f"Created new prompt template: {scene}")
             else:
-                # Update metadata if changed
                 if template.name != name or template.description != description:
                     template.name = name
                     template.description = description
                     session.add(template)
                     await session.commit()
             
-            # 2. Check version
             need_new_version = True
             if template.current_version_id:
                 current_version = await session.get(PromptVersion, template.current_version_id)
-                # Simple comparison. In production, might want more robust check (e.g. hash)
-                # Note: variables list comparison depends on order, so we sort it
                 if current_version and current_version.content == content and sorted(current_version.variables or []) == sorted(variables):
                     need_new_version = False
             
             if need_new_version:
-                # Calculate version number (integer)
                 stmt = select(PromptVersion.version).where(PromptVersion.template_id == template.id).order_by(desc(PromptVersion.version)).limit(1)
                 last_version = await session.scalar(stmt) or 0
                 
