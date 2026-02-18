@@ -13,15 +13,39 @@
 | Frontend | `ai-radar-web` | 3000 | Next.js 应用 |
 | Backend | `ai-radar-api` | 8000 | FastAPI 应用 |
 | Database | `ai-radar-db` | 5432 | PostgreSQL 15 |
-| Cache | `ai-radar-redis` | 6379 | Redis 7 (可选) |
+| Cache | `ai-radar-redis` | 6379 | Redis 7 (必须，用于 Firecrawl) |
+| Firecrawl API | `firecrawl-api` | 3002 | 网页抓取服务 API (独立部署) |
+| Firecrawl Worker | `firecrawl-worker` | - | 网页抓取任务处理 (独立部署) |
+| Playwright | `playwright-service` | 3000 | 浏览器自动化服务 (独立部署) |
 
 ## 快速启动
 
-1. **克隆代码**
-   ```bash
-   git clone <repo_url>
-   cd ai-radar
-   ```
+### 1. 启动 Firecrawl 服务 (依赖服务)
+
+由于 Firecrawl 需要独立构建，建议优先启动：
+
+```bash
+cd firecrawl
+# 配置环境变量 (首次运行)
+cp .env.example .env
+# 启动服务
+docker compose up -d
+```
+
+验证 Firecrawl 是否就绪：
+```bash
+curl http://localhost:3002/test
+# 应返回 "Hello, world!" 或类似成功信息
+```
+
+### 2. 启动 AI Radar 主应用
+
+回到项目根目录：
+
+```bash
+cd ..
+# 克隆代码 (如果尚未克隆)
+# git clone <repo_url>
 
 2. **配置环境变量**
    复制示例配置并修改：
