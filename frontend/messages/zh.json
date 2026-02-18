@@ -1169,8 +1169,7 @@
       "cluster_discovery": "聚类发现",
       "content_metabolism": "内容代谢"
     }
-  }
-},
+  },
   "Status": {
     "active": "活跃",
     "paused": "暂停",
@@ -1209,100 +1208,6 @@
       "link_content": "关联内容",
       "update_strategy": "更新策略",
       "archive_content": "归档内容"
-    }
-  },
-  "Settings": {
-    "title": "系统配置",
-    "tabs": {
-      "general": "通用配置",
-      "ai": "AI 模型",
-      "history": "变更历史",
-      "tasks": "任务管理"
-    },
-    "loading": "加载配置中...",
-    "save_success": "已更新 {key}",
-    "save_failed": "保存配置失败",
-    "General": {
-      "title": "{group} 配置"
-    },
-    "Tasks": {
-      "title": "后台任务控制",
-      "batch_classify": {
-        "title": "批量自动分类",
-        "description": "对所有未处理的内容（ai_processed=false）触发 AI 自动分类、摘要生成和标签提取。",
-        "button": "立即触发",
-        "processing": "正在启动...",
-        "confirm": "确定要触发全量内容的批量自动分类吗？这可能需要较长时间。",
-        "started": "批量分类任务已启动",
-        "start_failed": "启动失败",
-        "trigger_failed": "触发失败"
-      }
-    },
-    "History": {
-      "columns": {
-        "time": "时间",
-        "config_key": "配置项",
-        "old_value": "旧值",
-        "new_value": "新值",
-        "operator": "操作人"
-      }
-    },
-    "AIConfig": {
-      "title": "AI 模型配置",
-      "enable_ai": "启用 AI 功能",
-      "enable_local": "启用本地模型",
-      "strategy": {
-        "label": "调度策略 (Strategy)",
-        "local_first": {
-          "label": "本地优先 (Local First)",
-          "desc": "优先使用本地，失败时自动降级到云端"
-        },
-        "local_only": {
-          "label": "仅本地 (Local Only)",
-          "desc": "只使用本地模型，不连接外网"
-        },
-        "cloud_only": {
-          "label": "仅云端 (Cloud Only)",
-          "desc": "只使用云端服务"
-        }
-      },
-      "Local": {
-        "title": "🏠 本地模型配置 (Local AI)",
-        "base_url": "本地 Base URL",
-        "model_name": "本地模型名称",
-        "timeout": "超时时间 (秒)",
-        "test_connection": "测试本地连接"
-      },
-      "Cloud": {
-        "title": "☁️ 云端模型配置 (Cloud AI)",
-        "base_url": "Cloud API Base URL",
-        "base_url_hint": "兼容 OpenAI 接口的服务地址",
-        "api_key": "API Key",
-        "api_key_hint": "如显示为 *** 则表示已脱敏，无需修改。留空则禁用 AI。",
-        "model_name": "Cloud Model Name",
-        "test_connection": "测试云端连接"
-      },
-      "Params": {
-        "temperature": "温度 (Temperature)",
-        "temperature_levels": {
-          "precise": "精确 (0.0)",
-          "balanced": "均衡 (1.0)",
-          "creative": "创意 (2.0)"
-        },
-        "max_retries": "最大重试次数"
-      },
-      "Test": {
-        "success": "连接成功",
-        "failed": "连接失败",
-        "latency": "延迟"
-      },
-      "Actions": {
-        "save": "保存配置",
-        "test_current": "测试当前策略连接",
-        "saved": "配置已保存",
-        "save_failed": "保存失败",
-        "test_failed": "连接测试失败: {error}"
-      }
     }
   }
 }
