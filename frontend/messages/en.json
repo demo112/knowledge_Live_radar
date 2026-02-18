@@ -248,6 +248,8 @@
       "update_node": "Update Node",
       "split_node": "Split Node",
       "merge_node": "Merge Node",
+      "move_node": "Move Node",
+      "fix_drift": "Fix Drift",
       "link_content": "Link Content",
       "update_strategy": "Update Strategy",
       "archive_content": "Archive Content"

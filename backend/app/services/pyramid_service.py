@@ -3,14 +3,98 @@ from uuid import UUID
 from typing import List, Optional, Any
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from app.repositories.pyramid import PyramidRepository, PyramidNodeRepository
 from app.schemas.pyramid import PyramidCreate, PyramidUpdate, PyramidNodeCreate, PyramidNodeUpdate, NodeSplitRequest, NodeMergeRequest
+from app.services.evolution.restructure_advisor import RestructureAdvisor
+from app.services.evolution.drift_detector import DriftDetector
+from app.models.ai_suggestion import AISuggestion
+from app.services.suggestion_executor import suggestion_executor
 
 class PyramidService:
     def __init__(self, db: AsyncSession):
         self.pyramid_repo = PyramidRepository(db)
         self.node_repo = PyramidNodeRepository(db)
         self.db = db
+
+    # Evolution Operations
+    async def analyze_structure(self, pyramid_id: UUID) -> List[Any]:
+        """
+        Analyze pyramid structure and generate optimization suggestions.
+        """
+        # Ensure pyramid exists
+        await self.get_pyramid(pyramid_id)
+        
+        advisor = RestructureAdvisor(self.db)
+        return await advisor.analyze_and_propose(pyramid_id)
+
+    async def detect_drift(self, pyramid_id: UUID) -> List[Any]:
+        """
+        Detect concept drift in pyramid nodes.
+        """
+        # Ensure pyramid exists
+        await self.get_pyramid(pyramid_id)
+        
+        detector = DriftDetector(self.db)
+        return await detector.detect_drift(pyramid_id)
+
+    async def get_optimization_suggestions(self, pyramid_id: UUID) -> List[Any]:
+        """
+        Get pending optimization suggestions for the pyramid.
+        """
+        # Ensure pyramid exists
+        await self.get_pyramid(pyramid_id)
+        
+        stmt = select(AISuggestion).where(
+            AISuggestion.pyramid_id == pyramid_id,
+            AISuggestion.status == "pending"
+        ).order_by(AISuggestion.created_at.desc())
+        result = await self.db.execute(stmt)
+        return result.scalars().all()
+
+    async def apply_suggestion(self, suggestion_id: UUID) -> Any:
+        """
+        Apply (execute) an optimization suggestion.
+        Auto-approves the suggestion if it's pending.
+        """
+        executor = suggestion_executor(self.db)
+        
+        # Check suggestion status
+        suggestion = await executor._get_suggestion(str(suggestion_id))
+        if not suggestion:
+            raise HTTPException(status_code=404, detail="Suggestion not found")
+            
+        if suggestion.status == "pending":
+            approve_res = await executor.approve(str(suggestion_id), self.db)
+            if not approve_res["success"]:
+                 raise HTTPException(status_code=400, detail=f"Failed to approve suggestion: {approve_res.get('error')}")
+        
+        # Re-fetch suggestion after approval because SQLAlchemy object might be detached or stale
+        # though we passed self.db to executor methods, better be safe
+        
+        result = await executor.execute(str(suggestion_id), self.db)
+        if not result["success"]:
+            # If execution fails, we might want to log it but the HTTP exception is enough for API
+            error_detail = result.get('error')
+            if isinstance(error_detail, dict):
+                error_msg = error_detail.get('message', str(error_detail))
+            else:
+                error_msg = str(error_detail)
+            raise HTTPException(status_code=400, detail=f"Failed to execute suggestion: {error_msg}")
+            
+        return result
+
+    async def reject_suggestion(self, suggestion_id: UUID, reason: Optional[str] = None) -> Any:
+        """
+        Reject an optimization suggestion.
+        """
+        executor = suggestion_executor(self.db)
+        result = await executor.reject(str(suggestion_id), self.db, reason)
+        
+        if not result["success"]:
+             raise HTTPException(status_code=400, detail=f"Failed to reject suggestion: {result.get('error')}")
+             
+        return result
 
     # Pyramid Operations
     async def create_pyramid(self, schema: PyramidCreate) -> Any:

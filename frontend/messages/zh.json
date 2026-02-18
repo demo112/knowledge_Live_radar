@@ -34,6 +34,8 @@
       "update_node": "更新节点",
       "split_node": "拆分节点",
       "merge_node": "合并节点",
+      "move_node": "移动节点",
+      "fix_drift": "修复漂移",
       "link_content": "关联内容",
       "update_strategy": "更新策略",
       "archive_content": "归档内容"
@@ -302,7 +304,22 @@
       "system": "系统",
       "search": "搜索",
       "crawler": "抓取",
-      "ai": "AI"
+      "ai": "AI",
+      "pyramid_structure": "金字塔结构",
+      "content_classification": "内容分类",
+      "source_analysis": "源分析",
+      "search_intent": "搜索意图",
+      "soft_validation": "软校验",
+      "summary_generation": "摘要生成",
+      "concept_extraction": "概念提取",
+      "tag_generation": "标签生成",
+      "drift_detection": "漂移检测",
+      "cross_validation": "交叉验证",
+      "proposal_reason": "提案理由",
+      "pyramid_health": "金字塔健康",
+      "source_health": "源健康",
+      "content_metabolism": "内容代谢",
+      "unknown": "未知"
     },
     "status": {
       "success": "成功",

@@ -109,6 +109,17 @@ const EvolutionPanel: React.FC<EvolutionPanelProps> = ({ pyramidId, onUpdate }) 
     }
   };
 
+  const getActionLabel = (actionType: string) => {
+    try {
+      // Try to translate, if key missing it might throw or return key depending on config
+      // But we can catch it just in case
+      return t(`actions.${actionType}`);
+    } catch (error) {
+      console.warn(`Translation missing for action: ${actionType}`, error);
+      return actionType;
+    }
+  };
+
   return (
     <Card className="w-full border-blue-100 shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-gradient-to-r from-blue-50 to-white rounded-t-lg">
@@ -144,7 +155,7 @@ const EvolutionPanel: React.FC<EvolutionPanelProps> = ({ pyramidId, onUpdate }) 
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                        {t(`actions.${suggestion.action_type}`)}
+                        {getActionLabel(suggestion.action_type)}
                       </Badge>
                       <span className="text-sm font-semibold text-gray-800">
                         {suggestion.target_name || suggestion.target_id}
