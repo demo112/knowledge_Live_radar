@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
@@ -14,11 +16,12 @@ interface EvolutionPanelProps {
 }
 
 const EvolutionPanel: React.FC<EvolutionPanelProps> = ({ pyramidId, onUpdate }) => {
-  const t = useTranslations('evolution');
+  const t = useTranslations('Evolution');
   const { toast } = useToast();
   const [suggestions, setSuggestions] = useState<AISuggestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
+  const [applyingId, setApplyingId] = useState<string | null>(null);
 
   const fetchSuggestions = async () => {
     setLoading(true);
@@ -68,6 +71,9 @@ const EvolutionPanel: React.FC<EvolutionPanelProps> = ({ pyramidId, onUpdate }) 
   };
 
   const handleApply = async (suggestionId: string) => {
+    if (applyingId) return;
+    setApplyingId(suggestionId);
+    console.log(`Applying suggestion: ${suggestionId} for pyramid: ${pyramidId}`);
     try {
       await pyramidApi.applySuggestion(pyramidId, suggestionId);
       toast({
@@ -76,15 +82,18 @@ const EvolutionPanel: React.FC<EvolutionPanelProps> = ({ pyramidId, onUpdate }) 
       fetchSuggestions();
       if (onUpdate) onUpdate();
     } catch (error) {
-      console.error(error);
+      console.error('Failed to apply suggestion:', error);
       toast({
         title: t('apply_error'),
         variant: "destructive",
       });
+    } finally {
+      setApplyingId(null);
     }
   };
 
   const handleReject = async (suggestionId: string) => {
+    if (applyingId) return;
     try {
       await pyramidApi.rejectSuggestion(pyramidId, suggestionId);
       toast({
@@ -101,7 +110,7 @@ const EvolutionPanel: React.FC<EvolutionPanelProps> = ({ pyramidId, onUpdate }) 
   };
 
   return (
-    <Card className="w-full mt-6 border-blue-100 shadow-sm">
+    <Card className="w-full border-blue-100 shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-gradient-to-r from-blue-50 to-white rounded-t-lg">
         <div className="flex flex-col space-y-1.5">
           <CardTitle className="text-blue-900">{t('title')}</CardTitle>
@@ -111,7 +120,7 @@ const EvolutionPanel: React.FC<EvolutionPanelProps> = ({ pyramidId, onUpdate }) 
           variant="outline" 
           size="sm" 
           onClick={handleAnalyze} 
-          disabled={analyzing}
+          disabled={analyzing || !!applyingId}
           className="border-blue-200 text-blue-700 hover:bg-blue-50"
         >
           <RefreshCw className={`mr-2 h-4 w-4 ${analyzing ? 'animate-spin' : ''}`} />
@@ -159,6 +168,7 @@ const EvolutionPanel: React.FC<EvolutionPanelProps> = ({ pyramidId, onUpdate }) 
                       variant="ghost" 
                       className="text-gray-500 hover:text-red-600 hover:bg-red-50 h-8"
                       onClick={() => handleReject(suggestion.id)}
+                      disabled={!!applyingId}
                     >
                       <X className="h-4 w-4 mr-1" />
                       {t('reject')}
@@ -167,8 +177,13 @@ const EvolutionPanel: React.FC<EvolutionPanelProps> = ({ pyramidId, onUpdate }) 
                       size="sm" 
                       className="bg-blue-600 hover:bg-blue-700 text-white h-8 shadow-sm"
                       onClick={() => handleApply(suggestion.id)}
+                      disabled={!!applyingId}
                     >
-                      <Check className="h-4 w-4 mr-1" />
+                      {applyingId === suggestion.id ? (
+                        <RefreshCw className="h-4 w-4 mr-1 animate-spin" />
+                      ) : (
+                        <Check className="h-4 w-4 mr-1" />
+                      )}
                       {t('apply')}
                     </Button>
                   </div>
