@@ -194,7 +194,7 @@ export default function SourcesPage() {
             onClick={handleOpenCreateModal}
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
           >
-            <span>+</span> {tCommon('actions.create')}
+            <span>+</span> {tCommon('create')}
           </button>
         </div>
       </div>
@@ -241,7 +241,7 @@ export default function SourcesPage() {
                   {t('columns.last_crawled')}
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {tCommon('columns.actions')}
+                  {t('columns.actions')}
                 </th>
               </tr>
             </thead>
@@ -249,13 +249,13 @@ export default function SourcesPage() {
               {loading ? (
                 <tr>
                   <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
-                    {tCommon('status.loading')}
+                    {tCommon('loading')}
                   </td>
                 </tr>
               ) : sources.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
-                    {tCommon('status.no_data')}
+                    {t('no_data')}
                   </td>
                 </tr>
               ) : (
@@ -317,13 +317,13 @@ export default function SourcesPage() {
                         onClick={() => handleOpenEditModal(source)}
                         className="text-blue-600 hover:text-blue-900 mr-4"
                       >
-                        {tCommon('actions.edit')}
+                        {tCommon('edit')}
                       </button>
                       <button
                         onClick={() => handleDelete(source.id)}
                         className="text-red-600 hover:text-red-900"
                       >
-                        {tCommon('actions.delete')}
+                        {tCommon('delete')}
                       </button>
                     </td>
                   </tr>

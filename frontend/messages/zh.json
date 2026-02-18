@@ -119,7 +119,25 @@
     "back": "返回",
     "submit": "提交",
     "confirm": "确认",
-    "close": "关闭"
+    "close": "关闭",
+    "actions": {
+      "create": "创建",
+      "edit": "编辑",
+      "delete": "删除",
+      "save": "保存",
+      "cancel": "取消"
+    },
+    "columns": {
+      "actions": "操作"
+    },
+    "status": {
+      "no_data": "暂无数据",
+      "loading": "加载中..."
+    },
+    "alerts": {
+      "confirm_delete": "确认删除",
+      "delete_warning": "确定要删除此项吗？此操作不可撤销。"
+    }
   },
   "Components": {
     "AIReasoning": {
@@ -505,10 +523,47 @@
   "Sources": {
     "title": "信息源",
     "manage_whitelist": "管理白名单",
+    "edit_source": "编辑信息源",
+    "create_source": "添加信息源",
+    "manual_config": "手动配置",
+    "use_template": "使用模板",
+    "no_data": "暂无数据",
+    "tabs": {
+      "managed": "已管理",
+      "discovery": "发现"
+    },
+    "columns": {
+      "name": "名称",
+      "type": "类型",
+      "status": "状态",
+      "last_crawled": "上次抓取",
+      "actions": "操作"
+    },
+    "discovery": {
+      "started": "已触发 {count} 个发现任务"
+    },
     "add_source": "添加信息源",
+    "create_source": "添加信息源",
+    "edit_source": "编辑信息源",
+    "manual_config": "手动配置",
+    "use_template": "使用模板",
     "empty_list": "未找到信息源。",
     "last_crawled": "上次抓取: {date}",
     "never": "从未",
+    "tabs": {
+      "managed": "已管理",
+      "discovery": "发现"
+    },
+    "columns": {
+      "name": "名称",
+      "type": "类型",
+      "status": "状态",
+      "last_crawled": "上次抓取",
+      "url": "链接地址"
+    },
+    "discovery": {
+      "started": "发现任务已启动，共发现 {count} 个"
+    },
     "types": {
       "rss": "RSS 订阅源",
       "sitemap": "网站地图",
@@ -536,6 +591,7 @@
       "crawl": "抓取",
       "crawling": "抓取中...",
       "crawl_title": "立即抓取",
+      "crawl_now": "立即抓取",
       "crawl_desc": "触发一次立即抓取任务",
       "test": "测试",
       "testing": "测试中...",
@@ -548,6 +604,7 @@
       "delete_desc": "移除此信息源及其数据"
     },
     "alerts": {
+      "operation_failed": "操作失败",
       "discovered": "已发现: {title} ({type})",
       "discover_not_found": "未找到信息源",
       "discover_failed": "发现失败",
