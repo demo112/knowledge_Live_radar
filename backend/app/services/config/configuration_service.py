@@ -55,12 +55,13 @@ class ConfigurationService:
             "ai.model": "deepseek-ai/DeepSeek-V3",
             "ai.temperature": 0.3,
             "ai.max_retries": 3,
+            "ai.timeout": 60.0,
             "ai.enabled": False,
 
             # AI Local configuration
             "ai.local.base_url": "http://localhost:11434/v1",
             "ai.local.model": "qwen2.5:7b",
-            "ai.local.timeout": 5.0,
+            "ai.local.timeout": 30.0,
             "ai.local.enabled": True,
 
             # AI Strategy

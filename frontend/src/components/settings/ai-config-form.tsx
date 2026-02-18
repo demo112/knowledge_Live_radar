@@ -23,7 +23,7 @@ export default function AIConfigForm() {
     'ai.local.enabled': true,
     'ai.local.base_url': 'http://localhost:11434/v1',
     'ai.local.model': 'qwen2.5:7b',
-    'ai.local.timeout': 5.0
+    'ai.local.timeout': 30.0
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -163,6 +163,7 @@ export default function AIConfigForm() {
                    onChange={(e) => handleChange('ai.local.enabled', e.target.checked)}
                  />
                  <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-green-600"></div>
+                 <span className="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">{t('enable_local')}</span>
               </label>
             </div>
             
@@ -197,7 +198,7 @@ export default function AIConfigForm() {
           </label>
                 <input
                   type="number"
-                  value={(configs['ai.local.timeout'] as number) || 5.0}
+                  value={(configs['ai.local.timeout'] as number) || 30.0}
                   onChange={(e) => handleChange('ai.local.timeout', parseFloat(e.target.value))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 />

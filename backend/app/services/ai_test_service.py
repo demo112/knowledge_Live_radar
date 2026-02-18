@@ -35,10 +35,12 @@ class AITestService:
             api_key = "ollama" # Local usually doesn't need key
             base_url = configuration_service.get("ai.local.base_url")
             model = configuration_service.get("ai.local.model")
+            timeout = float(configuration_service.get("ai.local.timeout") or 30.0)
         else:
             api_key = configuration_service.get("ai.api_key")
             base_url = configuration_service.get("ai.base_url")
             model = configuration_service.get("ai.model")
+            timeout = float(configuration_service.get("ai.timeout") or 60.0)
 
         if not enabled:
             return {
@@ -66,7 +68,7 @@ class AITestService:
             client = AsyncOpenAI(
                 api_key=api_key,
                 base_url=base_url,
-                timeout=10.0, # 10 seconds timeout as required
+                timeout=timeout, 
                 max_retries=0 # No retries for test
             )
         except Exception as e:
