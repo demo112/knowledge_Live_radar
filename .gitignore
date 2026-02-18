@@ -57,3 +57,6 @@ chroma_db/
 # ide
 .idea/
 .vscode/
+
+# firecrawl
+firecrawl/
