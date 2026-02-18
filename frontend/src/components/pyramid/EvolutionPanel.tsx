@@ -10,6 +10,33 @@ import { AISuggestion } from '@/types';
 import { RefreshCw, X, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
+const ParamsPreview = ({ suggestion }: { suggestion: AISuggestion }) => {
+  const { action_type, params } = suggestion;
+  if (!params) return null;
+
+  if (action_type === 'update_node' && params.description) {
+    return (
+      <div className="mt-2 p-3 bg-blue-50 border border-blue-100 rounded text-sm text-blue-900">
+        <span className="font-semibold block mb-1">💡 预生成描述:</span>
+        {params.description}
+      </div>
+    );
+  }
+
+  if (action_type === 'add_source') {
+    return (
+      <div className="mt-2 p-3 bg-green-50 border border-green-100 rounded text-sm text-green-900">
+        <div className="font-semibold mb-1">📡 将添加信息源:</div>
+        <div>名称: {params.name}</div>
+        {params.description && <div>描述: {params.description}</div>}
+        <div className="text-gray-500 italic mt-1 text-xs">⚠️ URL 待配置</div>
+      </div>
+    );
+  }
+
+  return null;
+};
+
 interface EvolutionPanelProps {
   pyramidId: string;
   onUpdate?: () => void;
@@ -32,10 +59,14 @@ const EvolutionPanel: React.FC<EvolutionPanelProps> = ({ pyramidId, onUpdate }) 
       // Based on typical API wrapper in this project:
       const data = Array.isArray(res) ? res : (Array.isArray(res.data) ? res.data : []);
       setSuggestions(data);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
+      let errorMsg = t('fetch_error');
+      if (error?.response?.data?.detail) {
+        errorMsg += `: ${error.response.data.detail}`;
+      }
       toast({
-        title: t('fetch_error'),
+        title: errorMsg,
         variant: "destructive",
       });
     } finally {
@@ -59,10 +90,14 @@ const EvolutionPanel: React.FC<EvolutionPanelProps> = ({ pyramidId, onUpdate }) 
       });
       fetchSuggestions();
       if (onUpdate) onUpdate();
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
+      let errorMsg = t('analysis_error');
+      if (error?.response?.data?.detail) {
+        errorMsg += `: ${error.response.data.detail}`;
+      }
       toast({
-        title: t('analysis_error'),
+        title: errorMsg,
         variant: "destructive",
       });
     } finally {
@@ -172,6 +207,7 @@ const EvolutionPanel: React.FC<EvolutionPanelProps> = ({ pyramidId, onUpdate }) 
                     <p className="text-sm text-gray-600 leading-relaxed bg-gray-50 p-3 rounded-md">
                       {suggestion.reason}
                     </p>
+                    <ParamsPreview suggestion={suggestion} />
                     <div className="flex items-center gap-3 mt-3 text-xs text-gray-400">
                       <span className="flex items-center">
                         <span className="w-2 h-2 rounded-full bg-green-400 mr-1.5"></span>

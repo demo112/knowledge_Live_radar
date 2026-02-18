@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.ai_suggestion import AISuggestion
 from app.models.pyramid import PyramidNode
 from app.models.content import ContentItem, ContentNodeRelation
-from app.models.source import InformationSource
+from app.models.source import InformationSource, SourceNodeRelation
 from app.services.snapshot_service import SnapshotService
 
 logger = logging.getLogger(__name__)
@@ -67,6 +67,7 @@ class SuggestionExecutor:
                 "link_content": self._execute_link_content,
                 "update_strategy": self._execute_update_strategy,
                 "archive_content": self._execute_archive_content,
+                "add_source": self._execute_add_source,
             }
 
             executor = action_map.get(suggestion.action_type)
@@ -279,6 +280,10 @@ class SuggestionExecutor:
             f"{node.name} - 子类 B"
         ])
 
+        # Calculate path for children
+        parent_path = node.path or str(node.id)
+        child_path = f"{parent_path}/{node.id}"
+
         created_nodes = []
         for i, name in enumerate(sub_names):
             child = PyramidNode(
@@ -288,6 +293,7 @@ class SuggestionExecutor:
                 description=f"从 '{node.name}' 拆分创建",
                 level=node.level + 1,
                 sort_order=i,
+                path=child_path,
             )
             self.db.add(child)
             created_nodes.append(name)
@@ -363,6 +369,7 @@ class SuggestionExecutor:
             description=f"合并自: {len(source_node_ids)} 个节点",
             level=first_node.level,
             sort_order=first_node.sort_order,
+            path=first_node.path,
         )
         self.db.add(merged_node)
         await self.db.flush()
@@ -550,6 +557,58 @@ class SuggestionExecutor:
         return {
             "action": "archive_content",
             "archived_count": archived_count,
+        }
+
+    async def _execute_add_source(
+        self,
+        suggestion: AISuggestion
+    ) -> dict[str, Any]:
+        """执行添加信息源操作"""
+        params = suggestion.params
+        name = params.get("name")
+        if not name:
+             name = f"新信息源 - {datetime.now().strftime('%Y%m%d%H%M')}"
+        
+        description = params.get("description", "")
+        config = {"description": description} if description else {}
+        source_type = params.get("type", "web")
+        url = params.get("url", "http://pending-configuration")
+        
+        new_source = InformationSource(
+            name=name,
+            type=source_type,
+            url=url,
+            config=config,
+            status="pending", # 待配置
+        )
+        self.db.add(new_source)
+        await self.db.flush()
+        
+        # 关联节点
+        node_id = None
+        if suggestion.target_type == "pyramid_node" and suggestion.target_id:
+            node_id = suggestion.target_id
+        elif params.get("node_id"):
+             try:
+                 node_id = uuid.UUID(params["node_id"])
+             except ValueError:
+                 pass
+                 
+        if node_id:
+            relation = SourceNodeRelation(
+                source_id=new_source.id,
+                node_id=node_id,
+                weight=1.0
+            )
+            self.db.add(relation)
+        
+        logger.info(f"创建信息源 '{name}' 成功")
+        
+        return {
+            "action": "add_source",
+            "source_id": str(new_source.id),
+            "name": name,
+            "status": "pending"
         }
 
     async def _check_relation_exists(
