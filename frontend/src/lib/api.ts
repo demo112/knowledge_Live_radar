@@ -178,6 +178,14 @@ export const sourceApi = {
   renderTemplate: async (id: string, params: Record<string, unknown>) => {
     const response = await api.post(`/sources/templates/${id}/render`, params);
     return response.data;
+  },
+  discover: async (pyramidId?: string) => {
+    const response = await api.post('/sources/discover', { pyramid_id: pyramidId });
+    return response.data;
+  },
+  getDiscovered: async () => {
+    const response = await api.get('/sources/discovered');
+    return response.data;
   }
 };
 

@@ -30,3 +30,18 @@ class SourceResponse(InformationSourceBase):
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+class DiscoverRequest(BaseModel):
+    pyramid_id: Optional[UUID] = Field(None, description="Optional pyramid ID to scope discovery")
+
+class DiscoveredSource(BaseModel):
+    id: UUID
+    url: str
+    name: str
+    description: Optional[str] = None
+    source_type: str
+    reason: Optional[str] = None
+    created_at: datetime
+    status: str
+
+    model_config = {"from_attributes": True}

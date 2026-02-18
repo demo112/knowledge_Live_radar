@@ -56,6 +56,17 @@ export interface InformationSource {
   updated_at: string;
 }
 
+export interface DiscoveredSource {
+  id: string;
+  url: string;
+  name: string;
+  description?: string;
+  source_type: string;
+  reason?: string;
+  created_at: string;
+  status: 'pending' | 'approved' | 'rejected';
+}
+
 export interface SourceTemplateConfigField {
   name: string;
   label: string;
@@ -168,10 +179,27 @@ export interface HealthMetrics {
   activity_score: number;
 }
 
+export interface AISuggestion {
+  id: string;
+  action_type: string;
+  target_type: string;
+  target_id?: string;
+  target_name?: string;
+  reason: string;
+  params: Record<string, unknown>;
+  confidence: number;
+  status: string;
+  pyramid_id?: string;
+  source_id?: string;
+  created_at: string;
+  expires_at?: string;
+}
+
 export interface HealthReport {
   score: number;
   details: HealthMetrics;
-  suggestions: string[];
+  suggestions: AISuggestion[];
+  analysis?: Record<string, unknown>;
 }
 
 export interface ReactFlowNode {

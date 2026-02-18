@@ -81,10 +81,18 @@ const EvolutionPanel: React.FC<EvolutionPanelProps> = ({ pyramidId, onUpdate }) 
       });
       fetchSuggestions();
       if (onUpdate) onUpdate();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to apply suggestion:', error);
+      
+      let errorMsg = t('apply_error');
+      if (error?.response?.data?.detail) {
+        errorMsg += `: ${error.response.data.detail}`;
+      } else if (error?.message) {
+        errorMsg += `: ${error.message}`;
+      }
+      
       toast({
-        title: t('apply_error'),
+        title: errorMsg,
         variant: "destructive",
       });
     } finally {
