@@ -8,7 +8,7 @@ import { Upload } from 'lucide-react';
 import { useTranslations, useFormatter } from 'next-intl';
 
 export default function PyramidListPage() {
-  const t = useTranslations('Pyramid');
+  const t = useTranslations('Pyramid.List');
   const format = useFormatter();
   const [pyramids, setPyramids] = useState<Pyramid[]>([]);
   const [loading, setLoading] = useState(true);

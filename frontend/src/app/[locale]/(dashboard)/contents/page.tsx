@@ -82,7 +82,7 @@ export default function ContentsPage() {
     if (forSelected && (!ids || ids.length === 0)) return;
     
     const message = forSelected 
-      ? t('alerts.confirm_regenerate_selected', { count: ids?.length })
+      ? t('alerts.confirm_regenerate_selected', { count: ids ? ids.length : 0 })
       : t('alerts.confirm_regenerate_all');
       
     if (!confirm(message)) return;
