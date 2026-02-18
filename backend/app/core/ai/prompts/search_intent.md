@@ -2,7 +2,7 @@
 name: search_intent
 description: 搜索意图理解
 version: 1.0.0
-model: gpt-4o-mini
+model: null
 variables:
   - query
 ---

@@ -2,7 +2,7 @@
 name: pyramid_structure
 description: 生成金字塔结构建议
 version: 1.0.0
-model: gpt-4o
+model: null
 variables:
   - name
   - description

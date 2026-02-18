@@ -2,7 +2,7 @@
 name: source_analysis
 description: 信息源分析
 version: 1.0.0
-model: gpt-4o-mini
+model: null
 variables:
   - url
   - content_sample

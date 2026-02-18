@@ -26,7 +26,7 @@ class PyramidProcessor:
         model = metadata.get("model") if metadata else None
         
         messages = [{"role": "user", "content": prompt_content}]
-        response_text = await ai_client.chat_completion(messages, model=model)
+        response_text = await ai_client.chat_completion(messages, model=model, context="pyramid_structure")
         
         if not response_text:
             raise ValueError("AI returned empty response")

@@ -2,7 +2,7 @@
 name: content_classification
 description: 内容分类建议
 version: 1.0.0
-model: gpt-4o-mini
+model: null
 variables:
   - title
   - content

@@ -24,7 +24,7 @@ class ContentProcessor:
         model = metadata.get("model") if metadata else None
         
         messages = [{"role": "user", "content": prompt_content}]
-        response_text = await ai_client.chat_completion(messages, model=model)
+        response_text = await ai_client.chat_completion(messages, model=model, context="content_classification")
         
         if not response_text:
             raise ValueError("AI returned empty response")
@@ -57,7 +57,7 @@ class ContentProcessor:
         model = metadata.get("model") if metadata else None
         
         messages = [{"role": "user", "content": prompt_content}]
-        response_text = await ai_client.chat_completion(messages, model=model)
+        response_text = await ai_client.chat_completion(messages, model=model, context="source_analysis")
         
         if not response_text:
             raise ValueError("AI returned empty response")

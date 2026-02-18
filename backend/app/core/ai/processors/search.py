@@ -20,7 +20,7 @@ class SearchProcessor:
         model = metadata.get("model") if metadata else None
         
         messages = [{"role": "user", "content": prompt_content}]
-        response_text = await ai_client.chat_completion(messages, model=model)
+        response_text = await ai_client.chat_completion(messages, model=model, context="search_intent")
         
         if not response_text:
             return {"intent": "keyword_search", "keywords": [query], "expanded_terms": []}
