@@ -67,7 +67,13 @@ class SourceDiscoveryService:
             try:
                 yield DiscoveryEvent(event="progress", data={"current": i+1, "total": total_keywords, "percentage": int((i+1)/total_keywords*100), "message": f"正在搜索: {kw}"})
                 
-                query = f"{kw} 博客 RSS"
+                # query format: "{keyword} (site:zhihu.com OR site:juejin.cn OR site:csdn.net OR site:segmentfault.com OR inurl:rss)"
+                # But simple search might be better: "{keyword} 博客" or "{keyword} 技术文章"
+                # RSS specific search is often hard because many sites don't index rss xml well.
+                # Let's try: "{keyword} 博客" to find blog homepages, then we can look for RSS links (future work).
+                # For now, let's target tech blogs more specifically.
+                query = f"{kw} (技术博客 OR 专栏 OR 官方文档)"
+                logger.debug(f"Searching for: {query}")
                 import asyncio
                 # Use synchronous DDGS in executor
                 results = await asyncio.get_running_loop().run_in_executor(
@@ -80,6 +86,12 @@ class SourceDiscoveryService:
                     for res in results:
                         url = res.get("href") or res.get("url")
                         if not url: continue
+                        
+                        # Filter out common non-blog sites if needed
+                        # e.g. baidu.com, google.com
+                        if "baidu.com" in url or "google.com" in url:
+                            continue
+
                         candidates.append({
                             "url": url,
                             "name": res.get("title") or "Unknown Title",
@@ -162,9 +174,13 @@ class SourceDiscoveryService:
     async def _get_keywords(self, pyramid_id: Optional[uuid.UUID]) -> List[str]:
         """
         Extract keywords from pyramid nodes.
+        Combine node name with parent name for better context.
         Prioritize leaf nodes and nodes with fewer contents.
         """
-        query = select(PyramidNode)
+        # Eager load parent to construct context
+        from sqlalchemy.orm import selectinload
+        query = select(PyramidNode).options(selectinload(PyramidNode.parent))
+        
         if pyramid_id:
             query = query.where(PyramidNode.pyramid_id == pyramid_id)
             
@@ -181,7 +197,16 @@ class SourceDiscoveryService:
         
         keywords = set()
         for node in nodes:
-            if node.name:
-                keywords.add(node.name)
+            if not node.name: continue
+            
+            # Combine with parent name if exists for better context
+            # e.g. "Tools" -> "Python Tools"
+            kw = node.name
+            if node.parent and node.parent.name:
+                # Avoid redundancy if parent name is already part of node name
+                if node.parent.name not in node.name:
+                    kw = f"{node.parent.name} {node.name}"
+            
+            keywords.add(kw)
                 
         return list(keywords)
