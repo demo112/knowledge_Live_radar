@@ -574,7 +574,28 @@
       "template": "Template"
     },
     "discovery": {
-      "started": "Started {count} discovery tasks"
+      "title": "Discovery Progress",
+      "started": "Started {count} discovery tasks",
+      "empty": "No discovered sources pending approval",
+      "initializing": "Initializing discovery process...",
+      "stage_prefix": "Stage",
+      "logs": "Discovery Logs",
+      "status": {
+        "pending": "Pending",
+        "running": "Running",
+        "completed": "Completed",
+        "failed": "Failed"
+      },
+      "errors": {
+        "connection_interrupted": "Connection interrupted"
+      },
+      "stages": {
+        "extract": "Extract",
+        "search": "Search",
+        "filter": "Filter",
+        "proposal": "Proposal",
+        "finish": "Finish"
+      }
     },
     "actions": {
       "crawl": "Crawl",

@@ -92,7 +92,7 @@ export default function DiscoveredSourceList() {
   };
 
   if (loading) {
-    return <div className="p-4 text-center text-gray-500">{tCommon('status.loading')}</div>;
+    return <div className="p-4 text-center text-gray-500">{tCommon('loading')}</div>;
   }
 
   if (sources.length === 0) {
@@ -139,14 +139,14 @@ export default function DiscoveredSourceList() {
                 disabled={processing === source.id}
                 className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded border transition-colors disabled:opacity-50"
               >
-                {tCommon('actions.ignore')}
+                {tCommon('ignore')}
               </button>
               <button
                 onClick={() => handleApprove(source.id)}
                 disabled={processing === source.id}
                 className="px-3 py-1.5 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded shadow-sm transition-colors disabled:opacity-50"
               >
-                {processing === source.id ? tCommon('status.processing') : tCommon('actions.add')}
+                {processing === source.id ? tCommon('processing') : tCommon('add')}
               </button>
             </div>
           </div>

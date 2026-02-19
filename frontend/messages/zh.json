@@ -544,7 +544,28 @@
       "actions": "操作"
     },
     "discovery": {
-      "started": "发现任务已启动，共发现 {count} 个"
+      "title": "发现进度",
+      "started": "发现任务已启动，共发现 {count} 个",
+      "empty": "暂无待审批的发现源",
+      "initializing": "正在初始化发现任务...",
+      "stage_prefix": "阶段",
+      "logs": "发现日志",
+      "status": {
+        "pending": "等待中",
+        "running": "进行中",
+        "completed": "完成",
+        "failed": "失败"
+      },
+      "errors": {
+        "connection_interrupted": "连接中断"
+      },
+      "stages": {
+        "extract": "提取",
+        "search": "搜索",
+        "filter": "过滤",
+        "proposal": "提案",
+        "finish": "完成"
+      }
     },
     "types": {
       "rss": "RSS 订阅源",

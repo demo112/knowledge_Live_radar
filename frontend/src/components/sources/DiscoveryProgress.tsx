@@ -44,8 +44,10 @@ export default function DiscoveryProgress({ pyramidId, onFinish, onError }: Disc
         if (eventType === 'stage_update') {
           setStage(payload.stage);
           // Add stage change to logs
+          const statusKey = payload.status.toLowerCase() as 'pending' | 'running' | 'completed' | 'failed';
+          const statusText = t(`status.${statusKey}`);
           setLogs(prev => [...prev, { 
-            message: `Stage: ${payload.label || payload.stage} (${payload.status})`, 
+            message: `${t('stage_prefix')}: ${payload.label || payload.stage} (${statusText})`, 
             level: 'info', 
             timestamp: new Date().toISOString() 
           }]);
@@ -71,7 +73,7 @@ export default function DiscoveryProgress({ pyramidId, onFinish, onError }: Disc
       console.error('SSE error:', e);
       // Only treat as error if it's not a normal close (readyState 2 = CLOSED)
       if (eventSource.readyState !== 2) {
-          onError('Connection interrupted');
+          onError(t('errors.connection_interrupted'));
       }
       eventSource.close();
     };
@@ -145,7 +147,7 @@ export default function DiscoveryProgress({ pyramidId, onFinish, onError }: Disc
         >
             {logs.length === 0 ? (
                 <div className="h-full flex items-center justify-center text-gray-600 italic">
-                    Initializing discovery process...
+                    {t('initializing')}
                 </div>
             ) : (
                 logs.map((log, i) => (
