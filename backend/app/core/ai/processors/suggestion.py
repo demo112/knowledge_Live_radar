@@ -657,7 +657,6 @@ class SuggestionProcessor:
                     type="health_analysis",
                     input_hash=input_hash,
                     data=suggestion_data.get("params", {}),
-                    reasoning=suggestion_data.get("reason"),
                     confidence=suggestion_data.get("confidence"),
                     action_type=suggestion_data.get("action_type", "update_node"),
                     target_type="pyramid_node" if pyramid_id else "information_source",

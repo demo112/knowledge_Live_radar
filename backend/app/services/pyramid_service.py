@@ -67,7 +67,9 @@ class PyramidService:
         if suggestion.status == "pending":
             approve_res = await executor.approve(str(suggestion_id), self.db)
             if not approve_res["success"]:
-                 raise HTTPException(status_code=400, detail=f"Failed to approve suggestion: {approve_res.get('error')}")
+                 error_detail = approve_res.get('error')
+                 msg = error_detail.get('message') if isinstance(error_detail, dict) else str(error_detail)
+                 raise HTTPException(status_code=400, detail=f"Failed to approve suggestion: {msg}")
         
         # Re-fetch suggestion after approval because SQLAlchemy object might be detached or stale
         # though we passed self.db to executor methods, better be safe

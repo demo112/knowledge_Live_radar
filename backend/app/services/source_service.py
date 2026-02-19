@@ -1,5 +1,5 @@
 from uuid import UUID
-from typing import List, Any
+from typing import List, Any, Tuple
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.repositories.source import SourceRepository
@@ -52,8 +52,10 @@ class SourceService:
             raise HTTPException(status_code=404, detail="未找到信息源")
         return source
 
-    async def get_all_sources(self, skip: int = 0, limit: int = 100) -> List[Any]:
-        return await self.source_repo.get_all(skip, limit)
+    async def get_sources(self, skip: int = 0, limit: int = 100) -> Tuple[List[Any], int]:
+        items = await self.source_repo.get_all(skip, limit)
+        total = await self.source_repo.count()
+        return items, total
 
     async def update_source(self, id: UUID, schema: SourceUpdate) -> Any:
         source = await self.get_source(id)

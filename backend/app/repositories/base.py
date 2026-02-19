@@ -1,7 +1,7 @@
 from typing import Generic, TypeVar, Type, Optional, List, Any
 from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update, delete
+from sqlalchemy import select, update, delete, func
 from app.database import Base
 
 ModelType = TypeVar("ModelType", bound=Base)
@@ -23,6 +23,13 @@ class BaseRepository(Generic[ModelType]):
         query = query.offset(skip).limit(limit)
         result = await self.db.execute(query)
         return result.scalars().all()
+
+    async def count(self) -> int:
+        query = select(func.count()).select_from(self.model)
+        if hasattr(self.model, "is_deleted"):
+            query = query.where(self.model.is_deleted == False)
+        result = await self.db.execute(query)
+        return result.scalar() or 0
 
     async def create(self, obj_in: dict[str, Any], commit: bool = True) -> ModelType:
         db_obj = self.model(**obj_in)
