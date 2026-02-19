@@ -44,7 +44,29 @@ As a 用户, I want 将微信公众号的 RSS 链接添加到系统, so that 我
   - **When**: 点击“检测”
   - **Then**: 系统自动识别其为 RSS 类型，并显示预览文章
 
-### Story 2: (可选) 系统内置 WeWe RSS 集成
+### Story 2: 通过文章链接自动解析添加
+
+As a 用户, I want 输入一篇微信公众号文章链接就能自动添加该公众号, so that 我不需要手动查找 RSS 地址或公众号 ID。
+
+**Acceptance Criteria:**
+
+- [ ] AC1: 解析文章链接提取信息
+  - **Given**: 用户拥有一篇微信公众号文章链接 (如 `https://mp.weixin.qq.com/s/...`)
+  - **When**: 用户在“添加信息源”页面输入该链接，类型选择“WECHAT_MP”
+  - **Then**: 
+    - 系统自动从 HTML 中提取公众号名称 (`nickname`) 和 BizID (`__biz`)
+    - 自动填充“公众号名称”字段
+    - 自动生成适配 RSSHub 的 URL (如 `https://rsshub.app/wechat/gzh/{id}`)
+
+- [ ] AC2: 映射到 RSSHub 路由
+  - **Given**: 系统成功提取了 BizID 或公众号 ID
+  - **When**: 保存信息源
+  - **Then**: 
+    - 创建类型为 `WECHAT_MP` 的信息源
+    - `rss_url` 字段指向正确的 RSSHub 路由
+    - 系统立即触发一次抓取验证有效性
+
+### Story 3: (可选) 系统内置 WeWe RSS 集成
 
 > **注意**：此功能作为进阶选项，需要额外的开发工作量。
 
@@ -64,7 +86,7 @@ As a 用户, I want 在系统内直接搜索公众号名称并添加, so that �
 
 ## Constraints
 
-- **依赖性**：方案严重依赖第三方 RSS 工具（如 WeWe RSS）的稳定性。
+- **依赖性**：方案严重依赖第三方 RSS 工具（如 WeWe RSS 或 RSSHub）的稳定性。
 - **部署要求**：用户可能需要自行部署 WeWe RSS 服务（Docker）。
 - **版权风险**：抓取内容仅供个人学习研究，不得用于商业用途。
 
@@ -77,14 +99,15 @@ As a 用户, I want 在系统内直接搜索公众号名称并添加, so that �
 ## Assumptions
 
 以下假设已与用户确认：
-- [ ] 用户接受使用 RSS 方式接入微信公众号。
-- [ ] 用户愿意（或已经）使用 WeWe RSS 等工具生成链接。
-- [ ] 系统现有的 RSS 解析能力足以处理微信 RSS 格式。
+- [x] 用户接受使用 RSS 方式接入微信公众号。
+- [x] 用户愿意（或已经）使用 WeWe RSS / RSSHub 等工具。
+- [x] 系统现有的 RSS 解析能力足以处理微信 RSS 格式。
 
 ## Metadata
 
-- 规模：小 (基于现有 RSS 能力)
+- 规模：中
 - 涉及模块：source-manager, crawl-engine
 - 涉及端：Backend, Frontend
 - 创建时间：2026-02-14
-- 状态：待确认
+- 更新时间：2026-02-19
+- 状态：已确认

@@ -65,6 +65,48 @@ As a 系统, I want 发现现有节点之间的隐含关系, so that 构建更�
     - 若关联强度超过阈值，且当前无显式关联
     - 生成 `LINK_NODES` 提案，建议建立 "相关" 关系
 
+### Story 4: 按需结构分析 (On-Demand Analysis)
+
+As a 管理员, I want 随时触发指定金字塔的结构分析, So that 我可以立即获取优化建议，而不必等待定时任务。
+
+**Acceptance Criteria:**
+
+- [ ] AC1: 手动触发分析 API
+  - **Given**: 用户在前端查看某个金字塔
+  - **When**: 点击“分析金字塔”按钮（调用 `POST /api/v1/pyramids/{id}/analyze`）
+  - **Then**: 
+    - 系统立即启动异步分析任务
+    - 返回任务 ID
+    - 前端显示“分析中...”状态
+
+- [ ] AC2: 获取实时建议
+  - **Given**: 分析任务完成
+  - **When**: 前端轮询或收到通知
+  - **Then**: 
+    - 用户界面刷新，显示最新的优化建议列表（如新增节点、拆分节点等）
+
+### Story 5: 建议的采纳与拒绝 (Apply/Reject)
+
+As a 管理员, I want 在前端直接处理优化建议, So that 我可以快速迭代金字塔结构。
+
+**Acceptance Criteria:**
+
+- [ ] AC1: 采纳建议
+  - **Given**: 列表中有一条“新增节点”建议
+  - **When**: 用户点击“采纳”
+  - **Then**: 
+    - 系统自动执行该建议（创建节点、关联内容）
+    - 建议状态变更为 `ACCEPTED`
+    - 前端移除该建议项
+
+- [ ] AC2: 拒绝建议
+  - **Given**: 列表中有一条建议
+  - **When**: 用户点击“拒绝”
+  - **Then**: 
+    - 建议状态变更为 `REJECTED`
+    - 系统记录拒绝原因（可选）
+    - 该建议在未来一段时间内不再重复生成
+
 ## Constraints
 
 - **审批机制**: 所有结构变更（增删改节点、建立关联）必须生成提案，**严禁 AI 直接修改金字塔结构**。
@@ -75,7 +117,6 @@ As a 系统, I want 发现现有节点之间的隐含关系, so that 构建更�
 ## Out of Scope
 
 - **节点拆分/合并**: 本次迭代暂不实现复杂的节点拆分（Split）和合并（Merge）建议，优先实现新增（Add）和关联（Link）。
-- **实时进化**: 结构进化分析仅作为定时批处理任务，不支持实时触发。
 
 ## Assumptions
 
@@ -86,7 +127,8 @@ As a 系统, I want 发现现有节点之间的隐含关系, so that 构建更�
 ## Metadata
 
 - 规模: 中
-- 涉及模块: `evolution_engine`, `approval_service`, `node_service`
-- 涉及端: Backend
+- 涉及模块: `evolution_engine`, `approval_service`, `node_service`, `pyramid_service`
+- 涉及端: Backend, Frontend
 - 创建时间: 2026-02-13
-- 状态: 草稿
+- 更新时间: 2026-02-19
+- 状态: 已确认
