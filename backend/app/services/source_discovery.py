@@ -44,11 +44,11 @@ class SourceDiscoveryService:
         try:
             keywords = await self._get_keywords(pyramid_id)
             if not keywords:
-                yield DiscoveryEvent(event="log", data={"message": "No keywords found.", "level": "warning"})
+                yield DiscoveryEvent(event="log", data={"message": "未找到关键词。", "level": "warning"})
                 yield DiscoveryEvent(event="stage_update", data={"stage": DiscoveryStage.EXTRACT, "status": DiscoveryStatus.COMPLETED})
                 return
             
-            yield DiscoveryEvent(event="log", data={"message": f"Generated {len(keywords)} keywords.", "level": "info"})
+            yield DiscoveryEvent(event="log", data={"message": f"已生成 {len(keywords)} 个关键词。", "level": "info"})
             yield DiscoveryEvent(event="stage_update", data={"stage": DiscoveryStage.EXTRACT, "status": DiscoveryStatus.COMPLETED})
         except Exception as e:
             logger.error(f"Error getting keywords: {e}")
@@ -59,13 +59,13 @@ class SourceDiscoveryService:
         yield DiscoveryEvent(event="stage_update", data={"stage": DiscoveryStage.SEARCH, "status": DiscoveryStatus.RUNNING, "label": "执行搜索..."})
         candidates = []
         if not self.ddgs:
-            yield DiscoveryEvent(event="error", data={"message": "Search engine not initialized"})
+            yield DiscoveryEvent(event="error", data={"message": "搜索引擎初始化失败"})
             return
 
         total_keywords = len(keywords)
         for i, kw in enumerate(keywords):
             try:
-                yield DiscoveryEvent(event="progress", data={"current": i+1, "total": total_keywords, "percentage": int((i+1)/total_keywords*100), "message": f"Searching: {kw}"})
+                yield DiscoveryEvent(event="progress", data={"current": i+1, "total": total_keywords, "percentage": int((i+1)/total_keywords*100), "message": f"正在搜索: {kw}"})
                 
                 query = f"{kw} 博客 RSS"
                 import asyncio
@@ -87,17 +87,17 @@ class SourceDiscoveryService:
                             "keyword": kw
                         })
                         found_count += 1
-                    yield DiscoveryEvent(event="log", data={"message": f"Found {found_count} results for '{kw}'", "level": "info"})
+                    yield DiscoveryEvent(event="log", data={"message": f"关键词 '{kw}' 找到 {found_count} 个结果", "level": "info"})
             except Exception as e:
                 logger.error(f"Error searching for {kw}: {e}")
-                yield DiscoveryEvent(event="log", data={"message": f"Error searching '{kw}': {str(e)}", "level": "error"})
+                yield DiscoveryEvent(event="log", data={"message": f"搜索 '{kw}' 失败: {str(e)}", "level": "error"})
                 continue
         
         yield DiscoveryEvent(event="stage_update", data={"stage": DiscoveryStage.SEARCH, "status": DiscoveryStatus.COMPLETED})
 
         # 3. Filter
         yield DiscoveryEvent(event="stage_update", data={"stage": DiscoveryStage.FILTER, "status": DiscoveryStatus.RUNNING, "label": "过滤结果..."})
-        yield DiscoveryEvent(event="log", data={"message": f"Filtering {len(candidates)} candidates...", "level": "info"})
+        yield DiscoveryEvent(event="log", data={"message": f"正在过滤 {len(candidates)} 个候选结果...", "level": "info"})
         
         valid_candidates = []
         skipped_count = 0
@@ -124,7 +124,7 @@ class SourceDiscoveryService:
             
             valid_candidates.append(candidate)
             
-        yield DiscoveryEvent(event="log", data={"message": f"Skipped {skipped_count} existing/pending sources.", "level": "info"})
+        yield DiscoveryEvent(event="log", data={"message": f"跳过 {skipped_count} 个已存在或待审批的来源。", "level": "info"})
         yield DiscoveryEvent(event="stage_update", data={"stage": DiscoveryStage.FILTER, "status": DiscoveryStatus.COMPLETED})
 
         # 4. Proposal
@@ -145,7 +145,7 @@ class SourceDiscoveryService:
                         "tags": [candidate['keyword']]
                     },
                     generated_by="system",
-                    reason=f"Auto-discovered based on keyword: {candidate['keyword']}",
+                    reason=f"基于关键词自动发现: {candidate['keyword']}",
                     created_at=datetime.now(),
                     updated_at=datetime.now()
                 )
@@ -155,7 +155,7 @@ class SourceDiscoveryService:
                 logger.error(f"Failed to create approval: {e}")
                 
         await self.db.commit()
-        yield DiscoveryEvent(event="result", data={"count": created_count, "summary": f"Created {created_count} proposals"})
+        yield DiscoveryEvent(event="result", data={"count": created_count, "summary": f"创建了 {created_count} 个提案"})
         yield DiscoveryEvent(event="stage_update", data={"stage": DiscoveryStage.PROPOSAL, "status": DiscoveryStatus.COMPLETED})
         yield DiscoveryEvent(event="finish", data={})
 
@@ -173,8 +173,8 @@ class SourceDiscoveryService:
         
         # Limit to avoid too many keywords
         # Strategy: Randomly pick 10 nodes or pick nodes with specific criteria
-        # Here we pick latest updated nodes
-        query = query.order_by(PyramidNode.updated_at.desc()).limit(10)
+        # Here we pick nodes with fewer contents (prioritize under-explored nodes)
+        query = query.order_by(PyramidNode.content_count.asc()).limit(10)
         
         result = await self.db.execute(query)
         nodes = result.scalars().all()
