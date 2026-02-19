@@ -7,12 +7,27 @@ from jinja2 import Template
 logger = logging.getLogger(__name__)
 
 class PromptLoader:
-    def __init__(self, prompts_dir: str = "app/core/ai/prompts"):
-        # Assuming run from backend root
-        self.prompts_dir = os.path.join(os.getcwd(), prompts_dir)
+    def __init__(self):
+        # Calculate project root relative to this file
+        # This file is located at: backend/app/core/ai/prompt_loader.py
+        # We need to go up 4 levels to reach the project root:
+        # ai -> core -> app -> backend -> project_root
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.abspath(os.path.join(current_dir, "../../../../"))
+        self.prompts_dir = os.path.join(project_root, "prompts")
+        
         if not os.path.exists(self.prompts_dir):
-             # Try absolute path if relative fails (e.g. running from tests)
-             self.prompts_dir = os.path.join(os.path.dirname(__file__), "prompts")
+            # Fallback: Try looking in CWD (useful for Docker or different execution contexts)
+            cwd_prompts = os.path.join(os.getcwd(), "prompts")
+            if os.path.exists(cwd_prompts):
+                self.prompts_dir = cwd_prompts
+            else:
+                # Fallback: Try looking in ../prompts (if CWD is backend/)
+                parent_prompts = os.path.join(os.path.dirname(os.getcwd()), "prompts")
+                if os.path.exists(parent_prompts):
+                    self.prompts_dir = parent_prompts
+                else:
+                    logger.error(f"Prompts directory not found. Expected at: {self.prompts_dir}")
 
     def load_prompt(self, prompt_name: str) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
         """
