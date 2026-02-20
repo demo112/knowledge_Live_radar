@@ -1,7 +1,7 @@
 import logging
 import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, func
 from app.models.approval import Approval
 from app.models.pyramid import PyramidNode
 from app.models.content import ContentItem, ContentNodeRelation
@@ -75,7 +75,7 @@ class DecisionExecutor:
             # 3. Update Approval Status
             old_status = approval.status
             approval.status = "executed"
-            # approval.executed_at = datetime.utcnow() # If we had this field
+            approval.executed_at = func.now()
             
             await self.db.commit()
             logger.info(f"Approval {approval_id} executed successfully")

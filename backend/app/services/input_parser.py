@@ -8,6 +8,7 @@ import docx
 import markdown
 from bs4 import BeautifulSoup
 from app.core.ai.client import ai_client
+from app.core.ai.prompt_loader import prompt_loader
 
 logger = logging.getLogger(__name__)
 
@@ -87,13 +88,16 @@ class InputParser:
                 elif ext == 'webp':
                     mime_type = "image/webp"
             
-            prompt = "请提取这张图片中的所有文字内容。直接输出文字，不要包含任何解释或Markdown格式。"
+            prompt_content = await prompt_loader.get_prompt("content/image_ocr")
+            if not prompt_content:
+                logger.error("Failed to load OCR prompt 'content/image_ocr'")
+                raise ValueError("OCR Prompt configuration missing")
             
             messages = [
                 {
                     "role": "user",
                     "content": [
-                        {"type": "text", "text": prompt},
+                        {"type": "text", "text": prompt_content},
                         {
                             "type": "image_url",
                             "image_url": {

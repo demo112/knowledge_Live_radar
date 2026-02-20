@@ -44,7 +44,7 @@ class HealthDetector:
         """
         try:
             prompt_content, metadata = prompt_loader.render_prompt(
-                "health_issue_analysis",
+                "analysis/health_issue",
                 {
                     "issue_type": issue_type,
                     "severity": severity,

@@ -94,13 +94,16 @@ class BatchClassificationService:
                 "content_preview": content_preview
             }
             
-            prompt_content, metadata = prompt_loader.render_prompt("content_analysis_batch", variables)
+            prompt_content, metadata = prompt_loader.render_prompt("content/batch_analysis", variables)
             
             if not prompt_content:
                 logger.error(f"Failed to load prompt 'content_analysis_batch' for item {item_data['id']}")
                 return {"id": item_data["id"], "success": False}
             
-            system_prompt = metadata.get("system_prompt", "You are a helpful assistant that categorizes content.")
+            system_prompt = metadata.get("system_prompt")
+            if not system_prompt:
+                logger.error(f"Missing system_prompt in metadata for 'content/batch_analysis'")
+                return {"id": item_data["id"], "success": False}
             
             messages = [
                 {"role": "system", "content": system_prompt},

@@ -33,7 +33,7 @@ import logging
 import json
 import re
 from typing import List, Dict, Any, Optional
-from app.services.prompt.prompt_manager import PromptManager
+from app.core.ai.prompt_loader import prompt_loader
 import asyncio
 
 logger = logging.getLogger(__name__)
@@ -45,7 +45,6 @@ class AIService:
         self._local_semaphore = asyncio.Semaphore(1)
         self._last_config = {}
         self._initialize_clients()
-        self.prompt_manager = PromptManager()
 
     def _initialize_clients(self):
         cloud_enabled = configuration_service.get("ai.enabled")
@@ -203,12 +202,12 @@ class AIService:
         if not (self._cloud_client or self._local_client) and not (configuration_service.get("ai.enabled") or configuration_service.get("ai.local.enabled")):
             return {"score": 100, "reason": "Skipped (AI disabled)"}
 
-        prompt = await self.prompt_manager.get_prompt_for_scene(
-            "soft_validation", 
+        prompt = await prompt_loader.get_prompt(
+            "validation/soft", 
             {"title": title, "content": content}
         )
         if not prompt:
-            logger.error("Prompt template 'soft_validation' not found")
+            logger.error("Prompt template 'validation/soft' not found")
             return {"score": 0, "reason": "System error: prompt missing"}
 
         response = await self.chat_completion(
@@ -230,8 +229,8 @@ class AIService:
         if not (self._cloud_client or self._local_client) and not (configuration_service.get("ai.enabled") or configuration_service.get("ai.local.enabled")):
             return {"summary": "", "key_points": []}
 
-        prompt = await self.prompt_manager.get_prompt_for_scene(
-            "summary_generation",
+        prompt = await prompt_loader.get_prompt(
+            "content/summary_generation",
             {"title": title, "content": content}
         )
         if not prompt:
@@ -256,8 +255,8 @@ class AIService:
         if not (self._cloud_client or self._local_client) and not (configuration_service.get("ai.enabled") or configuration_service.get("ai.local.enabled")):
             return []
 
-        prompt = await self.prompt_manager.get_prompt_for_scene(
-            "concept_extraction",
+        prompt = await prompt_loader.get_prompt(
+            "content/concept_extraction",
             {"title": title, "content": content}
         )
         if not prompt:
@@ -275,8 +274,8 @@ class AIService:
         if not (self._cloud_client or self._local_client) and not (configuration_service.get("ai.enabled") or configuration_service.get("ai.local.enabled")):
             return []
 
-        prompt = await self.prompt_manager.get_prompt_for_scene(
-            "tag_generation",
+        prompt = await prompt_loader.get_prompt(
+            "content/tag_generation",
             {"title": title, "content": content}
         )
         if not prompt:

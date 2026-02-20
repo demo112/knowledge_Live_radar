@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 class SearchProcessor:
     async def understand_intent(self, query: str) -> Dict[str, Any]:
-        prompt_name = "search_intent"
+        prompt_name = "search/intent"
         variables = {
             "query": query
         }

@@ -20,7 +20,9 @@ class MatchType(str, Enum):
 class MatchResult:
     concept_id: uuid.UUID
     match_type: MatchType
+    concept_name: Optional[str] = None
     node_id: Optional[uuid.UUID] = None
+    node_name: Optional[str] = None
     confidence: float = 0.0
     details: Optional[str] = None
 
@@ -44,7 +46,9 @@ class ConceptMatcher:
             return MatchResult(
                 concept_id=concept.id,
                 match_type=MatchType.EXACT,
+                concept_name=concept.name,
                 node_id=node.id,
+                node_name=node.name,
                 confidence=1.0,
                 details=f"Exact match with node '{node.name}'"
             )
@@ -70,7 +74,9 @@ class ConceptMatcher:
                  return MatchResult(
                     concept_id=concept.id,
                     match_type=MatchType.SYNONYM,
+                    concept_name=concept.name,
                     node_id=node.id,
+                    node_name=node.name,
                     confidence=0.9,
                     details=f"Matched via synonym '{syn.synonym}' to node '{node.name}'"
                 )
@@ -79,6 +85,7 @@ class ConceptMatcher:
         return MatchResult(
             concept_id=concept.id,
             match_type=MatchType.NEW,
+            concept_name=concept.name,
             confidence=0.0,
             details="No matching node found"
         )

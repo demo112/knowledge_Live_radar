@@ -26,15 +26,14 @@ async def test_hard_validator():
 
 @pytest.mark.asyncio
 async def test_soft_validator():
-    # Patch the ai_service instance in soft_validator module
-    with patch("app.services.validator.soft_validator.ai_service") as mock_service:
-        mock_service.client = True # Simulate client exists
-        mock_service.validate_content_soft = AsyncMock()
+    # Patch the ai_facade instance in soft_validator module
+    with patch("app.services.validator.soft_validator.ai_facade") as mock_facade:
+        mock_facade.validate_content_soft = AsyncMock()
         
         validator = SoftValidator()
         
         # AI says valid (Score 80)
-        mock_service.validate_content_soft.return_value = {
+        mock_facade.validate_content_soft.return_value = {
             "score": 80,
             "reason": "This content is valid.",
             "dimensions": {}
@@ -44,7 +43,7 @@ async def test_soft_validator():
         assert result["score"] == 80
         
         # AI says invalid (Score 40)
-        mock_service.validate_content_soft.return_value = {
+        mock_facade.validate_content_soft.return_value = {
             "score": 40,
             "reason": "No, this is unrelated.",
             "dimensions": {}
@@ -54,7 +53,7 @@ async def test_soft_validator():
         assert result["score"] == 40
 
         # Boundary Test: Score 59 (Fail)
-        mock_service.validate_content_soft.return_value = {
+        mock_facade.validate_content_soft.return_value = {
             "score": 59,
             "reason": "Almost there",
             "dimensions": {}
@@ -63,7 +62,7 @@ async def test_soft_validator():
         assert not valid
 
         # Boundary Test: Score 60 (Pass)
-        mock_service.validate_content_soft.return_value = {
+        mock_facade.validate_content_soft.return_value = {
             "score": 60,
             "reason": "Just passed",
             "dimensions": {}

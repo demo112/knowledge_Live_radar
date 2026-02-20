@@ -1,7 +1,10 @@
 import uuid
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 import logging
+import json
+from urllib.parse import urlparse
+
 from duckduckgo_search import DDGS
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_
@@ -9,13 +12,15 @@ from sqlalchemy import select, and_
 from app.models.approval import Approval
 from app.models.source import InformationSource
 from app.models.pyramid import Pyramid, PyramidNode
-from app.schemas.source import DiscoveredSource
+from app.schemas.source import DiscoveredSource, DiscoveryEvent, DiscoveryStage, DiscoveryStatus
+from app.core.ai.facade import AIFacade
 
 logger = logging.getLogger(__name__)
 
 class SourceDiscoveryService:
     def __init__(self, db: AsyncSession):
         self.db = db
+        self.ai = AIFacade()
         try:
             self.ddgs = DDGS()
         except Exception as e:
@@ -37,176 +42,255 @@ class SourceDiscoveryService:
         Execute source discovery task with streaming events.
         Yields DiscoveryEvent.
         """
-        from app.schemas.source import DiscoveryEvent, DiscoveryStage, DiscoveryStatus
-        
-        # 1. Extract Keywords
-        yield DiscoveryEvent(event="stage_update", data={"stage": DiscoveryStage.EXTRACT, "status": DiscoveryStatus.RUNNING, "label": "提取关键词..."})
+        if not pyramid_id:
+            yield DiscoveryEvent(event="error", data={"message": "Pyramid ID is required for adaptive discovery."})
+            return
+
+        if not self.ddgs:
+            yield DiscoveryEvent(event="error", data={"message": "Search engine initialization failed."})
+            return
+
+        # 1. Extract Structure Snapshot
+        yield DiscoveryEvent(event="stage_update", data={"stage": DiscoveryStage.EXTRACT, "status": DiscoveryStatus.RUNNING, "label": "提取金字塔结构..."})
         try:
-            keywords = await self._get_keywords(pyramid_id)
-            if not keywords:
-                yield DiscoveryEvent(event="log", data={"message": "未找到关键词。", "level": "warning"})
-                yield DiscoveryEvent(event="stage_update", data={"stage": DiscoveryStage.EXTRACT, "status": DiscoveryStatus.COMPLETED})
+            snapshot = await self._get_structure_snapshot(pyramid_id)
+            if not snapshot:
+                yield DiscoveryEvent(event="error", data={"message": "Pyramid not found or empty."})
                 return
             
-            yield DiscoveryEvent(event="log", data={"message": f"已生成 {len(keywords)} 个关键词。", "level": "info"})
-            yield DiscoveryEvent(event="stage_update", data={"stage": DiscoveryStage.EXTRACT, "status": DiscoveryStatus.COMPLETED})
+            snapshot_json = json.dumps(snapshot, ensure_ascii=False, indent=2)
+            yield DiscoveryEvent(event="log", data={"message": f"Structure snapshot extracted for '{snapshot['name']}'.", "level": "info"})
         except Exception as e:
-            logger.error(f"Error getting keywords: {e}")
+            logger.error(f"Error extracting structure: {e}")
             yield DiscoveryEvent(event="error", data={"message": str(e)})
             return
 
-        # 2. Search
-        yield DiscoveryEvent(event="stage_update", data={"stage": DiscoveryStage.SEARCH, "status": DiscoveryStatus.RUNNING, "label": "执行搜索..."})
-        candidates = []
-        if not self.ddgs:
-            yield DiscoveryEvent(event="error", data={"message": "搜索引擎初始化失败"})
+        # 2. Generate Adaptive Queries
+        yield DiscoveryEvent(event="stage_update", data={"stage": DiscoveryStage.EXTRACT, "status": DiscoveryStatus.COMPLETED})
+        yield DiscoveryEvent(event="stage_update", data={"stage": DiscoveryStage.SEARCH, "status": DiscoveryStatus.RUNNING, "label": "生成自适应查询..."})
+        
+        try:
+            queries = await self.ai.generate_adaptive_queries(snapshot['name'], snapshot_json)
+            if not queries:
+                yield DiscoveryEvent(event="log", data={"message": "AI failed to generate queries, falling back to basic search.", "level": "warning"})
+                queries = [{"query": f"{snapshot['name']} documentation blog", "intent": "fallback", "scope": "Macro"}]
+            
+            yield DiscoveryEvent(event="log", data={"message": f"Generated {len(queries)} adaptive queries.", "level": "info"})
+        except Exception as e:
+            logger.error(f"Error generating queries: {e}")
+            yield DiscoveryEvent(event="error", data={"message": f"AI Query Generation Failed: {str(e)}"})
             return
 
-        total_keywords = len(keywords)
-        for i, kw in enumerate(keywords):
+        # 3. Execute Search
+        candidates = []
+        total_queries = len(queries)
+        
+        import asyncio
+        
+        for i, q_config in enumerate(queries):
+            query_str = q_config.get("query")
+            intent = q_config.get("intent", "unknown")
+            scope = q_config.get("scope", "General")
+            reason = q_config.get("reason", "")
+            
+            yield DiscoveryEvent(event="progress", data={
+                "current": i+1, 
+                "total": total_queries, 
+                "percentage": int((i+1)/total_queries*100), 
+                "message": f"[{scope}] {query_str}"
+            })
+            
             try:
-                yield DiscoveryEvent(event="progress", data={"current": i+1, "total": total_keywords, "percentage": int((i+1)/total_keywords*100), "message": f"正在搜索: {kw}"})
-                
-                # query format: "{keyword} (site:zhihu.com OR site:juejin.cn OR site:csdn.net OR site:segmentfault.com OR inurl:rss)"
-                # But simple search might be better: "{keyword} 博客" or "{keyword} 技术文章"
-                # RSS specific search is often hard because many sites don't index rss xml well.
-                # Let's try: "{keyword} 博客" to find blog homepages, then we can look for RSS links (future work).
-                # For now, let's target tech blogs more specifically.
-                query = f"{kw} (技术博客 OR 专栏 OR 官方文档)"
-                logger.debug(f"Searching for: {query}")
-                import asyncio
                 # Use synchronous DDGS in executor
                 results = await asyncio.get_running_loop().run_in_executor(
                     None,
-                    lambda: self.ddgs.text(query, region="cn-zh", max_results=5)
+                    lambda: self.ddgs.text(query_str, region="cn-zh", max_results=8)
                 )
                 
                 if results:
-                    found_count = 0
                     for res in results:
                         url = res.get("href") or res.get("url")
                         if not url: continue
                         
-                        # Filter out common non-blog sites if needed
-                        # e.g. baidu.com, google.com
-                        if "baidu.com" in url or "google.com" in url:
-                            continue
-
                         candidates.append({
                             "url": url,
                             "name": res.get("title") or "Unknown Title",
                             "description": res.get("body") or res.get("description") or "",
-                            "keyword": kw
+                            "query_context": {
+                                "query": query_str,
+                                "intent": intent,
+                                "scope": scope,
+                                "reason": reason
+                            }
                         })
-                        found_count += 1
-                    yield DiscoveryEvent(event="log", data={"message": f"关键词 '{kw}' 找到 {found_count} 个结果", "level": "info"})
             except Exception as e:
-                logger.error(f"Error searching for {kw}: {e}")
-                yield DiscoveryEvent(event="log", data={"message": f"搜索 '{kw}' 失败: {str(e)}", "level": "error"})
-                continue
-        
+                logger.error(f"Search failed for query '{query_str}': {e}")
+                yield DiscoveryEvent(event="log", data={"message": f"Search failed for '{query_str}': {str(e)}", "level": "warning"})
+
         yield DiscoveryEvent(event="stage_update", data={"stage": DiscoveryStage.SEARCH, "status": DiscoveryStatus.COMPLETED})
 
-        # 3. Filter
-        yield DiscoveryEvent(event="stage_update", data={"stage": DiscoveryStage.FILTER, "status": DiscoveryStatus.RUNNING, "label": "过滤结果..."})
-        yield DiscoveryEvent(event="log", data={"message": f"正在过滤 {len(candidates)} 个候选结果...", "level": "info"})
+        # 4. Filter & Create Proposals
+        yield DiscoveryEvent(event="stage_update", data={"stage": DiscoveryStage.FILTER, "status": DiscoveryStatus.RUNNING, "label": "过滤与去重..."})
         
-        valid_candidates = []
-        skipped_count = 0
-        for candidate in candidates:
-            if not candidate.get("url"): continue
-            
-            # Check exist
-            url = candidate["url"]
-            exists_source = await self.db.execute(select(InformationSource).where(InformationSource.url == url))
-            if exists_source.scalar_one_or_none():
-                skipped_count += 1
-                continue
-                
-            # Check pending
-            exists_approval = await self.db.execute(select(Approval).where(and_(Approval.type == "create_source", Approval.status == "pending")))
-            is_pending = False
-            for approval in exists_approval.scalars().all():
-                if approval.data and approval.data.get("url") == url:
-                    is_pending = True
-                    break
-            if is_pending:
-                skipped_count += 1
-                continue
-            
-            valid_candidates.append(candidate)
-            
-        yield DiscoveryEvent(event="log", data={"message": f"跳过 {skipped_count} 个已存在或待审批的来源。", "level": "info"})
-        yield DiscoveryEvent(event="stage_update", data={"stage": DiscoveryStage.FILTER, "status": DiscoveryStatus.COMPLETED})
-
-        # 4. Proposal
+        filtered_candidates = self._filter_results(candidates)
+        yield DiscoveryEvent(event="log", data={"message": f"Filtered {len(candidates)} -> {len(filtered_candidates)} candidates.", "level": "info"})
+        
         yield DiscoveryEvent(event="stage_update", data={"stage": DiscoveryStage.PROPOSAL, "status": DiscoveryStatus.RUNNING, "label": "生成提案..."})
+        
         created_count = 0
-        for candidate in valid_candidates:
-            try:
-                new_approval = Approval(
-                    id=uuid.uuid4(),
-                    type="create_source",
-                    status="pending",
-                    data={
-                        "url": candidate["url"],
-                        "name": candidate["name"],
-                        "description": candidate.get("description"),
-                        "source_type": "RSS",
-                        "reason": f"与节点 '{candidate['keyword']}' 相关",
-                        "tags": [candidate['keyword']]
-                    },
-                    generated_by="system",
-                    reason=f"基于关键词自动发现: {candidate['keyword']}",
-                    created_at=datetime.now(),
-                    updated_at=datetime.now()
-                )
-                self.db.add(new_approval)
-                created_count += 1
-            except Exception as e:
-                logger.error(f"Failed to create approval: {e}")
+        for cand in filtered_candidates:
+            # Check if source exists
+            stmt = select(InformationSource).where(InformationSource.url == cand['url'])
+            result = await self.db.execute(stmt)
+            if result.scalar_one_or_none():
+                continue
                 
-        await self.db.commit()
-        yield DiscoveryEvent(event="result", data={"count": created_count, "summary": f"创建了 {created_count} 个提案"})
-        yield DiscoveryEvent(event="stage_update", data={"stage": DiscoveryStage.PROPOSAL, "status": DiscoveryStatus.COMPLETED})
-        yield DiscoveryEvent(event="finish", data={})
+            # Check if approval exists
+            stmt = select(Approval).where(
+                and_(
+                    Approval.data['url'].astext == cand['url'],
+                    Approval.status == 'pending'
+                )
+            )
+            result = await self.db.execute(stmt)
+            if result.scalar_one_or_none():
+                continue
 
-    async def _get_keywords(self, pyramid_id: Optional[uuid.UUID]) -> List[str]:
-        """
-        Extract keywords from pyramid nodes.
-        Combine node name with parent name for better context.
-        Prioritize leaf nodes and nodes with fewer contents.
-        """
-        # Eager load parent to construct context
-        from sqlalchemy.orm import selectinload
-        query = select(PyramidNode).options(selectinload(PyramidNode.parent))
-        
-        if pyramid_id:
-            query = query.where(PyramidNode.pyramid_id == pyramid_id)
+            # Create Approval
+            ctx = cand['query_context']
+            reason = f"[{ctx['scope']}] {ctx['intent']} (Reason: {ctx['reason']})"
             
-        # Get nodes that are active and not deleted
-        query = query.where(PyramidNode.is_deleted == False)
+            approval_data = {
+                "name": cand['name'],
+                "url": cand['url'],
+                "type": "WEB", # Default to WEB, user can change
+                "description": cand['description'],
+                "source_context": reason
+            }
+            
+            approval = Approval(
+                type="create_source",
+                data={**approval_data, "pyramid_id": str(pyramid_id)},
+                status="pending",
+                generated_by="ai",
+                applicant_id="system",
+                reason=reason
+            )
+            self.db.add(approval)
+            created_count += 1
         
-        # Limit to avoid too many keywords
-        # Strategy: Randomly pick 10 nodes or pick nodes with specific criteria
-        # Here we pick nodes with fewer contents (prioritize under-explored nodes)
-        query = query.order_by(PyramidNode.content_count.asc()).limit(10)
+        try:
+            await self.db.commit()
+        except Exception as e:
+            await self.db.rollback()
+            logger.error(f"Failed to commit approvals: {e}")
+            yield DiscoveryEvent(event="error", data={"message": "Failed to save proposals."})
+            return
+
+        yield DiscoveryEvent(event="result", data={"count": created_count, "message": f"Created {created_count} new source proposals."})
+        yield DiscoveryEvent(event="stage_update", data={"stage": DiscoveryStage.FINISH, "status": DiscoveryStatus.COMPLETED})
+
+
+    async def _get_structure_snapshot(self, pyramid_id: uuid.UUID) -> Optional[Dict[str, Any]]:
+        """
+        Extract a simplified tree structure of the pyramid for AI context.
+        """
+        # Fetch pyramid
+        stmt = select(Pyramid).where(Pyramid.id == pyramid_id)
+        result = await self.db.execute(stmt)
+        pyramid = result.scalar_one_or_none()
+        if not pyramid:
+            return None
+
+        # Fetch all nodes
+        stmt = select(PyramidNode).where(
+            and_(
+                PyramidNode.pyramid_id == pyramid_id,
+                PyramidNode.is_deleted == False
+            )
+        ).order_by(PyramidNode.level, PyramidNode.sort_order)
         
-        result = await self.db.execute(query)
+        result = await self.db.execute(stmt)
         nodes = result.scalars().all()
         
-        keywords = set()
+        # Build tree
+        node_map = {}
+        roots = []
+        
         for node in nodes:
-            if not node.name: continue
+            node_data = {
+                "name": node.name,
+                "description": node.description,
+                "level": node.level,
+                "children": []
+            }
+            # Only include ID if needed for internal logic, but for AI prompt name is enough
             
-            # Combine with parent name if exists for better context
-            # e.g. "Tools" -> "Python Tools"
-            kw = node.name
-            if node.parent and node.parent.name:
-                # Avoid redundancy if parent name is already part of node name
-                if node.parent.name not in node.name:
-                    kw = f"{node.parent.name} {node.name}"
+            node_map[node.id] = node_data
             
-            keywords.add(kw)
+            if node.parent_id and node.parent_id in node_map:
+                node_map[node.parent_id]["children"].append(node_data)
+            elif node.level == 1:
+                roots.append(node_data)
+        
+        # Prune tree for token limit (Simple heuristic: Depth limit 3)
+        def prune(n, depth):
+            if depth >= 3:
+                n["children"] = [] # Cut off children at depth 3
+                return
+            for c in n["children"]:
+                prune(c, depth + 1)
                 
-        return list(keywords)
+        for r in roots:
+            prune(r, 1)
+
+        return {
+            "name": pyramid.name,
+            "description": pyramid.description,
+            "structure": roots
+        }
+
+    def _filter_results(self, candidates: List[Dict]) -> List[Dict]:
+        """
+        Filter and deduplicate search results.
+        """
+        seen_urls = set()
+        filtered = []
+        
+        ignored_domains = [
+            "baidu.com", "google.com", "bing.com", "sogou.com", 
+            "so.com", "yahoo.com", "yandex.com",
+            "facebook.com", "twitter.com", "instagram.com",
+            "youtube.com", "bilibili.com", # Video sites might be good, but we focus on text for now unless specified
+            "pinterest.com", "linkedin.com"
+        ]
+        
+        for cand in candidates:
+            url = cand['url']
+            try:
+                parsed = urlparse(url)
+                domain = parsed.netloc.lower()
+                
+                # Rule 0: Skip if domain in ignored list
+                if any(ignored in domain for ignored in ignored_domains):
+                    continue
+                
+                # Rule 1: Deduplicate by domain (Keep only one result per domain? Or allow multiple if paths differ?)
+                # Let's allow multiple if paths differ significantly, but exact URL duplicate check is must.
+                if url in seen_urls:
+                    continue
+                
+                # Rule 2: Prefer root or near-root paths for "Macro" scope
+                # But allow deep paths for "Micro" scope.
+                # So we don't aggressively filter by path depth anymore, relying on AI's query to find right pages.
+                
+                # Rule 3: Content-Type check (hard to do without fetching).
+                # Assume search engine result is HTML.
+                
+                seen_urls.add(url)
+                filtered.append(cand)
+                
+            except Exception:
+                continue
+                
+        return filtered

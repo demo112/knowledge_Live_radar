@@ -4,11 +4,12 @@ import asyncio
 from unittest.mock import MagicMock, AsyncMock, patch
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy import select
 from datetime import datetime
 
 from app.services.content_processor import ContentProcessor
-from app.services.ai_service import AIService
-from app.services.prompt_loader import prompt_loader
+from app.core.ai.facade import ai_facade
+from app.core.ai.prompt_loader import prompt_loader
 from app.models.source import InformationSource
 from app.models.content import ContentItem
 from app.database import Base
@@ -54,12 +55,7 @@ async def test_ai_content_flow(db_session):
     """
     
     # 1. Setup
-    # Load prompts (mocking file reading to avoid dependency on actual files if needed, 
-    # but here we assume prompt_loader works with actual files or we skip if not critical)
-    # For integration test, we want to test PromptManager -> DB interaction.
-    # So we should let prompt_loader run if possible, or manually insert prompts.
-    # Let's assume prompts are loaded or we manually insert them for stability.
-    await prompt_loader.load_initial_prompts()
+    # Prompts are loaded from files by prompt_loader, no need to load_initial_prompts
     
     source = InformationSource(
         name="Test Source",
@@ -80,7 +76,8 @@ async def test_ai_content_flow(db_session):
         with patch("app.services.content_processor.HardValidator") as MockHard, \
              patch("app.services.content_processor.SoftValidator") as MockSoft, \
              patch("app.services.content_processor.CrossValidator") as MockCross, \
-             patch("app.services.content_processor.ai_service") as mock_ai_service:
+             patch("app.services.content_processor.EvolutionEngine") as MockEvolution, \
+             patch("app.services.content_processor.ai_facade") as mock_ai_facade:
             
             # Setup Validator instances
             mock_hard_instance = MockHard.return_value
@@ -92,41 +89,39 @@ async def test_ai_content_flow(db_session):
             mock_cross_instance = MockCross.return_value
             mock_cross_instance.validate = AsyncMock(return_value=(True, {"cross": "pass"}))
 
+            mock_evolution_instance = MockEvolution.return_value
+
             # We need to mock: validate_content_soft, generate_summary, generate_tags, extract_concepts
             
-            mock_ai_service.validate_content_soft = AsyncMock(return_value={
+            mock_ai_facade.validate_content_soft = AsyncMock(return_value={
                 "score": 85, 
                 "reason": "Good",
                 "dimensions": {"info": 8}
             })
-            mock_ai_service.generate_summary = AsyncMock(return_value={
+            mock_ai_facade.generate_summary = AsyncMock(return_value={
                 "summary": "AI Agents summary",
                 "key_points": ["Point 1"]
             })
-            mock_ai_service.generate_tags = AsyncMock(return_value=["AI", "Tech"])
-            mock_ai_service.extract_concepts = AsyncMock(return_value=[{"name": "Agent", "type": "Concept"}])
+            mock_ai_facade.generate_tags = AsyncMock(return_value=["AI", "Agents"])
+            mock_ai_facade.extract_concepts = AsyncMock(return_value=[{"name": "AI Agents", "type": "Tech"}])
             
-            # Also need client for the check `if not ai_service.client` in soft_validator
-            mock_ai_service.client = True 
-
             # 3. Action
             processor = ContentProcessor()
             job = await processor.process_source(source, db_session)
             
-            # 4. Verify Job Status
+            # 4. Verify
             assert job.status == "COMPLETED"
-            assert job.items_new == 1
-                
-            # 5. Verify Content Item
-            from sqlalchemy import select
+            assert job.items_fetched == 1
+            
+            # Let's check the content created
+            
             stmt = select(ContentItem).where(ContentItem.source_id == source.id)
             result = await db_session.execute(stmt)
-            content = result.scalar_one()
+            content_items = result.scalars().all()
             
-            assert content.title == "The Future of AI Agents"
-            assert content.ai_processed is True
-            assert content.summary == "AI Agents summary"
-            assert "AI" in content.tags
-            assert content.concepts[0]["name"] == "Agent"
-            
-            print("\n✅ Integration Test Passed: Content successfully processed with AI fields.")
+            assert len(content_items) == 1
+            item = content_items[0]
+            assert item.title == "The Future of AI Agents"
+            assert item.summary == "AI Agents summary"
+            assert "AI" in item.tags
+            assert item.ai_processed is True

@@ -77,3 +77,9 @@ class NodeChangeImpactResponse(BaseModel):
     impact_score: float # 0-1
     affected_children_ids: List[UUID] = []
     reasoning: str
+
+class NodePlacementResponse(BaseModel):
+    best_parent_id: Optional[UUID] = None
+    confidence: float
+    reasoning: str
+    alternative_parent_ids: List[UUID] = []

@@ -3,12 +3,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.ai.processors.pyramid import pyramid_processor
 from app.core.ai.processors.content import content_processor
 from app.core.ai.processors.search import search_processor
+from app.core.ai.processors.discovery import discovery_processor
 from app.core.ai.processors.enhancement import enhancement_processor
 from app.core.ai.processors.suggestion import suggestion_processor
 from app.schemas.ai import (
     PyramidSuggestResponse, 
     ContentClassificationResponse, 
-    SourceAnalyzeResponse
+    SourceAnalyzeResponse,
+    NodePlacementResponse
 )
 
 
@@ -18,6 +20,18 @@ class AIFacade:
     委托给具体的处理器执行。
     """
     
+    async def find_best_parent_node(
+        self,
+        new_node_name: str,
+        new_node_description: str,
+        source_context: str,
+        candidate_nodes: List[Dict[str, Any]]
+    ) -> NodePlacementResponse:
+        """Find the best parent node for a new node."""
+        return await pyramid_processor.find_best_parent_node(
+            new_node_name, new_node_description, source_context, candidate_nodes
+        )
+
     async def suggest_pyramid_structure(self, name: str, description: str) -> PyramidSuggestResponse:
         """生成金字塔结构建议。"""
         return await pyramid_processor.generate_structure(name, description)
@@ -33,6 +47,13 @@ class AIFacade:
     async def understand_search_intent(self, query: str) -> Dict[str, Any]:
         """理解搜索意图。"""
         return await search_processor.understand_intent(query)
+
+    async def generate_adaptive_queries(self, pyramid_name: str, pyramid_structure_json: str) -> List[Dict[str, str]]:
+        """
+        Generate adaptive search queries based on pyramid structure context.
+        """
+        return await discovery_processor.generate_adaptive_queries(pyramid_name, pyramid_structure_json)
+
 
     async def validate_content_soft(self, title: str, content: str) -> Dict[str, Any]:
         """软性校验：使用 AI 评估内容质量。"""

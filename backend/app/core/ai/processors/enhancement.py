@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 class EnhancementProcessor:
     async def validate_content_soft(self, title: str, content: str) -> Dict[str, Any]:
-        prompt_name = "soft_validation"
+        prompt_name = "validation/soft"
         variables = {
             "title": title,
             "content": content[:3000]
@@ -36,7 +36,7 @@ class EnhancementProcessor:
         return result
 
     async def generate_summary(self, title: str, content: str) -> Dict[str, Any]:
-        prompt_name = "summary_generation"
+        prompt_name = "content/summary_generation"
         variables = {
             "title": title,
             "content": content[:3000]
@@ -63,7 +63,7 @@ class EnhancementProcessor:
         return result
 
     async def extract_concepts(self, title: str, content: str) -> List[Dict[str, str]]:
-        prompt_name = "concept_extraction"
+        prompt_name = "content/concept_extraction"
         variables = {
             "title": title,
             "content": content[:10000]
@@ -83,7 +83,7 @@ class EnhancementProcessor:
         return result.get("concepts", [])
 
     async def generate_tags(self, title: str, content: str) -> List[str]:
-        prompt_name = "tag_generation"
+        prompt_name = "content/tag_generation"
         variables = {
             "title": title,
             "content": content[:3000]
@@ -111,7 +111,7 @@ class EnhancementProcessor:
         old_days: int = 30,
         new_days: int = 7
     ) -> Dict[str, Any]:
-        prompt_name = "drift_detection"
+        prompt_name = "analysis/drift_detection"
         variables = {
             "concept_name": concept_name,
             "concept_description": concept_description or "无",
@@ -128,10 +128,7 @@ class EnhancementProcessor:
         
         model = metadata.get("model") if metadata else None
         
-        messages = [
-            {"role": "system", "content": "你是一个知识图谱一致性分析专家。请用中文回复。"},
-            {"role": "user", "content": prompt_content}
-        ]
+        messages = [{"role": "user", "content": prompt_content}]
         response_text = await ai_client.chat_completion(messages, model=model, temperature=0.1, context="drift_detection")
         
         if not response_text:
@@ -156,7 +153,7 @@ class EnhancementProcessor:
         new_text: str,
         existing_content: str
     ) -> Dict[str, Any]:
-        prompt_name = "cross_validation"
+        prompt_name = "validation/cross"
         variables = {
             "new_title": new_title,
             "new_text": new_text[:500],
@@ -170,10 +167,7 @@ class EnhancementProcessor:
         
         model = metadata.get("model") if metadata else None
         
-        messages = [
-            {"role": "system", "content": "你是一个事实核查助手。只返回有效的 JSON。确保 JSON 中的所有文本内容使用中文。"},
-            {"role": "user", "content": prompt_content}
-        ]
+        messages = [{"role": "user", "content": prompt_content}]
         response_text = await ai_client.chat_completion(messages, model=model, temperature=0.1, context="cross_validation")
         
         if not response_text:
@@ -193,7 +187,7 @@ class EnhancementProcessor:
         content_title: str,
         node_name: str = "无"
     ) -> str:
-        prompt_name = "proposal_reason"
+        prompt_name = "approval/proposal_reason"
         variables = {
             "match_type": match_type,
             "concept_name": concept_name,

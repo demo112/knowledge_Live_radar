@@ -49,7 +49,7 @@ class SuggestionProcessor:
                 return {"error": "金字塔不存在", "suggestions": []}
 
             prompt_content, metadata = prompt_loader.render_prompt(
-                "pyramid_health_analysis",
+                "pyramid/health_analysis",
                 {
                     "pyramid_structure": data["structure"],
                     "node_stats": data["node_stats"],
@@ -123,7 +123,7 @@ class SuggestionProcessor:
                 return {"error": "信息源不存在", "suggestions": []}
 
             prompt_content, metadata = prompt_loader.render_prompt(
-                "source_health_analysis",
+                "source/health_analysis",
                 {
                     "source_info": data["source_info"],
                     "crawl_history": data["crawl_history"],
@@ -193,7 +193,7 @@ class SuggestionProcessor:
             data = await self._collect_content_data(content_uuids, db)
 
             prompt_content, metadata = prompt_loader.render_prompt(
-                "content_metabolism_analysis",
+                "analysis/metabolism",
                 {
                     "content_list": data["content_list"],
                     "quality_scores": data["quality_scores"],
@@ -261,7 +261,7 @@ class SuggestionProcessor:
                 return {"error": "节点不存在", "suggestions": []}
 
             prompt_content, metadata = prompt_loader.render_prompt(
-                "drift_detection",
+                "analysis/drift_detection",
                 {
                     "concept_name": data["concept_name"],
                     "concept_description": data["concept_description"],

@@ -22,7 +22,6 @@ from app.services.scheduler.scheduler_service import scheduler_service
 from app.services.scheduler.crawl_manager import crawl_manager
 from app.services.scheduler import tasks
 from app.services.scheduler.task_registry import TaskRegistry
-from app.services.prompt_loader import prompt_loader_service
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -39,9 +38,6 @@ async def lifespan(app: FastAPI):
     # Startup
     await scheduler_service.start()
     await crawl_manager.start()
-    
-    # Load AI Prompts
-    await prompt_loader_service.load_initial_prompts()
     
     # Register Scheduled Tasks (Create in DB if not exist)
     # 1. Content Crawl (Every 30 mins)

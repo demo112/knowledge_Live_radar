@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 class ContentProcessor:
     async def classify_content(self, title: str, content: str, existing_nodes: List[Dict[str, Any]]) -> ContentClassificationResponse:
-        prompt_name = "content_classification"
+        prompt_name = "content/classification"
         variables = {
             "title": title,
             "content": content[:2000], # Truncate for token limit
@@ -43,7 +43,7 @@ class ContentProcessor:
         )
 
     async def analyze_source(self, url: str, sample_content: str) -> SourceAnalyzeResponse:
-        prompt_name = "source_analysis"
+        prompt_name = "source/analysis"
         variables = {
             "url": url,
             "content_sample": sample_content[:2000]

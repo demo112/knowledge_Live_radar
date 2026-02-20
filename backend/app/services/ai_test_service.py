@@ -3,6 +3,7 @@ import time
 from typing import Dict, Any
 from openai import AsyncOpenAI
 from app.services.config.configuration_service import configuration_service
+from app.core.ai.prompt_loader import prompt_loader
 
 logger = logging.getLogger(__name__)
 
@@ -82,9 +83,14 @@ class AITestService:
         start_time = time.time()
         try:
             # Send simple test request
+            test_content = await prompt_loader.get_prompt("system/connectivity_test")
+            if not test_content:
+                logger.error("Failed to load test prompt 'system/connectivity_test'")
+                raise ValueError("Test Prompt configuration missing")
+                
             await client.chat.completions.create(
                 model=model,
-                messages=[{"role": "user", "content": "Hello"}],
+                messages=[{"role": "user", "content": test_content}],
                 max_tokens=10
             )
             

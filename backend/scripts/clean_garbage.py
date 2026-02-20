@@ -16,8 +16,7 @@ from app.models import (
     ContentItem, ContentNodeRelation, ValidationResult, AISuggestion,
     Approval, Hotspot,
     Concept, ConceptSynonym, Snapshot, Contribution, SynonymMapping,
-    BatchTask, DomainWhitelist, DiscoveredDomain,
-    PromptTemplate, PromptVersion, ABTest
+    BatchTask, DomainWhitelist, DiscoveredDomain
 )
 
 # Configure logging
@@ -115,7 +114,6 @@ async def clean_business_data(session):
         AISuggestion,
         ConceptSynonym,
         SynonymMapping,
-        PromptVersion,
         
         # 2. Secondary Entities
         PyramidNode,
@@ -126,14 +124,12 @@ async def clean_business_data(session):
         BatchTask,
         DiscoveredDomain,
         DomainWhitelist,
-        ABTest,
         
         # 3. Core Entities
         ContentItem,
         InformationSource,
         Pyramid,
-        Concept,
-        PromptTemplate
+        Concept
     ]
     
     total_deleted = 0

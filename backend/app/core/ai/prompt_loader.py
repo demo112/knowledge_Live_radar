@@ -82,4 +82,15 @@ class PromptLoader:
             logger.error(f"Error rendering prompt {prompt_name}: {e}")
             return None, metadata
 
+    async def get_prompt(self, prompt_name: str, variables: Dict[str, Any] = None) -> Optional[str]:
+        """
+        Async wrapper to get rendered prompt content.
+        Compatible with previous AI Service interface.
+        """
+        if variables is None:
+            variables = {}
+        
+        content, _ = self.render_prompt(prompt_name, variables)
+        return content
+
 prompt_loader = PromptLoader()

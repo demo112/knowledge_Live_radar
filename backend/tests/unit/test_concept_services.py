@@ -12,14 +12,12 @@ async def test_extract_concepts():
     mock_db = AsyncMock()
     extractor = ConceptExtractor(mock_db)
     
-    mock_response = json.dumps({
-        "concepts": [
-            {"name": "Python", "type": "technology", "description": "Lang", "confidence": 0.9}
-        ]
-    })
+    expected_concepts = [
+        {"name": "Python", "type": "technology", "description": "Lang", "confidence": 0.9}
+    ]
     
-    with patch("app.services.concept_extractor.ai_service.chat_completion", new_callable=AsyncMock) as mock_chat:
-        mock_chat.return_value = mock_response
+    with patch("app.services.concept_extractor.ai_facade.extract_concepts", new_callable=AsyncMock) as mock_extract:
+        mock_extract.return_value = expected_concepts
         
         concepts = await extractor.extract_concepts("Python is great")
         
