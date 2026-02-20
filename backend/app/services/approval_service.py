@@ -1,7 +1,7 @@
 import uuid
 from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, func
 from app.models.approval import Approval
 from app.schemas.approval import ApprovalCreate, ApprovalUpdate
 
@@ -42,8 +42,26 @@ class ApprovalService:
         await self.db.commit()
         await self.db.refresh(approval)
         
-        if old_status != approval.status:
-            from app.services.notification_service import notification_service
-            await notification_service.notify_approval_status_change(approval, old_status, approval.status)
-
+        # if old_status != approval.status:
+        #     from app.services.notification_service import notification_service
+        #     await notification_service.notify_approval_status_change(approval, old_status, approval.status)
+        
         return approval
+
+    async def execute_approval(self, id: uuid.UUID, user_id: str = "system") -> bool:
+        """
+        Execute an approved proposal.
+        """
+        from app.services.decision_executor import DecisionExecutor
+        executor = DecisionExecutor(self.db)
+        return await executor.execute_approval(id, user_id)
+
+    async def rollback_execution(self, id: uuid.UUID) -> bool:
+        """
+        Rollback an executed proposal.
+        """
+        from app.services.decision_executor import DecisionExecutor
+        executor = DecisionExecutor(self.db)
+        return await executor.rollback_execution(id)
+
+

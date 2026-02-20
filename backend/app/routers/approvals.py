@@ -4,7 +4,6 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.services.approval_service import ApprovalService
-from app.services.decision_executor import DecisionExecutor
 from app.services.impact_analyzer import ImpactAnalyzer
 from app.schemas.approval import ApprovalCreate, ApprovalUpdate, ApprovalResponse
 from app.schemas.common import SuccessResponse
@@ -79,10 +78,9 @@ async def review_approval(
 async def execute_approval(
     id: UUID,
     user_id: str = "current_user", # In real app, get from auth context
-    db: AsyncSession = Depends(get_db)
+    service: ApprovalService = Depends(get_service)
 ):
-    executor = DecisionExecutor(db)
-    success = await executor.execute_approval(id, user_id)
+    success = await service.execute_approval(id, user_id)
     if not success:
         raise HTTPException(status_code=400, detail="执行失败。请确保提案已批准且有效。")
     return SuccessResponse(data=success)
@@ -90,10 +88,9 @@ async def execute_approval(
 @router.post("/{id}/rollback", response_model=SuccessResponse[bool])
 async def rollback_approval(
     id: UUID,
-    db: AsyncSession = Depends(get_db)
+    service: ApprovalService = Depends(get_service)
 ):
-    executor = DecisionExecutor(db)
-    success = await executor.rollback_execution(id)
+    success = await service.rollback_execution(id)
     if not success:
         raise HTTPException(status_code=400, detail="回滚失败。请确保提案已执行且存在快照。")
     return SuccessResponse(data=success)
