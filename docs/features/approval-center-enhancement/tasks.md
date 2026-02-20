@@ -41,14 +41,14 @@ graph LR
 
 ### 依赖关系速查表
 
-| 任务 | 前置依赖 | 可并行 |
-|------|----------|--------|
-| Task 1: 更新 Approval Schemas | 无 | - |
-| Task 2: 实现批量处理服务 | Task 1 | - |
-| Task 3: 实现批量审批 API | Task 2 | - |
-| Task 4: 更新前端 API Client | Task 3 | - |
-| Task 5: 改造 ApprovalList 组件 | Task 4 | - |
-| Task 6: 集成测试 | Task 5 | - |
+| 任务 | 前置依赖 | 可并行 | 状态 |
+|------|----------|--------|------|
+| Task 1: 更新 Approval Schemas | 无 | - | ✅ 完成 |
+| Task 2: 实现批量处理服务 | Task 1 | - | ✅ 完成 |
+| Task 3: 实现批量审批 API | Task 2 | - | ✅ 完成 |
+| Task 4: 更新前端 API Client | Task 3 | - | ✅ 完成 |
+| Task 5: 改造 ApprovalList 组件 | Task 4 | - | ✅ 完成 |
+| Task 6: 集成测试 | Task 5 | - | ✅ 完成 |
 
 ## 任务清单
 
