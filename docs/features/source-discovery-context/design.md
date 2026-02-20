@@ -51,11 +51,11 @@ interface SuccessResponse {
 
 ### 1. 结构快照提取 (`_get_structure_snapshot`)
 
-从 `Pyramid` 和 `PyramidNode` 表中构建树状结构：
+从 `Pyramid` 和 `PyramidNode` 表中构建**全量树状结构**：
 - **Root**: Pyramid Name & Description
-- **L1-L3 Nodes**: Name, Description (if meaningful)
-- **Leaf Nodes (Optional)**: High priority or recent ones (limit total tokens)
-- **Output**: Simplified JSON Tree String
+- **All Nodes**: Name, Description (if meaningful), Level
+- **Format**: 使用缩进文本（Indented Text）或精简 JSON 表示层级关系
+- **Token Strategy**: 优先保留完整的层级结构。若超出 Token 限制（如 8k/16k），优先保留高层级节点和近期更新的叶子节点，而非简单截断深度。
 
 ### 2. 自适应查询生成 (`DiscoveryProcessor`)
 
@@ -63,7 +63,6 @@ interface SuccessResponse {
 
 ```markdown
 ---
-model: deepseek-chat
 temperature: 0.7
 ---
 
@@ -72,17 +71,19 @@ temperature: 0.7
 
 # Context
 用户正在为一个名为 "{{ pyramid_name }}" 的知识金字塔寻找高质量的信息源。
-以下是金字塔的结构快照（包含核心分支和关键节点）：
-```json
-{{ pyramid_structure_json }}
+以下是金字塔的**全量结构上下文**：
+```text
+{{ pyramid_structure_text }}
 ```
 
 # Task
-分析上述金字塔结构，制定一个**多维度的信息源搜索策略**。
-请生成 3-5 个搜索查询配置，覆盖以下三个维度（视情况组合）：
-1. **宏观（Macro）**: 针对整体领域（如官方文档、Awesome列表、社区入口）。
-2. **中观（Meso）**: 针对关键子树或分支（如某个特定技术栈的深度解析）。
-3. **微观（Micro）**: 针对具有代表性的、新兴的或复杂的具体节点（如最新评测、实战教程）。
+分析上述金字塔结构，制定一个**智能、灵活的信息源搜索策略**。
+不要局限于特定的层级（如仅关注顶层或底层），而是像人类专家一样，根据内容的特性决定关注点：
+- 如果这是一个广度优先的领域概览，请关注宏观（Macro）资源（如官方文档、Awesome列表）。
+- 如果某些分支非常深且复杂，请关注中观（Meso）资源（如深度解析、架构设计）。
+- 如果某些叶子节点代表了前沿、具体的技术点或实体，请关注微观（Micro）资源（如最新评测、实战教程）。
+
+请生成 3-5 个最具价值的搜索查询配置。
 
 # Output Format
 JSON List of objects:
@@ -91,7 +92,7 @@ JSON List of objects:
     "query": "搜索关键词",
     "intent": "寻找官方文档/技术博客/社区讨论/...",
     "scope": "Macro/Meso/Micro",
-    "reason": "分析原因（例如：'发现 Rust Async 是一个复杂的子领域，需要专门的深入教程'）"
+    "reason": "分析原因（例如：'发现节点 X 是一个新兴且复杂的具体技术点，需要专门的深入教程'）"
   },
   ...
 ]
