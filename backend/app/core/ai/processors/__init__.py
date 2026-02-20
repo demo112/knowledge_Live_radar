@@ -3,6 +3,7 @@ from app.core.ai.processors.content import content_processor
 from app.core.ai.processors.search import search_processor
 from app.core.ai.processors.enhancement import enhancement_processor
 from app.core.ai.processors.suggestion import suggestion_processor
+from app.core.ai.processors.cognitive_processor import cognitive_processor
 
 __all__ = [
     "pyramid_processor",
@@ -10,4 +11,5 @@ __all__ = [
     "search_processor",
     "enhancement_processor",
     "suggestion_processor",
+    "cognitive_processor",
 ]

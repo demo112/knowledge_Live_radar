@@ -18,6 +18,12 @@ class DeterministicEmbeddingFunction(embedding_functions.EmbeddingFunction):
     """
     DIMENSION = 384  # Match all-MiniLM-L6-v2 dimension
 
+    def __init__(self):
+        super().__init__()
+
+    def name(self) -> str:
+        return "deterministic_hashing"
+
     def __call__(self, texts: List[str]) -> List[List[float]]:
         results = []
         for text in texts:
@@ -87,6 +93,37 @@ class VectorService:
             # Non-blocking error for vector operations
             pass
 
+    async def upsert_knowledge_node_vector(self, node_id: UUID, name: str, description: Optional[str] = None, ai_model: Optional[Dict] = None):
+        """
+        Upsert a knowledge node vector. Text = name + description + ai_model(summary/concepts).
+        """
+        try:
+            text = f"{name}"
+            if description:
+                text += f"\nDescription: {description}"
+            
+            if ai_model:
+                summary = ai_model.get("summary") or ai_model.get("core_concept")
+                if summary:
+                    text += f"\nAI Model: {summary}"
+                
+                # Add tags/concepts if available
+                tags = ai_model.get("tags") or ai_model.get("keywords")
+                if tags and isinstance(tags, list):
+                    text += f"\nTags: {', '.join(tags)}"
+
+            meta = {"type": "knowledge_node", "name": name}
+            
+            self.node_collection.upsert(
+                ids=[str(node_id)],
+                documents=[text],
+                metadatas=[meta]
+            )
+            logger.debug(f"Upserted knowledge node vector: {node_id}")
+        except Exception as e:
+            logger.error(f"Error upserting knowledge node vector {node_id}: {e}")
+            pass
+
     async def upsert_content_vector(self, content_id: UUID, title: str, summary: Optional[str] = None, concepts: Optional[List[str]] = None, metadata: Optional[Dict] = None):
         """
         Upsert a content vector. Text = title + summary + concepts.
@@ -112,14 +149,20 @@ class VectorService:
             logger.error(f"Error upserting content vector {content_id}: {e}")
             pass
 
-    async def search_similar_nodes(self, query_text: str, limit: int = 5, threshold: float = 0.0) -> List[Dict[str, Any]]:
+    async def search_similar_nodes(self, query_text: str, limit: int = 5, node_type: str = None) -> List[Dict[str, Any]]:
         """
         Search for similar nodes.
+        If node_type is provided, filters by metadata['type'].
         """
         try:
+            where_filter = None
+            if node_type:
+                where_filter = {"type": node_type}
+                
             results = self.node_collection.query(
                 query_texts=[query_text],
-                n_results=limit
+                n_results=limit,
+                where=where_filter
             )
             
             # Results structure: {'ids': [['id1', 'id2']], 'distances': [[0.1, 0.2]], ...}
@@ -154,6 +197,47 @@ class VectorService:
             
         except Exception as e:
             logger.error(f"Error searching similar nodes: {e}")
+            return []
+
+    async def search_similar_content(self, query_text: str, limit: int = 5) -> List[Dict[str, Any]]:
+        """
+        Search for similar content items.
+        """
+        try:
+            results = self.content_collection.query(
+                query_texts=[query_text],
+                n_results=limit
+            )
+            
+            parsed_results = []
+            if results["ids"] and results["distances"]:
+                ids = results["ids"][0]
+                distances = results["distances"][0]
+                metadatas = results["metadatas"][0] if results["metadatas"] else [{}] * len(ids)
+                
+                for i, content_id in enumerate(ids):
+                    dist = distances[i]
+                    parsed_results.append({
+                        "id": UUID(content_id),
+                        "distance": dist,
+                        "metadata": metadatas[i]
+                    })
+            
+            return parsed_results
+            
+        except Exception as e:
+            logger.error(f"Error searching similar content: {e}")
+            return []
+
+    async def get_content_embeddings(self, content_ids: List[UUID]) -> List[List[float]]:
+        try:
+            results = self.content_collection.get(
+                ids=[str(id) for id in content_ids],
+                include=["embeddings"]
+            )
+            return results["embeddings"] if results["embeddings"] else []
+        except Exception as e:
+            logger.error(f"Error getting content embeddings: {e}")
             return []
 
     async def delete_node_vector(self, node_id: UUID):

@@ -6,6 +6,7 @@ from sqlalchemy import select, desc
 from sqlalchemy.orm import selectinload
 from app.database import get_db
 from app.models.content import ContentItem, ContentNodeRelation
+from app.models.knowledge import KnowledgeNode
 from app.models.pyramid import PyramidNode
 from app.models.approval import Approval
 from app.schemas.common import SuccessResponse, PaginatedResponse, PaginatedData
@@ -26,12 +27,28 @@ async def classify_content_preview(
 ):
     """
     AI Classify content before creation (Preview).
+    Upgrade: Uses KnowledgeNode and Cognitive Model for better accuracy.
     """
-    # Fetch some context nodes (e.g., top-level concepts) to help AI
-    # This is a simplified context fetching
-    stmt = select(PyramidNode).limit(50)
+    # Fetch context nodes (KnowledgeNode) to help AI
+    # We prioritize nodes with AI cognitive models
+    stmt = select(KnowledgeNode).limit(50)
     result = await db.execute(stmt)
-    nodes = [{"id": str(n.id), "name": n.name, "description": n.description} for n in result.scalars()]
+    
+    nodes = []
+    for n in result.scalars():
+        node_info = {
+            "id": str(n.id),
+            "name": n.name,
+            "description": n.description
+        }
+        # Add cognitive summary if available
+        if n.ai_model:
+            # Extract core concept or summary from ai_model
+            cognitive_summary = n.ai_model.get("core_concept") or n.ai_model.get("summary") or ""
+            if cognitive_summary:
+                node_info["cognitive_summary"] = cognitive_summary
+        
+        nodes.append(node_info)
     
     classification = await ai_facade.classify_content(request.title or "", request.content, nodes)
     return SuccessResponse(data=classification)

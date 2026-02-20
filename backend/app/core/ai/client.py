@@ -120,7 +120,7 @@ class AIClient:
         else:
             self._local_client = None
 
-    async def chat_completion(self, messages: List[Dict[str, Any]], model: Optional[str] = None, temperature: Optional[float] = None, max_retries: Optional[int] = None, context: str = "unknown") -> Optional[str]:
+    async def chat_completion(self, messages: List[Dict[str, Any]], model: Optional[str] = None, temperature: Optional[float] = None, max_retries: Optional[int] = None, context: str = "unknown", **kwargs) -> Optional[str]:
         """
         Send a chat completion request with strategy-based routing and fallback.
         """
@@ -133,23 +133,23 @@ class AIClient:
         max_retries = max_retries if max_retries is not None else configuration_service.get("ai.max_retries")
 
         if strategy == "cloud_only":
-            return await self._call_cloud(messages, model, temperature, max_retries, context)
+            return await self._call_cloud(messages, model, temperature, max_retries, context, **kwargs)
         elif strategy == "local_only":
-            return await self._call_local(messages, model, temperature, max_retries, context)
+            return await self._call_local(messages, model, temperature, max_retries, context, **kwargs)
         else: # local_first
             try:
                 # Try local first
-                result = await self._call_local(messages, model, temperature, max_retries, context)
+                result = await self._call_local(messages, model, temperature, max_retries, context, **kwargs)
                 if result:
                     return result
                 # If result is None (handled error inside _call_local but returned None), fallback
                 logger.warning("Local LLM returned None, falling back to Cloud...")
-                return await self._call_cloud(messages, model, temperature, max_retries, context)
+                return await self._call_cloud(messages, model, temperature, max_retries, context, **kwargs)
             except Exception as e:
                 logger.warning(f"Local LLM failed ({type(e).__name__}: {e}), falling back to Cloud...")
-                return await self._call_cloud(messages, model, temperature, max_retries, context)
+                return await self._call_cloud(messages, model, temperature, max_retries, context, **kwargs)
 
-    async def _call_local(self, messages, model, temperature, max_retries, context: str = "unknown"):
+    async def _call_local(self, messages, model, temperature, max_retries, context: str = "unknown", **kwargs):
         if not self._local_client:
             if configuration_service.get("ai.strategy") == "local_only":
                 logger.error("Local AI not initialized but strategy is local_only.")
@@ -167,7 +167,8 @@ class AIClient:
                 response = await self._local_client.chat.completions.create(
                     model=target_model,
                     messages=messages,
-                    temperature=temperature
+                    temperature=temperature,
+                    **kwargs
                 )
                 self._record_metric(start_time, target_model, "local", context, response=response)
                 return response.choices[0].message.content
@@ -176,7 +177,7 @@ class AIClient:
                 # Re-raise to trigger fallback
                 raise e
 
-    async def _call_cloud(self, messages, model, temperature, max_retries, context: str = "unknown"):
+    async def _call_cloud(self, messages, model, temperature, max_retries, context: str = "unknown", **kwargs):
         if not self._cloud_client:
             if configuration_service.get("ai.enabled"):
                 logger.error("Cloud AI not initialized.")
@@ -191,7 +192,8 @@ class AIClient:
                 response = await self._cloud_client.chat.completions.create(
                     model=target_model,
                     messages=messages,
-                    temperature=temperature
+                    temperature=temperature,
+                    **kwargs
                 )
                 self._record_metric(start_time, target_model, "cloud", context, response=response)
                 return response.choices[0].message.content
@@ -235,5 +237,41 @@ class AIClient:
             
             logger.error(f"Failed to parse JSON from AI response: {text[:100]}...")
             return {}
+
+    async def audio_transcriptions(self, file_path: str, model: Optional[str] = None, context: str = "unknown", **kwargs) -> str:
+        """
+        Transcribe audio file using Cloud AI (SiliconFlow/OpenAI compatible).
+        """
+        self._initialize_clients()
+        
+        if not self._cloud_client:
+            if configuration_service.get("ai.enabled"):
+                logger.error("Cloud AI not initialized.")
+            raise RuntimeError("Cloud AI not initialized")
+            
+        target_model = model or configuration_service.get("ai.audio_model", "whisper-1")
+        start_time = time.time()
+        
+        try:
+            logger.info(f"Sending audio transcription request: {target_model}")
+            
+            # Using standard open in async context is generally discouraged for I/O but acceptable for small-medium files in MVP.
+            # For high concurrency, consider aiofiles or run_in_executor.
+            with open(file_path, "rb") as audio_file:
+                response = await self._cloud_client.audio.transcriptions.create(
+                    model=target_model,
+                    file=audio_file,
+                    **kwargs
+                )
+            
+            # Record metric (Transcription object usually doesn't have token usage, but _record_metric handles missing usage)
+            self._record_metric(start_time, target_model, "cloud", context, response=response)
+            
+            return response.text
+            
+        except Exception as e:
+            self._record_metric(start_time, target_model, "cloud", context, error=e)
+            logger.error(f"Audio Transcription Error: {e}")
+            raise e
 
 ai_client = AIClient()

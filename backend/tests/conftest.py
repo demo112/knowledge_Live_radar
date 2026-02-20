@@ -1,6 +1,11 @@
 
+import os
 import pytest
 import pytest_asyncio
+
+# Set dummy embedding model for tests to prevent network calls
+os.environ["EMBEDDING_MODEL"] = "dummy"
+
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.pool import StaticPool

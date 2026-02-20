@@ -1,7 +1,7 @@
 from .pyramid import Pyramid, PyramidNode
 from .node_relation import NodeRelation
-from .source import InformationSource, SourceNodeRelation
-from .content import ContentItem, ContentNodeRelation, ValidationResult
+from .source import InformationSource, SourceNodeRelation, SourceKnowledgeRelation
+from .content import ContentItem, ContentNodeRelation, ValidationResult, ContentKnowledgeRelation
 from .crawl_job import CrawlJob
 from .approval import Approval
 from .concept import Concept, ConceptSynonym
@@ -11,6 +11,7 @@ from .synonym import SynonymMapping
 from .batch_task import BatchTask, BatchTaskStatus
 from .domain_whitelist import DomainWhitelist
 from .discovered_domain import DiscoveredDomain
+from .knowledge import KnowledgeNode, KnowledgeCluster, ClusterNodeMembership, KnowledgeNodeRelation
 
 # Iteration 4 Models
 from .hotspot import Hotspot, HotspotStatus

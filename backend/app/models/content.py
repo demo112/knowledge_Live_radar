@@ -43,10 +43,15 @@ class ContentItem(Base):
     source: Mapped[Optional["InformationSource"]] = relationship("app.models.source.InformationSource")
     validation_result: Mapped[Optional["ValidationResult"]] = relationship("ValidationResult", uselist=False, back_populates="content")
     node_relations: Mapped[List["ContentNodeRelation"]] = relationship("ContentNodeRelation", back_populates="content", cascade="all, delete-orphan")
+    knowledge_relations: Mapped[List["ContentKnowledgeRelation"]] = relationship("ContentKnowledgeRelation", back_populates="content", cascade="all, delete-orphan")
     
     @property
     def nodes(self) -> List["ContentNodeRelation"]:
         return self.node_relations
+
+    @property
+    def knowledge_nodes(self) -> List["ContentKnowledgeRelation"]:
+        return self.knowledge_relations
 
     def __repr__(self):
         return f"<ContentItem(id={self.id}, title={self.title})>"
@@ -75,6 +80,14 @@ class ContentNodeRelation(Base):
         return self.node.name if self.node else ""
 
     @property
+    def description(self) -> str:
+        return self.node.description if self.node else ""
+
+    @property
+    def node_type(self) -> str:
+        return self.node.node_type if self.node else ""
+
+    @property
     def pyramid_id(self) -> uuid.UUID:
         return self.node.pyramid_id if self.node else None
 
@@ -84,6 +97,39 @@ class ContentNodeRelation(Base):
 
     def __repr__(self):
         return f"<ContentNodeRelation(content_id={self.content_id}, node_id={self.node_id}, source={self.source})>"
+
+
+class ContentKnowledgeRelation(Base):
+    __tablename__ = "content_knowledge_relations"
+
+    content_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("content_items.id", ondelete="CASCADE"), primary_key=True)
+    node_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("knowledge_nodes.id", ondelete="CASCADE"), primary_key=True)
+    confidence: Mapped[float] = mapped_column(Float, default=1.0, server_default="1.0")
+    source: Mapped[str] = mapped_column(String(20), default="manual", server_default="manual") # manual, ai_auto, ai_confirm
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationships
+    content: Mapped["ContentItem"] = relationship("ContentItem", back_populates="knowledge_relations")
+    node: Mapped["KnowledgeNode"] = relationship("app.models.knowledge.KnowledgeNode")
+
+    @property
+    def id(self) -> uuid.UUID:
+        return self.node_id
+        
+    @property
+    def name(self) -> str:
+        return self.node.name if self.node else ""
+
+    @property
+    def description(self) -> str:
+        return self.node.description if self.node else ""
+
+    @property
+    def node_type(self) -> str:
+        return self.node.node_type if self.node else ""
+
+    def __repr__(self):
+        return f"<ContentKnowledgeRelation(content_id={self.content_id}, node_id={self.node_id}, source={self.source})>"
 
 
 class ValidationResult(Base):

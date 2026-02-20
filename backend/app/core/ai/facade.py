@@ -6,6 +6,7 @@ from app.core.ai.processors.search import search_processor
 from app.core.ai.processors.discovery import discovery_processor
 from app.core.ai.processors.enhancement import enhancement_processor
 from app.core.ai.processors.suggestion import suggestion_processor
+from app.core.ai.processors.cognitive_processor import cognitive_processor
 from app.schemas.ai import (
     PyramidSuggestResponse, 
     ContentClassificationResponse, 
@@ -119,6 +120,14 @@ class AIFacade:
     async def analyze_concept_drift(self, node_id: str, db: AsyncSession = None) -> Dict[str, Any]:
         """分析概念漂移并生成建议。"""
         return await suggestion_processor.analyze_concept_drift(node_id, db)
+
+    async def generate_cognitive_model(self, name: str, description: str, context: str = "") -> Dict[str, Any]:
+        """生成认知模型。"""
+        return await cognitive_processor.generate_cognitive_model(name, description, context)
+
+    async def evolve_cognitive_model(self, current_model: Dict[str, Any], new_content: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """进化认知模型。"""
+        return await cognitive_processor.evolve_cognitive_model(current_model, new_content)
 
     async def generate_suggestions(self, scene: str, context: Dict[str, Any], db: AsyncSession = None) -> List[Dict[str, Any]]:
         """通用建议生成方法。"""

@@ -190,6 +190,12 @@ class KnowledgeService:
         await self.relation_repo.delete(relation_id)
         return True
 
+    async def get_node_relations(self, node_id: UUID) -> List[KnowledgeNodeRelation]:
+        """
+        Get all relations (incoming and outgoing) for a node.
+        """
+        return await self.relation_repo.get_relations(node_id)
+
     # Content Linking Operations
     async def link_content(self, node_id: UUID, content_id: UUID, source: str = "manual", confidence: float = 1.0) -> ContentKnowledgeRelation:
         """
