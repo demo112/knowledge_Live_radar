@@ -271,6 +271,14 @@ export const approvalApi = {
   rollback: async (id: string) => {
     const response = await api.post(`/approvals/${id}/rollback`);
     return response.data;
+  },
+  batchReview: async (ids: string[], action: 'approve' | 'reject', reason?: string) => {
+    const response = await api.post('/approvals/batch/review', { ids, action, reason });
+    return response.data;
+  },
+  cleanup: async (reason: string = 'User cleanup') => {
+    const response = await api.post('/approvals/cleanup', { reason });
+    return response.data;
   }
 };
 

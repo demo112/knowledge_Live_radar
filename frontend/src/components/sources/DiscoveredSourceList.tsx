@@ -86,7 +86,7 @@ export default function DiscoveredSourceList() {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 rounded">
-                  {source.type || 'RSS'}
+                  {source.source_type || 'RSS'}
                 </span>
                 <h3 className="text-base font-semibold text-gray-900 truncate" title={source.name}>
                   {source.name}
