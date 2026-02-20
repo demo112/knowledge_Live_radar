@@ -169,17 +169,8 @@ describe('契约验证 - 属性测试', () => {
 #### 1. 运行类型检查
 
 ```bash
-# 前端类型检查
 npx tsc --noEmit --strict
-
-# 后端测试（注意：不要添加任何会启动服务器的参数）
-cd backend && python -m pytest tests/ --tb=short
 ```
-
-**⚠️ 重要：禁止阻塞式命令**
-- ❌ 不要使用 `pytest-html-reporter serve` 或任何启动 HTTP 服务器的命令
-- ❌ 不要使用 `python -m http.server` 查看报告
-- ✅ 只使用生成静态文件的命令，执行完立即退出
 
 #### 2. 检查关键位置断言覆盖
 
@@ -397,11 +388,9 @@ npx stryker run
 
 **目标**: 确保任务满足完成标准，不遗漏文档和规范要求
 
-> 详细 DoD 标准参见 `rules/14-definition-of-done`。以下为自动化检查步骤。
-
 ### 执行步骤（必须执行）
 
-#### 1. 代码规范检查（参照 Rule 06-logging、Rule 14-definition-of-done）
+#### 1. 代码规范检查
 
 ```bash
 # 检查是否有 console.log（禁止）
@@ -420,7 +409,7 @@ grep -r "raise Exception" backend/app --include="*.py"
 npm run lint:docs
 
 # 检查项：
-# - docs/features/{SPEC_ID}/ 下存在 requirements.md、design.md、tasks.md
+# - docs/feature/{SPEC_ID}/ 下存在 requirements.md、design.md、tasks.md
 # - 文件名无中文
 ```
 

@@ -52,17 +52,12 @@ class PaginatedData(BaseModel):
 
 ## 核心 API 模块
 
-| 模块 | 路径前缀 | 说明 | 状态 |
-|------|----------|------|------|
-| 金字塔管理 | `/api/v1/pyramids` | CRUD、模板、健康度 | ✅ |
-| 节点管理 | `/api/v1/pyramids/{id}/nodes` | 节点 CRUD、移动、拆分、合并 | ✅ |
-| 信息源管理 | `/api/v1/sources` | CRUD、测试、生命周期 | ✅ |
-| 内容管理 | `/api/v1/contents` | 列表、搜索、详情 | ✅ |
-| 审批管理 | `/api/v1/approvals` | 队列、审批、历史 | ⚠️ 基础 |
-| 抓取管理 | `/api/v1/crawl` | 触发抓取、任务状态 | ⚠️ 框架 |
-| 校验管理 | `/api/v1/validation` | 校验状态、校验报告 | ⚠️ 部分 |
-| 健康报告 | `/api/v1/health` | 系统健康、金字塔健康 | ⚠️ 占位 |
-| 热点管理 | `/api/v1/hotspots` | 热点列表、生命周期 | ❌ |
-| 搜索 | `/api/v1/search` | 全文搜索、高级过滤 | ⚠️ 基础 |
-| 系统配置 | `/api/v1/system` | 配置、日志、监控 | ⚠️ 基础 |
-| 通知 | `/api/v1/notifications` | 通知列表、已读标记 | ❌ |
+| 模块 | 路径前缀 | 说明 |
+|------|----------|------|
+| 金字塔管理 | `/api/v1/pyramids` | CRUD、模板、健康度 |
+| 节点管理 | `/api/v1/pyramids/{id}/nodes` | 节点 CRUD、移动、拆分、合并 |
+| 信息源管理 | `/api/v1/sources` | CRUD、测试、生命周期 |
+| 内容管理 | `/api/v1/contents` | 列表、搜索、详情 |
+| 审批管理 | `/api/v1/approvals` | 队列、审批、历史 |
+| 健康报告 | `/api/v1/health` | 系统健康、金字塔健康 |
+| 系统配置 | `/api/v1/system` | 配置、日志、监控 |

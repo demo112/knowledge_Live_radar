@@ -12,7 +12,7 @@
 |-------|--------|-----------|--------|
 | requirement-analysis | 需求分析、我想做、能不能实现 | 20-project-overview | → technical-design |
 | technical-design | 技术设计、怎么实现、API设计 | 04-api-spec | → task-planning |
-| task-planning | 任务拆分、怎么开始、先做什么 | 13-doc-management | → code-implementation |
+| task-planning | 任务拆分、测试设计、怎么开始、先做什么 | 13-doc-management, 11-testing | → code-implementation |
 | code-implementation | 写代码、实现、开始做 | 02-typescript, 03-file-structure | → code-logging |
 | code-logging | 检查日志、补日志 | 06-logging | → code-verification |
 | code-verification | 验证、测一下、代码写完了 | 14-definition-of-done | → git-operation / problem-fixing |

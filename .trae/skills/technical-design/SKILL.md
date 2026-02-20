@@ -193,7 +193,7 @@ next_skills:
 
 | 输入项 | 来源 | 格式 | 必要性 |
 |--------|------|------|--------|
-| 需求文档 | `docs/features/{SPEC_ID}/requirements.md` | Markdown | 必须 |
+| 需求文档 | `docs/features/{feature}/requirements.md` | Markdown | 必须 |
 
 #### 执行步骤
 
@@ -411,7 +411,7 @@ next_skills:
 
 | 输出项 | 格式 | 位置 |
 |--------|------|------|
-| 设计文档 | Markdown | `docs/features/{SPEC_ID}/design.md` |
+| 设计文档 | Markdown | `docs/features/{feature}/design.md` |
 
 #### 质量门控
 
@@ -460,7 +460,7 @@ next_skills:
 
 | 输出项 | 类型 | 格式 | 位置 |
 |--------|------|------|------|
-| 设计文档 | 文档型 | Markdown | `docs/features/{SPEC_ID}/design.md` |
+| 设计文档 | 文档型 | Markdown | `docs/features/{feature}/design.md` |
 
 ### 输出模板
 
@@ -648,10 +648,30 @@ interface {ResponseType} {
 
 ---
 
-## 前置条件
+## 前置条件（硬性门控）
 
-- `docs/features/{SPEC_ID}/requirements.md` 必须存在
-- 如不存在，提示先执行 requirement-analysis
+> **这是不可跳过的前置检查。每次激活 technical-design 时必须执行。**
+
+### 必须检查
+
+在开始任何设计工作之前，必须执行以下检查：
+
+1. **检查 `docs/features/{feature}/requirements.md` 是否存在**
+   - 如果不存在 → **立即停止**，不做任何设计工作，提示用户：
+     > ⚠️ 需求文档不存在。请先完成需求分析（requirement-analysis），创建 requirements.md 后再进入技术设计。
+   - 如果存在 → 继续
+
+2. **检查需求文档是否已确认**
+   - 查看文档中的 `状态` 字段是否为"已确认"
+   - 如果未确认 → 提示用户先确认需求文档
+
+### 违规判定
+
+以下行为视为违规：
+- ❌ 没有检查 requirements.md 是否存在就开始设计
+- ❌ requirements.md 不存在时，在 design.md 中"顺便"写了需求
+- ❌ 把需求分析和技术设计合并在一次执行中完成（跳过了需求确认环节）
+- ❌ 认为"需求简单可以跳过需求文档"
 
 ---
 

@@ -56,7 +56,7 @@ next_skills:
 
 ### 规则 4: 冲突处理策略
 
-**AI 判断必须完全基于 `docs/features/{SPEC_ID}/requirements.md` 文档**。禁止无依据猜测。
+**AI 判断必须完全基于 `.trae/specs/{feature}/requirements.md` 文档**。禁止无依据猜测。
 
 ### 规则 5: 非交互式执行
 

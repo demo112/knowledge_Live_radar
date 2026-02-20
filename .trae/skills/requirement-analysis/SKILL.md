@@ -352,7 +352,7 @@ next_skills:
 
 | 输出项 | 格式 | 位置 |
 |--------|------|------|
-| 需求文档 | Markdown | `docs/features/{SPEC_ID}/requirements.md` |
+| 需求文档 | Markdown | `docs/features/{feature}/requirements.md` |
 
 #### 质量门控
 
@@ -400,7 +400,7 @@ next_skills:
 
 | 输出项 | 类型 | 格式 | 位置 |
 |--------|------|------|------|
-| 需求文档 | 文档型 | Markdown | `docs/features/{SPEC_ID}/requirements.md` |
+| 需求文档 | 文档型 | Markdown | `docs/features/{feature}/requirements.md` |
 | 拆分方案（如需要） | 文档型 | Markdown | 临时输出，用户确认后拆分 |
 
 ### 输出模板
@@ -968,6 +968,33 @@ As a 员工, I want 查看我的打卡记录, so that 确认我的出勤情况
 
 ---
 
+## 强制输出规则
+
+> **这是不可跳过的硬性要求。**
+
+本 Skill 被调用后，必须完成以下动作才算执行完毕：
+
+1. **必须创建 `docs/features/{feature}/requirements.md` 文件** —— 不是在对话中展示需求分析结果，而是必须实际写入文件
+2. **必须等待用户确认** —— 文件创建后，必须暂停等用户回复"确认"
+3. **未创建文件 = 未完成** —— 如果因为任何原因没有创建 requirements.md，不得进入 technical-design 阶段
+
+### 违规判定
+
+以下行为视为违规：
+- ❌ 在对话中口头总结了需求，但没有写入 requirements.md 文件
+- ❌ 读了代码后直接跳到 technical-design
+- ❌ 把需求分析的内容合并到 design.md 中输出
+- ❌ 认为"需求简单不需要文档"而跳过
+
+### 正确行为
+
+- ✅ 无论需求大小，都必须创建 requirements.md
+- ✅ 文件内容遵循本 Skill 的输出模板
+- ✅ 创建文件后展示给用户，等待确认
+- ✅ 用户确认后，才进入 technical-design
+
+---
+
 ## 后续流程
 
-需求文档确认后，进入 `technical-design` 阶段。
+需求文档确认后（requirements.md 已创建且用户已确认），进入 `technical-design` 阶段。

@@ -1,0 +1,9 @@
+- [x] PyramidService.analyze_structure 能够调用 Advisor 并生成建议
+- [x] PyramidService.get_optimization_suggestions 能返回待处理建议
+- [x] PyramidService.apply_suggestion 能正确执行拆分节点建议
+- [x] PyramidService.apply_suggestion 能正确执行合并节点建议
+- [x] PyramidService.apply_suggestion 能正确执行移动节点建议
+- [x] API POST /pyramids/{id}/analyze 返回 200 并包含分析结果
+- [x] API GET /pyramids/{id}/suggestions 返回建议列表
+- [x] API POST /suggestions/{id}/apply 成功执行并更新建议状态
+- [x] EvolutionEngine 正常运行且调用了 Service 方法

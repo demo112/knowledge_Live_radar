@@ -1,9 +1,6 @@
 ---
 name: regression-check
 description: 修复后的回归验证，确保原问题解决且不破坏已有功能。
-related_rules:
-  - rules/15-bug-fix-rules
-  - rules/14-definition-of-done
 ---
 
 # 回归验证
@@ -93,16 +90,7 @@ npm test
 
 # 运行特定文件测试
 npm test -- {测试文件路径}
-
-# 后端测试（注意：不要添加任何会启动服务器的参数）
-cd backend && python -m pytest tests/
 ```
-
-**⚠️ 测试执行规范：**
-- ✅ 所有测试命令必须是非阻塞的
-- ✅ 命令执行完毕后应立即返回到命令提示符
-- ❌ 不要使用任何会输出 "Serving HTML report at..." 的命令
-- ❌ 不要使用任何需要按 Ctrl+C 退出的命令
 
 #### 输出
 

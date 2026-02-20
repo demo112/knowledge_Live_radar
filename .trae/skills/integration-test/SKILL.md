@@ -184,8 +184,8 @@ next_skills:
 
 | 输入项 | 来源 | 格式 | 必要性 |
 |--------|------|------|--------|
-| 需求文档 | `docs/features/{SPEC_ID}/requirements.md` | Markdown | 必须 |
-| 设计文档 | `docs/features/{SPEC_ID}/design.md` | Markdown | 必须 |
+| 需求文档 | `.trae/specs/{feature}/requirements.md` | Markdown | 必须 |
+| 设计文档 | `.trae/specs/{feature}/design.md` | Markdown | 必须 |
 
 #### 执行步骤
 
@@ -505,8 +505,8 @@ AC: 点击打卡后获取GPS位置并提交
 ## 前置条件
 
 - 所有Task已完成
-- `docs/features/{SPEC_ID}/requirements.md` 存在
-- `docs/features/{SPEC_ID}/design.md` 存在
+- `.trae/specs/{feature}/requirements.md` 存在
+- `.trae/specs/{feature}/design.md` 存在
 
 ---
 
