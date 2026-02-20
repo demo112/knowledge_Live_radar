@@ -59,3 +59,18 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
 }
+
+/* 
+ * 隐藏 Next.js 开发工具 UI
+ * 包含：错误覆盖层(Error Overlay)、错误提示(Toast)、开发指示器(Dev Indicator)
+ * 这些错误信息仍会在浏览器控制台(Console)中显示
+ */
+nextjs-portal,
+[data-nextjs-dialog-overlay],
+[data-nextjs-toast],
+[data-nextjs-dev-tools-indicator] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}

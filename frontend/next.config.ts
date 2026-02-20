@@ -11,11 +11,8 @@ const nextConfig: NextConfig = {
     },
   },
 
-  // 2. 开发指示器：自定义构建状态显示
-  // devIndicators: {
-  //   buildActivity: true,
-  //   buildActivityPosition: 'bottom-right',
-  // },
+  // 2. 开发指示器：禁用以避免遮挡错误日志
+  devIndicators: false,
 
   // 3. 严格模式：建议开启，有助于在开发阶段发现潜在问题
   reactStrictMode: true,

@@ -36,6 +36,7 @@ class PyramidNode(Base):
     level: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     sort_order: Mapped[int] = mapped_column(Integer, default=0)
     path: Mapped[str] = mapped_column(String(255), index=True) # Materialized path
+    node_type: Mapped[Optional[str]] = mapped_column(String(50), nullable=True, default="Concept") # Concept, Technology, Tool, etc.
     health_score: Mapped[int] = mapped_column(Integer, default=100)
     status: Mapped[str] = mapped_column(String(20), default="pending") # pending, completed
     content_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0") # Count of associated contents

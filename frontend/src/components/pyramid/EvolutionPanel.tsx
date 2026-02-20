@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
+import { isAxiosError } from 'axios';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -50,7 +51,7 @@ const EvolutionPanel: React.FC<EvolutionPanelProps> = ({ pyramidId, onUpdate }) 
   const [analyzing, setAnalyzing] = useState(false);
   const [applyingId, setApplyingId] = useState<string | null>(null);
 
-  const fetchSuggestions = async () => {
+  const fetchSuggestions = useCallback(async () => {
     setLoading(true);
     try {
       const res = await pyramidApi.getSuggestions(pyramidId);
@@ -59,10 +60,10 @@ const EvolutionPanel: React.FC<EvolutionPanelProps> = ({ pyramidId, onUpdate }) 
       // Based on typical API wrapper in this project:
       const data = Array.isArray(res) ? res : (Array.isArray(res.data) ? res.data : []);
       setSuggestions(data);
-    } catch (error: any) {
+    } catch (error) {
       console.error(error);
       let errorMsg = t('fetch_error');
-      if (error?.response?.data?.detail) {
+      if (isAxiosError(error) && error.response?.data?.detail) {
         errorMsg += `: ${error.response.data.detail}`;
       }
       toast({
@@ -72,13 +73,13 @@ const EvolutionPanel: React.FC<EvolutionPanelProps> = ({ pyramidId, onUpdate }) 
     } finally {
       setLoading(false);
     }
-  };
+  }, [pyramidId, t, toast]);
 
   useEffect(() => {
     if (pyramidId) {
       fetchSuggestions();
     }
-  }, [pyramidId]);
+  }, [pyramidId, fetchSuggestions]);
 
   const handleAnalyze = async () => {
     setAnalyzing(true);
@@ -90,10 +91,10 @@ const EvolutionPanel: React.FC<EvolutionPanelProps> = ({ pyramidId, onUpdate }) 
       });
       fetchSuggestions();
       if (onUpdate) onUpdate();
-    } catch (error: any) {
+    } catch (error) {
       console.error(error);
       let errorMsg = t('analysis_error');
-      if (error?.response?.data?.detail) {
+      if (isAxiosError(error) && error.response?.data?.detail) {
         errorMsg += `: ${error.response.data.detail}`;
       }
       toast({
@@ -116,13 +117,13 @@ const EvolutionPanel: React.FC<EvolutionPanelProps> = ({ pyramidId, onUpdate }) 
       });
       fetchSuggestions();
       if (onUpdate) onUpdate();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Failed to apply suggestion:', error);
       
       let errorMsg = t('apply_error');
-      if (error?.response?.data?.detail) {
+      if (isAxiosError(error) && error.response?.data?.detail) {
         errorMsg += `: ${error.response.data.detail}`;
-      } else if (error?.message) {
+      } else if (error instanceof Error) {
         errorMsg += `: ${error.message}`;
       }
       

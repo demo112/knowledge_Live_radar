@@ -55,6 +55,7 @@ class SuggestionProcessor:
                     "node_stats": data["node_stats"],
                     "content_stats": data["content_stats"],
                     "activity_stats": data["activity_stats"],
+                    "node_samples": data.get("node_samples", "{}"),
                 }
             )
 
@@ -369,6 +370,9 @@ class SuggestionProcessor:
 
         content_stats = await self._get_content_stats(pyramid_id, db)
 
+        # Collect content samples for semantic anchoring
+        node_samples = await self._get_node_content_samples(pyramid_id, db)
+
         activity_stats = {
             "last_content_at": None,
             "content_trend": "stable",
@@ -392,7 +396,49 @@ class SuggestionProcessor:
             "node_stats": json.dumps(node_stats, ensure_ascii=False, indent=2),
             "content_stats": json.dumps(content_stats, ensure_ascii=False, indent=2),
             "activity_stats": json.dumps(activity_stats, ensure_ascii=False, indent=2),
+            "node_samples": json.dumps(node_samples, ensure_ascii=False, indent=2),
         }
+
+    async def _get_node_content_samples(
+        self,
+        pyramid_id: uuid.UUID,
+        db: AsyncSession,
+        limit_per_node: int = 5
+    ) -> Dict[str, List[str]]:
+        """获取每个节点的内容样本（标题）"""
+        # 1. Get all nodes in pyramid
+        nodes_result = await db.execute(
+            select(PyramidNode.id)
+            .where(PyramidNode.pyramid_id == pyramid_id, PyramidNode.is_deleted == False)
+        )
+        node_ids = nodes_result.scalars().all()
+        
+        samples = {}
+        
+        # Optimize: In a real large-scale system, we would use a window function or batch query.
+        # For now, we iterate, but we can limit the number of contents fetched.
+        # To avoid N+1 for large pyramids, let's fetch relations and content titles in a single join
+        # but grouped by node is tricky in ORM without window functions.
+        # Let's try a simple loop for now, assuming < 50 nodes usually.
+        
+        for nid in node_ids:
+            # Get latest 3 contents for this node
+            stmt = (
+                select(ContentItem.title)
+                .join(ContentNodeRelation, ContentItem.id == ContentNodeRelation.content_id)
+                .where(
+                    ContentNodeRelation.node_id == nid,
+                    ContentItem.is_deleted == False
+                )
+                .order_by(ContentItem.created_at.desc())
+                .limit(limit_per_node)
+            )
+            result = await db.execute(stmt)
+            titles = result.scalars().all()
+            if titles:
+                samples[str(nid)] = list(titles)
+                
+        return samples
 
     async def _collect_source_data(
         self,

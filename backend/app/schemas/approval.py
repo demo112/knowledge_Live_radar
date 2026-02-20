@@ -30,3 +30,20 @@ class ApprovalResponse(ApprovalBase):
     updated_at: datetime
     
     model_config = {"from_attributes": True}
+
+class BatchReviewRequest(BaseModel):
+    ids: list[UUID]
+    action: str  # "approve" | "reject"
+    reason: Optional[str] = "Batch operation"
+
+class BatchReviewResult(BaseModel):
+    success_count: int
+    failure_count: int
+    failures: list[Dict[str, Any]] # [{"id": "...", "error": "..."}]
+
+class CleanupRequest(BaseModel):
+    reason: str = "Batch Cleanup"
+
+class CleanupResult(BaseModel):
+    count: int
+    message: str

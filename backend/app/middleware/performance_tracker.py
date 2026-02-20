@@ -18,6 +18,7 @@ class PerformanceTrackerMiddleware(BaseHTTPMiddleware):
         try:
             response = await call_next(request)
             status_code = response.status_code
+            return response
         except Exception as e:
             status_code = 500
             raise e

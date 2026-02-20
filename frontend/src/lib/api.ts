@@ -18,7 +18,7 @@ const api = axios.create({
 
 export const pyramidApi = {
   getAll: async () => {
-    const response = await api.get('/pyramids');
+    const response = await api.get('/pyramids/');
     return response.data;
   },
   getById: async (id: string) => {
@@ -26,7 +26,7 @@ export const pyramidApi = {
     return response.data;
   },
   create: async (data: Record<string, unknown>) => {
-    const response = await api.post('/pyramids', data);
+    const response = await api.post('/pyramids/', data);
     return response.data;
   },
   getTemplates: async () => {
@@ -144,11 +144,11 @@ export const nodeApi = {
 
 export const sourceApi = {
   getAll: async () => {
-    const response = await api.get('/sources');
+    const response = await api.get('/sources/');
     return response.data;
   },
   create: async (data: Record<string, unknown>) => {
-    const response = await api.post('/sources', data);
+    const response = await api.post('/sources/', data);
     return response.data;
   },
   update: async (id: string, data: Record<string, unknown>) => {
@@ -191,7 +191,7 @@ export const sourceApi = {
 
 export const contentApi = {
   getAll: async (params?: Record<string, unknown>) => {
-    const response = await api.get('/contents', { params });
+    const response = await api.get('/contents/', { params });
     return response.data;
   },
   getById: async (id: string) => {
@@ -235,19 +235,29 @@ export const approvalApi = {
     return response.data;
   },
   getAll: async (status?: string) => {
-    const response = await api.get('/approvals', { params: { status } });
+    const response = await api.get('/approvals/', { params: { status } });
     return response.data;
   },
-  approve: async (id: string, note?: string) => {
-    const response = await api.post(`/approvals/${id}/approve`, { note });
+  approve: async (id: string, comment?: string) => {
+    const response = await api.post(`/approvals/${id}/review`, { 
+      status: 'approved', 
+      review_comment: comment 
+    });
     return response.data;
   },
-  reject: async (id: string, note: string) => {
-    const response = await api.post(`/approvals/${id}/reject`, { note });
+  reject: async (id: string, reason: string) => {
+    const response = await api.post(`/approvals/${id}/review`, { 
+      status: 'rejected', 
+      review_comment: reason 
+    });
     return response.data;
   },
   review: async (id: string, status: string, note?: string, reviewer_id?: string) => {
-    const response = await api.post(`/approvals/${id}/review`, { status, note, reviewer_id });
+    const response = await api.post(`/approvals/${id}/review`, { 
+      status, 
+      review_comment: note, 
+      reviewer_id 
+    });
     return response.data;
   },
   execute: async (id: string) => {
@@ -285,11 +295,11 @@ export const discoveryApi = {
 
 export const whitelistApi = {
   getAll: async () => {
-    const response = await api.get('/whitelist');
+    const response = await api.get('/whitelist/');
     return response.data;
   },
   add: async (data: { domain: string; reason?: string; credibility?: number }) => {
-    const response = await api.post('/whitelist', data);
+    const response = await api.post('/whitelist/', data);
     return response.data;
   },
   remove: async (id: string) => {
@@ -319,10 +329,6 @@ export const healthApi = {
     return response.data;
   },
   getReport: async () => {
-    const response = await api.get('/health/report/latest');
-    return response.data;
-  },
-  getSystemHealth: async () => {
     const response = await api.get('/health/report/latest');
     return response.data;
   },
@@ -390,10 +396,6 @@ export const hotspotApi = {
     const response = await api.get('/hotspots');
     return response.data;
   },
-  getHotspots: async () => {
-    const response = await api.get('/hotspots');
-    return response.data;
-  }
 };
 
 export const evolutionApi = {
@@ -433,14 +435,6 @@ export const schedulerApi = {
   },
   getAll: async () => {
     const response = await api.get('/scheduler/tasks');
-    return response.data;
-  },
-  getTasks: async () => {
-    const response = await api.get('/scheduler/tasks');
-    return response.data;
-  },
-  runTask: async (taskId: string) => {
-    const response = await api.post(`/scheduler/tasks/${taskId}/run`);
     return response.data;
   },
 };

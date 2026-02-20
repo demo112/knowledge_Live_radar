@@ -11,7 +11,6 @@ router = APIRouter(
 
 @router.post("/optimize")
 async def optimize_strategies(
-    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -19,7 +18,11 @@ async def optimize_strategies(
     """
     adapter = StrategyAdapter(db)
     
-    # Run in background
-    background_tasks.add_task(adapter.optimize_strategies)
+    # Run synchronously to return results
+    changes = await adapter.optimize_strategies()
     
-    return {"status": "accepted", "message": "Strategy optimization started in background"}
+    return {
+        "success": True, 
+        "message": f"Strategy optimization completed. {len(changes)} sources adjusted.",
+        "changes": changes
+    }

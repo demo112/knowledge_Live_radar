@@ -1,7 +1,6 @@
 'use client';
 
-import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { sourceApi } from '@/lib/api';
 import { InformationSource, SourceTemplate } from '@/types';
@@ -9,10 +8,13 @@ import SourceTemplateSelector from '@/components/sources/SourceTemplateSelector'
 import CrawlHistoryDialog from '@/components/sources/CrawlHistoryDialog';
 import DiscoveredSourceList from '@/components/sources/DiscoveredSourceList';
 import DiscoveryProgress from '@/components/sources/DiscoveryProgress';
+import DiscoverySetupDialog from '@/components/sources/DiscoverySetupDialog';
+import { useToast } from '@/hooks/use-toast';
 
 export default function SourcesPage() {
   const t = useTranslations('Sources');
   const tCommon = useTranslations('Common');
+  const { toast } = useToast();
   const [sources, setSources] = useState<InformationSource[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -24,6 +26,8 @@ export default function SourcesPage() {
   const [templateConfig, setTemplateConfig] = useState<Record<string, unknown> | null>(null);
   const [discovering, setDiscovering] = useState(false);
   const [showDiscoveryProgress, setShowDiscoveryProgress] = useState(false);
+  const [showDiscoverySetup, setShowDiscoverySetup] = useState(false);
+  const [discoveryPyramidId, setDiscoveryPyramidId] = useState<string | undefined>(undefined);
   const [refreshDiscoveryKey, setRefreshDiscoveryKey] = useState(0);
   const [crawling, setCrawling] = useState<string | null>(null);
   const [testing, setTesting] = useState<string | null>(null);
@@ -61,9 +65,40 @@ export default function SourcesPage() {
   };
 
   const handleDiscover = () => {
+    setShowDiscoverySetup(true);
+  };
+
+  const handleStartDiscovery = (pyramidId: string | undefined) => {
+    setDiscoveryPyramidId(pyramidId);
+    setShowDiscoverySetup(false);
     setShowDiscoveryProgress(true);
+    setDiscovering(true);
     setActiveTab('discovery');
   };
+
+  const handleDiscoveryFinish = useCallback((count: number) => {
+    setDiscovering(false);
+    setShowDiscoveryProgress(false);
+    toast({
+      title: t('alerts.discovery_complete', { count }),
+      description: t('discovery.started', { count }),
+    });
+    setRefreshDiscoveryKey(prev => prev + 1);
+  }, [t, toast]);
+
+  const handleDiscoveryError = useCallback((err: string) => {
+    setDiscovering(false);
+    // Don't hide progress immediately on error so user can see logs?
+    // But if we want to stop the loop, we MUST hide it or ensure it doesn't reconnect.
+    // Let's hide it for now to be safe against loops.
+    setShowDiscoveryProgress(false);
+    console.error('Discovery error:', err);
+    toast({
+      title: t('alerts.discover_failed'),
+      description: err,
+      variant: "destructive"
+    });
+  }, [t, toast]);
 
   const handleOpenCreateModal = () => {
     setEditingSource(null);
@@ -336,19 +371,21 @@ export default function SourcesPage() {
                 </svg>
               </button>
               <DiscoveryProgress
-                onFinish={(count) => {
-                  alert(t('discovery.started', { count }));
-                  setRefreshDiscoveryKey(prev => prev + 1);
-                }}
-                onError={(err) => {
-                  console.error('Discovery error:', err);
-                }}
+                pyramidId={discoveryPyramidId}
+                onFinish={handleDiscoveryFinish}
+                onError={handleDiscoveryError}
               />
             </div>
           )}
           <DiscoveredSourceList key={refreshDiscoveryKey} />
         </div>
       )}
+
+      <DiscoverySetupDialog 
+        open={showDiscoverySetup} 
+        onOpenChange={setShowDiscoverySetup}
+        onStart={handleStartDiscovery}
+      />
 
       {/* Create/Edit Modal */}
       {showModal && (

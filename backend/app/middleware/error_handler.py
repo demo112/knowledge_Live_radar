@@ -1,7 +1,7 @@
 import logging
 import time
 import asyncio
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Tuple
 from dataclasses import dataclass
 from sqlalchemy.ext.asyncio import AsyncSession
 

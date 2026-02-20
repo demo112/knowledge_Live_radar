@@ -36,6 +36,17 @@ class RestructureAdvisor:
         
         result = await ai_facade.analyze_pyramid_health(str(pyramid_id), self.db)
         
+        # Debug logging
+        try:
+            with open("debug_suggestions.log", "a") as f:
+                import json
+                from datetime import datetime
+                f.write(f"\n[{datetime.now()}] Analysis Result for {pyramid_id}:\n")
+                f.write(json.dumps(result, ensure_ascii=False, indent=2))
+                f.write("\n")
+        except Exception as e:
+            logger.error(f"Failed to write debug log: {e}")
+        
         if result.get("error"):
             logger.error(f"AI 分析失败: {result['error']}")
             return []

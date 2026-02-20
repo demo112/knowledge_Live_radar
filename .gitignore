@@ -59,4 +59,9 @@ chroma_db/
 .vscode/
 
 # firecrawl
-firecrawl/openclaw/
+firecrawl/
+openclaw/
+
+# test artifacts
+backend/test_output_*.txt
+backend/test_output.log

@@ -315,7 +315,11 @@
       "service_reachable": "AI 服务可访问",
       "service_unreachable": "无法连接到 AI 服务",
       "connection_error": "连接错误",
-      "test_failed": "测试连接失败"
+      "test_failed": "测试连接失败",
+      "clean_success": "清理成功",
+      "clean_result": "已清理 {count} 条旧指标数据",
+      "clean_error": "清理失败",
+      "clean_failed": "无法清理旧数据，请稍后重试"
     },
     "modules": {
       "pyramid": "金字塔",
@@ -565,7 +569,13 @@
         "filter": "过滤",
         "proposal": "提案",
         "finish": "完成"
-      }
+      },
+      "setup_title": "发现新信息源",
+      "setup_description": "AI 将根据选定的金字塔上下文，智能搜索并推荐相关的信息源。",
+      "context_pyramid": "上下文金字塔",
+      "select_pyramid_placeholder": "选择一个金字塔...",
+      "global_context": "全局 (无上下文)",
+      "start_discovery": "开始发现"
     },
     "types": {
       "rss": "RSS 订阅源",
@@ -611,6 +621,7 @@
       "discovered": "已发现: {title} ({type})",
       "discover_not_found": "未找到信息源",
       "discover_failed": "发现失败",
+      "discovery_complete": "发现完成，共找到 {count} 个信息源",
       "crawl_started": "抓取已开始。新增项目: {count}",
       "crawl_failed": "抓取失败",
       "test_success": "测试成功！信息源可正常访问。",

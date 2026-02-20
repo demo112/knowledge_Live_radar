@@ -1,5 +1,6 @@
 import pytest
 import uuid
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.pyramid import Pyramid, PyramidNode
 from app.models.ai_suggestion import AISuggestion
@@ -26,15 +27,19 @@ async def test_suggestion_executor_create_node(db_session: AsyncSession):
     suggestion = AISuggestion(
         pyramid_id=pyramid.id,
         action_type="create_node",
+        type="structural_optimization",
+        data={},
+        input_hash="test_hash",
         params=params,
-        status="pending"
+        status="approved"
     )
     db.add(suggestion)
     await db.commit()
     await db.refresh(suggestion)
     
     # Execute
-    result = await suggestion_executor.execute(str(suggestion.id), db)
+    executor = suggestion_executor(db)
+    result = await executor.execute(str(suggestion.id), db)
     
     # Verify
     assert result["success"] is True
@@ -73,25 +78,185 @@ async def test_suggestion_executor_split_node_with_description(db_session: Async
         target_id=node.id,
         target_type="pyramid_node",
         action_type="split_node",
+        type="granularity_adjustment",
+        data={},
+        input_hash="test_hash",
         params=params,
-        status="pending"
+        status="approved"
     )
     db.add(suggestion)
     await db.commit()
     await db.refresh(suggestion)
     
     # Execute
-    result = await suggestion_executor.execute(str(suggestion.id), db)
+    executor = suggestion_executor(db)
+    result = await executor.execute(str(suggestion.id), db)
     
     # Verify
     assert result["success"] is True
     
     # Check Children
-    service = PyramidService(db)
-    children = await service._get_node_children(node.id)
+    stmt = select(PyramidNode).where(PyramidNode.parent_id == node.id)
+    result = await db.execute(stmt)
+    children = result.scalars().all()
     assert len(children) == 2
-    assert any(c.name == "Child A" for c in children)
-    assert any(c.name == "Child B" for c in children)
+    
+    # Verify child paths
+    child1 = children[0]
+    expected_path_prefix = f"{node.path}{node.id}/"
+    assert child1.path.startswith(expected_path_prefix)
+
+
+@pytest.mark.asyncio
+async def test_suggestion_executor_split_node(db_session: AsyncSession):
+    # Setup
+    db = db_session
+    pyramid = Pyramid(name="Test Pyramid Split", description="Test Description")
+    db.add(pyramid)
+    await db.commit()
+    await db.refresh(pyramid)
+    
+    node = PyramidNode(
+        pyramid_id=pyramid.id,
+        name="Node To Split",
+        description="Will be split",
+        path="/",
+        level=0
+    )
+    db.add(node)
+    await db.commit()
+    await db.refresh(node)
+    
+    # Create Suggestion
+    params = {
+        "node_id": str(node.id),
+        "suggested_children": [
+            {"name": "Child 1", "description": "Desc 1"},
+            {"name": "Child 2", "description": "Desc 2"}
+        ]
+    }
+    suggestion = AISuggestion(
+        pyramid_id=pyramid.id,
+        action_type="split_node",
+        type="structural_optimization",
+        data={},
+        input_hash="test_hash_split",
+        params=params,
+        status="approved"
+    )
+    db.add(suggestion)
+    await db.commit()
+    await db.refresh(suggestion)
+    
+    # Execute
+    executor = suggestion_executor(db)
+    result = await executor.execute(str(suggestion.id), db)
+    
+    # Verify
+    assert result["success"] is True
+    assert result["data"]["action"] == "split_node"
+    assert len(result["data"]["created_children"]) == 2
+    
+    # Verify children created in DB
+    stmt = select(PyramidNode).where(PyramidNode.parent_id == node.id)
+    result = await db.execute(stmt)
+    children = result.scalars().all()
+    assert len(children) == 2
+    
+    child_names = {c.name for c in children}
+    assert "Child 1" in child_names
+    assert "Child 2" in child_names
+    
+    child_descs = {c.description for c in children}
+    assert "Desc 1" in child_descs
+    assert "Desc 2" in child_descs
+
+
+@pytest.mark.asyncio
+async def test_suggestion_executor_merge_node(db_session: AsyncSession):
+    # Setup
+    db = db_session
+    pyramid = Pyramid(name="Test Pyramid Merge", description="Test Description")
+    db.add(pyramid)
+    await db.commit()
+    await db.refresh(pyramid)
+    
+    # Create parent node
+    parent = PyramidNode(
+        pyramid_id=pyramid.id,
+        name="Parent",
+        path="/",
+        level=0
+    )
+    db.add(parent)
+    await db.commit()
+    await db.refresh(parent)
+    
+    # Create nodes to merge
+    node1 = PyramidNode(
+        pyramid_id=pyramid.id,
+        name="Node 1",
+        parent_id=parent.id,
+        path=f"/{parent.id}/",
+        level=1
+    )
+    node2 = PyramidNode(
+        pyramid_id=pyramid.id,
+        name="Node 2",
+        parent_id=parent.id,
+        path=f"/{parent.id}/",
+        level=1
+    )
+    db.add(node1)
+    db.add(node2)
+    await db.commit()
+    await db.refresh(node1)
+    await db.refresh(node2)
+    
+    # Create Suggestion
+    params = {
+        "pyramid_id": str(pyramid.id),
+        "source_node_ids": [str(node1.id), str(node2.id)],
+        "target_node_name": "Merged Node",
+        "target_node_description": "Merged Description"
+    }
+    suggestion = AISuggestion(
+        pyramid_id=pyramid.id,
+        action_type="merge_node",
+        type="structural_optimization",
+        data={},
+        input_hash="test_hash_merge",
+        params=params,
+        status="approved"
+    )
+    db.add(suggestion)
+    await db.commit()
+    await db.refresh(suggestion)
+    
+    # Execute
+    executor = suggestion_executor(db)
+    result = await executor.execute(str(suggestion.id), db)
+    
+    # Verify
+    assert result["success"] is True
+    assert result["data"]["action"] == "merge_node"
+    
+    merged_node_id = result["data"]["merged_node_id"]
+    
+    # Verify merged node exists
+    stmt = select(PyramidNode).where(PyramidNode.id == uuid.UUID(merged_node_id))
+    result = await db.execute(stmt)
+    merged_node = result.scalar_one()
+    assert merged_node.name == "Merged Node"
+    assert merged_node.description == "Merged Description"
+    assert merged_node.parent_id == parent.id
+    
+    # Verify source nodes are soft deleted
+    stmt = select(PyramidNode).where(PyramidNode.id.in_([node1.id, node2.id]))
+    result = await db.execute(stmt)
+    source_nodes = result.scalars().all()
+    for n in source_nodes:
+        assert n.is_deleted is True
 
 @pytest.mark.asyncio
 async def test_suggestion_executor_move_node_recursive(db_session: AsyncSession):
@@ -135,19 +300,23 @@ async def test_suggestion_executor_move_node_recursive(db_session: AsyncSession)
         "target_parent_id": str(new_parent.id)
     }
     suggestion = AISuggestion(
-        pyramid_id=pyramid.id,
-        target_id=child.id,
-        target_type="pyramid_node",
-        action_type="move_node",
-        params=params,
-        status="pending"
-    )
+                pyramid_id=pyramid.id,
+                target_id=child.id,
+                target_type="pyramid_node",
+                action_type="move_node",
+                type="structural_optimization",
+                data={},
+                input_hash="test_hash",
+                params=params,
+                status="approved"
+            )
     db.add(suggestion)
     await db.commit()
     await db.refresh(suggestion)
     
     # Execute
-    result = await suggestion_executor.execute(str(suggestion.id), db)
+    executor = suggestion_executor(db)
+    result = await executor.execute(str(suggestion.id), db)
     
     # Verify
     assert result["success"] is True

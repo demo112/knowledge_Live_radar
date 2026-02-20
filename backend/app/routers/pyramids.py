@@ -49,48 +49,7 @@ async def confirm_pyramid_creation(
     request: PyramidConfirmRequest,
     service: PyramidService = Depends(get_service)
 ):
-    """
-    Step 2: Confirm and create pyramid based on (potentially modified) AI suggestion.
-    """
-    # In a real implementation, we might want to fetch the suggestion from DB/Cache to verify or merge
-    # For now, we assume the client sends the final structure they want (if modifications are supported in request)
-    # But wait, PyramidConfirmRequest has 'modifications' which is Optional[PyramidNodeStructure]
-    # And 'suggestion_id'. 
-    # If we don't store suggestion in DB, we rely on client sending back the structure?
-    # The design said "System saves pyramid... Records AI suggestion ID".
-    # We need to implement create_pyramid_from_suggestion in service.
-    
-    # Since we didn't implement DB storage for suggestion in this iteration (or did we? AISuggestion model exists),
-    # we should probably load the suggestion if we want to be strict.
-    # But to keep it simple and stateless for this step if possible, or assume Service handles it.
-    
-    # Actually, we should probably just take the structure from the request if the client is editing it.
-    # If client passes modifications, use that. If not, use what? We need to store it.
-    # The AISuggestion model was created. We should use it.
-    
-    # Let's assume PyramidService has a method for this.
-    # I need to add create_pyramid_from_suggestion to PyramidService or just handle logic here.
-    # Handling logic here:
-    
-    # 1. Fetch suggestion (if we stored it).
-    # Wait, where do we store the suggestion?
-    # The AI processor returned a suggestion_id but didn't save it to DB in my implementation of PyramidProcessor.
-    # I should fix PyramidProcessor to save the suggestion to DB!
-    
-    # Let's verify PyramidProcessor implementation.
-    # It just returns a response object. It does NOT save to DB.
-    # This is a gap. I should update PyramidProcessor or AIFacade to save the suggestion.
-    # OR, I can save it here in the router before returning? No, Facade is better.
-    
-    # I will modify the router to call service methods that don't exist yet?
-    # Or I can just implement the logic in the router for now using the service's existing create method?
-    # Existing create method takes PyramidCreate schema.
-    # I need to map PyramidNodeStructure to PyramidCreate + Node creates.
-    
-    # Let's add the routes first, and I will realize I need to update Service or Facade.
-    # I'll stick to the plan: Add routes.
-    
-    # For confirm, I'll delegate to a new method in PyramidService: create_from_suggestion.
+    """Confirm and create pyramid based on AI suggestion, with optional modifications."""
     pyramid = await service.create_from_suggestion(request.suggestion_id, request.modifications)
     return SuccessResponse(data=pyramid)
 
@@ -333,59 +292,3 @@ async def add_node(
 ):
     node = await service.add_node(id, schema)
     return SuccessResponse(data=node)
-
-@router.post("/{id}/snapshots", response_model=SuccessResponse[SnapshotSummaryResponse], status_code=status.HTTP_201_CREATED)
-async def create_snapshot(
-    id: UUID,
-    request: SnapshotCreateRequest,
-    service: SnapshotService = Depends(get_snapshot_service)
-):
-    """Create a new snapshot for the pyramid"""
-    snapshot = await service.create_snapshot(id, request.reason)
-    return SuccessResponse(data=snapshot)
-
-@router.get("/{id}/snapshots", response_model=PaginatedResponse[SnapshotSummaryResponse])
-async def get_snapshots(
-    id: UUID,
-    skip: int = 0,
-    limit: int = 20,
-    service: SnapshotService = Depends(get_snapshot_service)
-):
-    """Get all snapshots for the pyramid"""
-    items = await service.get_snapshots_by_pyramid(id, skip, limit)
-    # Mock total count for now
-    total = len(items)
-    return PaginatedResponse(data=PaginatedData(items=items, total=total, page=skip//limit + 1 if limit else 1, page_size=limit))
-
-@router.get("/{id}/snapshots/{snapshot_id}", response_model=SuccessResponse[SnapshotResponse])
-async def get_snapshot_details(
-    id: UUID,
-    snapshot_id: UUID,
-    service: SnapshotService = Depends(get_snapshot_service)
-):
-    """Get snapshot details"""
-    snapshot = await service.get_snapshot_by_id(snapshot_id)
-    if not snapshot:
-        raise HTTPException(status_code=404, detail="Snapshot not found")
-    if snapshot.pyramid_id != id:
-        raise HTTPException(status_code=400, detail="Snapshot does not belong to this pyramid")
-    return SuccessResponse(data=snapshot)
-
-@router.post("/{id}/rollback/{snapshot_id}", response_model=SuccessResponse[bool])
-async def rollback_pyramid(
-    id: UUID,
-    snapshot_id: UUID,
-    service: SnapshotService = Depends(get_snapshot_service)
-):
-    """Rollback pyramid to a snapshot state"""
-    snapshot = await service.get_snapshot_by_id(snapshot_id)
-    if not snapshot:
-        raise HTTPException(status_code=404, detail="Snapshot not found")
-    if snapshot.pyramid_id != id:
-        raise HTTPException(status_code=400, detail="Snapshot does not belong to this pyramid")
-        
-    success = await service.restore_snapshot(snapshot_id)
-    if not success:
-        raise HTTPException(status_code=500, detail="Failed to rollback snapshot")
-        
-    return SuccessResponse(data=True)

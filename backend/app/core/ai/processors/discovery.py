@@ -6,14 +6,14 @@ from app.core.ai.prompt_loader import prompt_loader
 logger = logging.getLogger(__name__)
 
 class DiscoveryProcessor:
-    async def generate_adaptive_queries(self, pyramid_name: str, pyramid_structure_json: str) -> List[Dict[str, str]]:
+    async def generate_adaptive_queries(self, pyramid_name: str, pyramid_structure_text: str) -> List[Dict[str, str]]:
         """
         Generate adaptive search queries based on pyramid structure context.
         """
         prompt_name = "discovery/adaptive_query_generation"
         variables = {
             "pyramid_name": pyramid_name,
-            "pyramid_structure_json": pyramid_structure_json
+            "pyramid_structure_text": pyramid_structure_text
         }
         
         prompt_content, metadata = prompt_loader.render_prompt(prompt_name, variables)

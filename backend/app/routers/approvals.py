@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.services.approval_service import ApprovalService
 from app.services.impact_analyzer import ImpactAnalyzer
-from app.schemas.approval import ApprovalCreate, ApprovalUpdate, ApprovalResponse
+from app.schemas.approval import ApprovalCreate, ApprovalUpdate, ApprovalResponse, BatchReviewRequest, BatchReviewResult, CleanupRequest, CleanupResult
 from app.schemas.common import SuccessResponse
 
 router = APIRouter(prefix="/approvals", tags=["approvals"])
@@ -52,6 +52,22 @@ async def get_approval_queue(
     """
     approvals = await service.get_approvals("pending", skip, limit)
     return SuccessResponse(data=approvals)
+
+@router.post("/batch/review", response_model=SuccessResponse[BatchReviewResult])
+async def batch_review(
+    request: BatchReviewRequest,
+    service: ApprovalService = Depends(get_service)
+):
+    result = await service.batch_review(request)
+    return SuccessResponse(data=result)
+
+@router.post("/cleanup", response_model=SuccessResponse[CleanupResult])
+async def cleanup_pending_approvals(
+    request: CleanupRequest,
+    service: ApprovalService = Depends(get_service)
+):
+    result = await service.cleanup_pending_approvals(request)
+    return SuccessResponse(data=result)
 
 @router.get("/{id}", response_model=SuccessResponse[ApprovalResponse])
 async def get_approval(

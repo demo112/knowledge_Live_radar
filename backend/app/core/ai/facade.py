@@ -48,11 +48,11 @@ class AIFacade:
         """理解搜索意图。"""
         return await search_processor.understand_intent(query)
 
-    async def generate_adaptive_queries(self, pyramid_name: str, pyramid_structure_json: str) -> List[Dict[str, str]]:
+    async def generate_adaptive_queries(self, pyramid_name: str, pyramid_structure_text: str) -> List[Dict[str, str]]:
         """
         Generate adaptive search queries based on pyramid structure context.
         """
-        return await discovery_processor.generate_adaptive_queries(pyramid_name, pyramid_structure_json)
+        return await discovery_processor.generate_adaptive_queries(pyramid_name, pyramid_structure_text)
 
 
     async def validate_content_soft(self, title: str, content: str) -> Dict[str, Any]:

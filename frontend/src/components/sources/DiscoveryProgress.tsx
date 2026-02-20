@@ -81,7 +81,7 @@ export default function DiscoveryProgress({ pyramidId, onFinish, onError }: Disc
     return () => {
       eventSource.close();
     };
-  }, [pyramidId, onFinish, onError]);
+  }, [pyramidId, onFinish, onError, t]);
 
   // Auto-scroll logs
   useEffect(() => {

@@ -47,10 +47,24 @@ class PyramidService:
         
         stmt = select(AISuggestion).where(
             AISuggestion.pyramid_id == pyramid_id,
-            AISuggestion.status == "pending"
+            AISuggestion.status == "pending",
+            # Allow empty reason and null target_name for debugging
+            # AISuggestion.reason != "",
+            # AISuggestion.target_name.isnot(None)
         ).order_by(AISuggestion.created_at.desc())
+        
         result = await self.db.execute(stmt)
-        return result.scalars().all()
+        suggestions = result.scalars().all()
+        
+        # Debug logging
+        try:
+            with open("debug_suggestions.log", "a") as f:
+                from datetime import datetime
+                f.write(f"\n[{datetime.now()}] Retrieved {len(suggestions)} suggestions for {pyramid_id}\n")
+        except Exception:
+            pass
+            
+        return suggestions
 
     async def apply_suggestion(self, suggestion_id: UUID) -> Any:
         """
@@ -199,11 +213,30 @@ class PyramidService:
 
     async def split_node(self, node_id: UUID, schema: NodeSplitRequest) -> List[Any]:
         node = await self.get_node(node_id)
+        
+        # Pre-fetch attributes to avoid lazy loading issues
+        pyramid_id = node.pyramid_id
+        parent_id = node.id
+        node_path = node.path
+        
         created_nodes = []
         for child_schema in schema.children:
-            child_schema.parent_id = node.id
-            new_node = await self.add_node(node.pyramid_id, child_schema)
+            child_schema.parent_id = parent_id
+            new_node = await self.add_node(pyramid_id, child_schema)
             created_nodes.append(new_node)
+            
+        # Soft delete descendants
+        # Path format for children: {node.path}{node.id}/
+        if node_path == "/":
+             child_path_prefix = f"/{parent_id}/"
+        else:
+             child_path_prefix = f"{node_path}{parent_id}/"
+             
+        await self.node_repo.soft_delete_descendants(pyramid_id, child_path_prefix)
+        
+        # Soft delete the node itself
+        await self.node_repo.soft_delete(node_id)
+        
         return created_nodes
 
     async def merge_nodes(self, pyramid_id: UUID, schema: NodeMergeRequest) -> Any:

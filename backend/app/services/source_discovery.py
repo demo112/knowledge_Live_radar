@@ -58,7 +58,7 @@ class SourceDiscoveryService:
                 yield DiscoveryEvent(event="error", data={"message": "Pyramid not found or empty."})
                 return
             
-            snapshot_json = json.dumps(snapshot, ensure_ascii=False, indent=2)
+            snapshot_text = self._serialize_structure_to_text(snapshot)
             yield DiscoveryEvent(event="log", data={"message": f"Structure snapshot extracted for '{snapshot['name']}'.", "level": "info"})
         except Exception as e:
             logger.error(f"Error extracting structure: {e}")
@@ -70,7 +70,7 @@ class SourceDiscoveryService:
         yield DiscoveryEvent(event="stage_update", data={"stage": DiscoveryStage.SEARCH, "status": DiscoveryStatus.RUNNING, "label": "生成自适应查询..."})
         
         try:
-            queries = await self.ai.generate_adaptive_queries(snapshot['name'], snapshot_json)
+            queries = await self.ai.generate_adaptive_queries(snapshot['name'], snapshot_text)
             if not queries:
                 yield DiscoveryEvent(event="log", data={"message": "AI failed to generate queries, falling back to basic search.", "level": "warning"})
                 queries = [{"query": f"{snapshot['name']} documentation blog", "intent": "fallback", "scope": "Macro"}]
@@ -137,23 +137,33 @@ class SourceDiscoveryService:
         
         yield DiscoveryEvent(event="stage_update", data={"stage": DiscoveryStage.PROPOSAL, "status": DiscoveryStatus.RUNNING, "label": "生成提案..."})
         
-        created_count = 0
-        for cand in filtered_candidates:
-            # Check if source exists
-            stmt = select(InformationSource).where(InformationSource.url == cand['url'])
+        # Pre-fetch existing sources and pending approvals to avoid N+1 queries and DB-specific JSON syntax
+        existing_urls = set()
+        candidate_urls = [c['url'] for c in filtered_candidates]
+        
+        if candidate_urls:
+            # Fetch existing sources (only check relevant URLs)
+            stmt = select(InformationSource.url).where(InformationSource.url.in_(candidate_urls))
             result = await self.db.execute(stmt)
-            if result.scalar_one_or_none():
-                continue
-                
-            # Check if approval exists
+            existing_urls.update(result.scalars().all())
+            
+            # Fetch pending approvals (fetch all pending create_source is safer than filtering JSON in SQL across DBs)
+            # Assuming pending queue size is manageable.
             stmt = select(Approval).where(
                 and_(
-                    Approval.data['url'].astext == cand['url'],
+                    Approval.type == 'create_source',
                     Approval.status == 'pending'
                 )
             )
             result = await self.db.execute(stmt)
-            if result.scalar_one_or_none():
+            pending_approvals = result.scalars().all()
+            for app in pending_approvals:
+                if app.data and 'url' in app.data:
+                    existing_urls.add(app.data['url'])
+        
+        created_count = 0
+        for cand in filtered_candidates:
+            if cand['url'] in existing_urls:
                 continue
 
             # Create Approval
@@ -222,6 +232,7 @@ class SourceDiscoveryService:
                 "name": node.name,
                 "description": node.description,
                 "level": node.level,
+                "node_type": node.node_type,
                 "children": []
             }
             # Only include ID if needed for internal logic, but for AI prompt name is enough
@@ -229,26 +240,43 @@ class SourceDiscoveryService:
             node_map[node.id] = node_data
             
             if node.parent_id and node.parent_id in node_map:
+                if "children" not in node_map[node.parent_id]:
+                    node_map[node.parent_id]["children"] = []
                 node_map[node.parent_id]["children"].append(node_data)
             elif node.level == 1:
                 roots.append(node_data)
         
-        # Prune tree for token limit (Simple heuristic: Depth limit 3)
-        def prune(n, depth):
-            if depth >= 3:
-                n["children"] = [] # Cut off children at depth 3
-                return
-            for c in n["children"]:
-                prune(c, depth + 1)
-                
-        for r in roots:
-            prune(r, 1)
+        # No pruning - pass full structure to AI
+        # AI will decide what to focus on based on content.
 
         return {
             "name": pyramid.name,
             "description": pyramid.description,
             "structure": roots
         }
+
+    def _serialize_structure_to_text(self, snapshot: Dict[str, Any]) -> str:
+        """
+        Convert structure snapshot to indented text format for AI prompt.
+        Optimized for token usage and readability.
+        """
+        lines = []
+        lines.append(f"Pyramid: {snapshot['name']}")
+        if snapshot.get('description'):
+            lines.append(f"Description: {snapshot['description']}")
+        lines.append("Structure:")
+
+        def _recurse(nodes, level=0):
+            indent = "  " * level
+            for node in nodes:
+                type_str = f"[{node.get('node_type', 'Concept')}] " if node.get('node_type') else ""
+                desc = f" - {node['description'][:50]}..." if node.get('description') else ""
+                lines.append(f"{indent}- {type_str}{node['name']} (L{node['level']}){desc}")
+                if node.get("children"):
+                    _recurse(node["children"], level + 1)
+
+        _recurse(snapshot.get("structure", []))
+        return "\n".join(lines)
 
     def _filter_results(self, candidates: List[Dict]) -> List[Dict]:
         """

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { aiMonitorApi, configApi } from '@/lib/api';
 import { MetricFilters, AIMetric, AIStats } from '@/types/ai-monitor';
@@ -26,7 +26,7 @@ export function AIMonitorDashboard() {
     page_size: 20
   });
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const [statsData, metricsData] = await Promise.all([
@@ -41,11 +41,11 @@ export function AIMonitorDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
 
   useEffect(() => {
     fetchData();
-  }, [filters]);
+  }, [fetchData]);
 
   const handleFilterChange = (newFilters: MetricFilters) => {
     setFilters((prev) => ({
@@ -69,6 +69,7 @@ export function AIMonitorDashboard() {
         variant: result.success ? "default" : "destructive"
       });
     } catch (error) {
+      console.error('Connection test failed:', error);
       toast({
         title: t('toasts.connection_error'),
         description: t('toasts.test_failed'),
@@ -95,9 +96,25 @@ export function AIMonitorDashboard() {
           <Button 
             variant="destructive" 
             onClick={async () => {
-              if (confirm(t('actions.confirm_clean'))) {
-                await aiMonitorApi.cleanMetrics(30);
+              if (!confirm(t('actions.confirm_clean'))) return;
+              
+              setLoading(true);
+              try {
+                const result = await aiMonitorApi.cleanMetrics(30);
+                toast({
+                  title: t('toasts.clean_success'),
+                  description: t('toasts.clean_result', { count: result.deleted_count }),
+                });
                 fetchData();
+              } catch (error) {
+                console.error('Failed to clean metrics:', error);
+                toast({
+                  title: t('toasts.clean_error'),
+                  description: t('toasts.clean_failed'),
+                  variant: "destructive"
+                });
+              } finally {
+                setLoading(false);
               }
             }}
             disabled={loading}

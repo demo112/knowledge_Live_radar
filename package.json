@@ -1,5 +1,18 @@
 {
-  "dependencies": {
-    "pnpm": "^10.30.0"
+  "name": "knowledge-live-radar",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev:frontend": "cd frontend && pnpm dev",
+    "dev:backend": "cd backend && source .venv/bin/activate && uvicorn app.main:app --reload",
+    "build": "cd frontend && pnpm build",
+    "lint": "cd frontend && pnpm lint",
+    "test:backend": "cd backend && source .venv/bin/activate && pytest",
+    "test:e2e": "cd frontend && pnpm test:e2e",
+    "clean": "rm -rf frontend/.next frontend/node_modules/.cache backend/__pycache__"
+  },
+  "engines": {
+    "node": ">=18",
+    "pnpm": ">=10"
   }
 }

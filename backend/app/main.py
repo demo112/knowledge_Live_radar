@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import logging
 from app.config import settings
+from app.middleware.performance_tracker import PerformanceTrackerMiddleware
 from app.routers import (
     pyramids, nodes, sources, contents, discovery, approvals, 
     input, whitelist, dashboard, health,
@@ -104,6 +105,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Performance tracking middleware
+app.add_middleware(PerformanceTrackerMiddleware)
 
 # Include Routers
 app.include_router(pyramids.router, prefix=settings.API_V1_STR)

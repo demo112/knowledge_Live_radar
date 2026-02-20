@@ -8,6 +8,7 @@ variables:
   - node_stats
   - content_stats
   - activity_stats
+  - node_samples
 ---
 
 # System Context
@@ -43,6 +44,7 @@ variables:
 节点统计: {{ node_stats }}
 内容统计: {{ content_stats }}
 活跃度统计: {{ activity_stats }}
+节点内容样本: {{ node_samples }}
 
 # Output Format (JSON)
 请仅返回 JSON，不要包含 Markdown 代码块。
@@ -56,17 +58,24 @@ variables:
   },
   "suggestions": [
     {
-      "action_type": "add_node|remove_node|merge_nodes|split_node|update_node|add_source",
+      "action_type": "create_node|delete_node|merge_node|split_node|update_node|add_source",
       "target_id": "目标节点ID",
       "target_name": "目标节点名称",
       "reason": "具体原因，引用数据支撑",
       "params": {
-        "new_name": "新名称（如适用）",
-        "new_description": "新描述（如适用）",
+        "name": "新名称（用于 update_node）",
+        "description": "新描述（用于 update_node）",
+        "source_node_ids": ["ID1", "ID2"],
+        "target_node_name": "合并后的新节点名称（用于 merge_node）",
+        "target_node_description": "合并后的新节点描述（用于 merge_node）",
         "description": "对于 add_source：说明为什么要添加这个源",
         "name": "对于 add_source：推荐的源名称",
         "type": "对于 add_source：web|rss",
-        "url": "对于 add_source：http://pending-configuration"
+        "url": "对于 add_source：http://pending-configuration",
+        "suggested_children": [
+          {"name": "子节点A", "description": "基于内容样本的描述"},
+          {"name": "子节点B", "description": "基于内容样本的描述"}
+        ]
       },
       "confidence": 0.0-1.0,
       "priority": "high|medium|low"
@@ -75,13 +84,16 @@ variables:
 }
 
 # 建议生成规则
-1. 缺少描述的节点（特别是层级 0 或 1）：建议 update_node，在 params.description 中生成基于节点名称和上下文的简短描述（50字以内）
-2. 内容严重缺失的关键节点：建议 add_source，提供推荐的源名称和类型
-3. 内容过载的节点（> 50 条）：考虑建议 split_node
-4. 长期空置的叶子节点：考虑建议 remove_node 或 merge_nodes
-5. suggestions 数量 3-5 条，按优先级排序
-6. confidence 0.8 以上为高置信度建议
-7. reason 必须具体，引用实际数据（如"该节点下仅有2条内容，且最近30天无更新"）
+1. 缺少描述的节点（特别是层级 0 或 1）：必须生成 update_node 建议。必须仔细分析 `node_samples` 中的内容标题，提炼共性，生成一段准确、概括性的描述（50字以内），填入 params.description。绝不能只依赖节点名称猜测。
+2. 内容严重缺失的关键节点：建议 add_source，提供推荐的源名称和类型。
+3. 内容过载的节点（> 50 条）：建议 split_node。必须基于 `node_samples` 进行语义聚类，识别出 2-3 个明显的子主题。在 params.suggested_children 中定义的每个子节点，必须包含：
+   - name: 子主题名称
+   - description: 基于该子主题样本生成的详细描述（必须包含该子节点将覆盖的具体内容范围）
+4. 长期空置的叶子节点：考虑建议 delete_node 或 merge_node。若建议 merge_node，必须为合并后的节点生成新的描述（target_node_description），说明合并后的内容范围。
+5. 所有涉及新节点（split_node 的 children，merge_node 的 target）或更新节点（update_node）的操作，params 中必须包含 description 字段。这是后续 AI 处理的核心上下文。
+6. suggestions 数量 3-5 条，按优先级排序。
+7. confidence 0.8 以上为高置信度建议。
+8. reason 必须具体，引用实际数据（如"该节点有80条内容，样本显示包含'AI伦理'和'模型训练'两类主题，建议拆分"）。
 
 # 禁止行为
 - 不要生成超过 5 条建议，聚焦最重要的问题

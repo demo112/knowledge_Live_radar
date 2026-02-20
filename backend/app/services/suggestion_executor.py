@@ -11,6 +11,12 @@ from app.models.pyramid import PyramidNode
 from app.models.content import ContentItem, ContentNodeRelation
 from app.models.source import InformationSource, SourceNodeRelation
 from app.services.snapshot_service import SnapshotService
+from app.schemas.pyramid import (
+    PyramidNodeCreate, 
+    PyramidNodeUpdate, 
+    NodeSplitRequest, 
+    NodeMergeRequest
+)
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +30,10 @@ class SuggestionExecutor:
     def __init__(self, db: AsyncSession):
         self.db = db
         self.snapshot_service = SnapshotService(db)
+
+    async def _get_pyramid_service(self):
+        from app.services.pyramid_service import PyramidService
+        return PyramidService(self.db)
 
     async def execute(self, suggestion_id: str, db: AsyncSession) -> dict[str, Any]:
         """
@@ -166,38 +176,27 @@ class SuggestionExecutor:
     ) -> dict[str, Any]:
         """执行创建节点操作"""
         params = suggestion.params
-        pyramid_id = uuid.UUID(params["pyramid_id"])
-        parent_id = uuid.UUID(params["parent_id"]) if params.get("parent_id") else None
-        name = params.get("name", "新节点")
-        description = params.get("description")
-
-        level = 0
-        path = ""
-        if parent_id:
-            parent = await self._get_node(parent_id)
-            if parent:
-                level = parent.level + 1
-                parent_path = parent.path or str(parent.id)
-                path = f"{parent_path}/{parent.id}"
-
-        new_node = PyramidNode(
-            pyramid_id=pyramid_id,
-            parent_id=parent_id,
-            name=name,
-            description=description,
-            level=level,
-            path=path,
+        # 使用 suggestion.pyramid_id 而不是 params["pyramid_id"]
+        pyramid_id = suggestion.pyramid_id
+        
+        schema = PyramidNodeCreate(
+            name=params.get("name", "新节点"),
+            description=params.get("description"),
+            parent_id=uuid.UUID(params["parent_id"]) if params.get("parent_id") else None,
+            level=0, # Will be calculated by service
+            sort_order=0 # Default
         )
-        self.db.add(new_node)
-        await self.db.flush()
+        
+        service = await self._get_pyramid_service()
+        new_node = await service.add_node(pyramid_id, schema)
 
-        logger.info(f"创建节点 '{name}' 成功，层级: {level}")
+        logger.info(f"创建节点 '{new_node.name}' 成功，层级: {new_node.level}")
 
         return {
             "action": "create_node",
             "node_id": str(new_node.id),
-            "name": name,
-            "level": level,
+            "name": new_node.name,
+            "level": new_node.level,
         }
 
     async def _execute_delete_node(
@@ -207,22 +206,9 @@ class SuggestionExecutor:
         """执行删除节点操作"""
         params = suggestion.params
         node_id = uuid.UUID(params["node_id"])
-
-        node = await self._get_node(node_id)
-        if not node:
-            raise ValueError(f"节点不存在: {node_id}")
-
-        children = await self._get_node_children(node_id)
-        for child in children:
-            child.parent_id = node.parent_id
-            child.level = max(0, child.level - 1)
-
-        if node.parent_id:
-            relations = await self._get_content_relations(node_id)
-            for rel in relations:
-                rel.node_id = node.parent_id
-
-        node.is_deleted = True
+        
+        service = await self._get_pyramid_service()
+        node = await service.delete_node(node_id)
 
         logger.info(f"软删除节点 '{node.name}'")
 
@@ -239,27 +225,25 @@ class SuggestionExecutor:
         """执行更新节点操作"""
         params = suggestion.params
         node_id = uuid.UUID(params["node_id"])
-
-        node = await self._get_node(node_id)
-        if not node:
-            raise ValueError(f"节点不存在: {node_id}")
-
-        old_name = node.name
-        old_description = node.description
-
+        
+        # Only include fields that are present in params to avoid overwriting with None
+        update_data = {}
         if "name" in params:
-            node.name = params["name"]
+            update_data["name"] = params["name"]
         if "description" in params:
-            node.description = params["description"]
+            update_data["description"] = params["description"]
+            
+        schema = PyramidNodeUpdate(**update_data)
+        
+        service = await self._get_pyramid_service()
+        node = await service.update_node(node_id, schema)
 
-        logger.info(f"更新节点 '{old_name}' -> '{node.name}'")
+        logger.info(f"更新节点 '{node.name}'")
 
         return {
             "action": "update_node",
             "node_id": str(node_id),
-            "old_name": old_name,
             "new_name": node.name,
-            "old_description": old_description,
             "new_description": node.description,
         }
 
@@ -270,43 +254,33 @@ class SuggestionExecutor:
         """执行拆分节点操作"""
         params = suggestion.params
         node_id = uuid.UUID(params["node_id"])
+        
+        suggested_children = params.get("suggested_children", [])
+        children_schemas = []
+        created_names = []
+        
+        for child in suggested_children:
+            if isinstance(child, str):
+                children_schemas.append(PyramidNodeCreate(name=child))
+                created_names.append(child)
+            elif isinstance(child, dict):
+                children_schemas.append(PyramidNodeCreate(
+                    name=child.get("name"),
+                    description=child.get("description")
+                ))
+                created_names.append(child.get("name"))
+        
+        schema = NodeSplitRequest(children=children_schemas)
+        
+        service = await self._get_pyramid_service()
+        created_nodes = await service.split_node(node_id, schema)
 
-        node = await self._get_node(node_id)
-        if not node:
-            raise ValueError(f"节点不存在: {node_id}")
-
-        sub_names = params.get("suggested_children", [
-            f"{node.name} - 子类 A",
-            f"{node.name} - 子类 B"
-        ])
-
-        # Calculate path for children
-        parent_path = node.path or str(node.id)
-        child_path = f"{parent_path}/{node.id}"
-
-        created_nodes = []
-        for i, name in enumerate(sub_names):
-            child = PyramidNode(
-                pyramid_id=node.pyramid_id,
-                parent_id=node.id,
-                name=name,
-                description=f"从 '{node.name}' 拆分创建",
-                level=node.level + 1,
-                sort_order=i,
-                path=child_path,
-            )
-            self.db.add(child)
-            created_nodes.append(name)
-
-        await self.db.flush()
-
-        logger.info(f"拆分节点 '{node.name}' 为 {len(sub_names)} 个子节点")
+        logger.info(f"拆分节点 '{node_id}' 为 {len(created_nodes)} 个子节点")
 
         return {
             "action": "split_node",
             "node_id": str(node_id),
-            "name": node.name,
-            "created_children": created_nodes,
+            "created_children": created_names,
         }
 
     async def _execute_merge_node(
@@ -315,93 +289,30 @@ class SuggestionExecutor:
     ) -> dict[str, Any]:
         """执行合并节点操作"""
         params = suggestion.params
-        node_id = uuid.UUID(params["node_id"])
-
-        node = await self._get_node(node_id)
-        if not node:
-            raise ValueError(f"节点不存在: {node_id}")
-
-        children = await self._get_node_children(node_id)
-        moved_count = len(children)
-
-        for child in children:
-            child.parent_id = node.parent_id
-            child.level = max(0, child.level - 1)
-
-        if node.parent_id:
-            relations = await self._get_content_relations(node_id)
-            for rel in relations:
-                rel.node_id = node.parent_id
-
-        node.is_deleted = True
-
-        logger.info(f"合并节点 '{node.name}'，移动 {moved_count} 个子节点")
-
-        return {
-            "action": "merge_node",
-            "node_id": str(node_id),
-            "name": node.name,
-            "moved_children": moved_count,
-        }
-
-    async def _execute_merge_node(
-        self,
-        suggestion: AISuggestion
-    ) -> dict[str, Any]:
-        """执行合并节点操作"""
-        params = suggestion.params
-        source_node_ids = [uuid.UUID(id) for id in params.get("source_node_ids", [])]
+        
+        if "source_node_ids" not in params:
+            raise ValueError("合并操作缺少 source_node_ids 参数")
+            
+        source_node_ids = [uuid.UUID(id) for id in params["source_node_ids"]]
         target_node_name = params.get("target_node_name", "合并节点")
-        pyramid_id = uuid.UUID(params["pyramid_id"])
-
-        if len(source_node_ids) < 2:
-            raise ValueError("至少需要两个节点才能合并")
-
-        # Create new merged node
-        first_node = await self._get_node(source_node_ids[0])
-        if not first_node:
-             raise ValueError(f"节点不存在: {source_node_ids[0]}")
-
-        merged_node = PyramidNode(
-            pyramid_id=pyramid_id,
-            parent_id=first_node.parent_id,
-            name=target_node_name,
-            description=f"合并自: {len(source_node_ids)} 个节点",
-            level=first_node.level,
-            sort_order=first_node.sort_order,
-            path=first_node.path,
+        target_node_desc = params.get("target_node_description")
+        # 使用 suggestion.pyramid_id 而不是 params["pyramid_id"]
+        pyramid_id = suggestion.pyramid_id
+        
+        schema = NodeMergeRequest(
+            source_node_ids=source_node_ids,
+            new_node_name=target_node_name,
+            new_node_description=target_node_desc
         )
-        self.db.add(merged_node)
-        await self.db.flush()
+        
+        service = await self._get_pyramid_service()
+        new_node = await service.merge_nodes(pyramid_id, schema)
 
-        # Move children and contents
-        for node_id in source_node_ids:
-            node = await self._get_node(node_id)
-            if node:
-                # Move children
-                children = await self._get_node_children(node_id)
-                for child in children:
-                    child.parent_id = merged_node.id
-                    child.level = merged_node.level + 1
-                
-                # Move content relations
-                relations = await self._get_content_relations(node_id)
-                for rel in relations:
-                    # Check if relation already exists for target to avoid duplicate key error
-                    exists = await self._check_relation_exists(rel.content_id, merged_node.id)
-                    if not exists:
-                        rel.node_id = merged_node.id
-                    else:
-                        await self.db.delete(rel)
-
-                # Soft delete source node
-                node.is_deleted = True
-
-        logger.info(f"合并 {len(source_node_ids)} 个节点到 '{merged_node.name}'")
+        logger.info(f"合并 {len(source_node_ids)} 个节点到 '{new_node.name}'")
 
         return {
             "action": "merge_node",
-            "merged_node_id": str(merged_node.id),
+            "merged_node_id": str(new_node.id),
             "source_node_ids": [str(id) for id in source_node_ids],
         }
 
@@ -414,37 +325,14 @@ class SuggestionExecutor:
         node_id = uuid.UUID(params["node_id"])
         target_parent_id = uuid.UUID(params["target_parent_id"]) if params.get("target_parent_id") else None
         
-        node = await self._get_node(node_id)
-        if not node:
-            raise ValueError(f"节点不存在: {node_id}")
-            
-        old_parent_id = node.parent_id
+        service = await self._get_pyramid_service()
+        node = await service.move_node(node_id, new_parent_id=target_parent_id)
         
-        # Calculate new level
-        new_level = 0
-        new_path = ""
-        if target_parent_id:
-            parent = await self._get_node(target_parent_id)
-            if not parent:
-                raise ValueError(f"目标父节点不存在: {target_parent_id}")
-            new_level = parent.level + 1
-            parent_path = parent.path or str(parent.id)
-            new_path = f"{parent_path}/{parent.id}"
-            
-        node.parent_id = target_parent_id
-        node.level = new_level
-        node.path = new_path
-        
-        # We should also update children's levels and paths recursively
-        # For simplicity in this iteration, we might skip deep recursion or assume small tree
-        # TODO: Implement recursive update for children paths/levels
-        
-        logger.info(f"移动节点 '{node.name}' parent: {old_parent_id} -> {target_parent_id}")
+        logger.info(f"移动节点 '{node.name}' -> parent: {target_parent_id}")
         
         return {
             "action": "move_node",
             "node_id": str(node.id),
-            "old_parent_id": str(old_parent_id),
             "new_parent_id": str(target_parent_id),
         }
 

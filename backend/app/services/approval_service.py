@@ -3,7 +3,7 @@ from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from app.models.approval import Approval
-from app.schemas.approval import ApprovalCreate, ApprovalUpdate
+from app.schemas.approval import ApprovalCreate, ApprovalUpdate, BatchReviewRequest, BatchReviewResult, CleanupRequest, CleanupResult
 
 class ApprovalService:
     def __init__(self, db: AsyncSession):
@@ -63,5 +63,56 @@ class ApprovalService:
         from app.services.decision_executor import DecisionExecutor
         executor = DecisionExecutor(self.db)
         return await executor.rollback_execution(id)
+
+    async def batch_review(self, request: BatchReviewRequest) -> BatchReviewResult:
+        success_count = 0
+        failure_count = 0
+        failures = []
+
+        for id in request.ids:
+            approval = await self.get_approval(id)
+            if not approval:
+                failure_count += 1
+                failures.append({"id": str(id), "error": "Approval not found"})
+                continue
+            
+            try:
+                if request.action == "approve":
+                    approval.status = "approved"
+                    # Apply reason if provided? The request has reason, but Approval model might not store it directly
+                    # unless we want to store it in data or review_comment. 
+                    # The ApprovalUpdate schema has review_comment.
+                    if request.reason:
+                        approval.review_comment = request.reason
+                elif request.action == "reject":
+                    await self.db.delete(approval)
+                
+                success_count += 1
+            except Exception as e:
+                failure_count += 1
+                failures.append({"id": str(id), "error": str(e)})
+
+        await self.db.commit()
+        return BatchReviewResult(
+            success_count=success_count,
+            failure_count=failure_count,
+            failures=failures
+        )
+
+    async def cleanup_pending_approvals(self, request: CleanupRequest) -> CleanupResult:
+        query = select(Approval).where(Approval.status == "pending")
+        result = await self.db.execute(query)
+        approvals = result.scalars().all()
+        
+        count = len(approvals)
+        for approval in approvals:
+            await self.db.delete(approval)
+            
+        await self.db.commit()
+        
+        return CleanupResult(
+            count=count,
+            message=f"Successfully cleaned up {count} pending approvals."
+        )
 
 

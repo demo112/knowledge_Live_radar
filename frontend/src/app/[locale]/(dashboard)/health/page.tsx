@@ -4,19 +4,44 @@ import React, { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { healthApi, hotspotApi, evolutionApi } from '@/lib/api';
 import { HealthReport, HealthIssue, Hotspot } from '@/lib/types';
-import { Activity, Zap, RefreshCw, AlertTriangle } from 'lucide-react';
+import { Activity, Zap, RefreshCw, AlertTriangle, ArrowRight } from 'lucide-react';
 import PyramidHealthCard from '@/components/health/PyramidHealthCard';
 import SourceHealthSummary from '@/components/health/SourceHealthSummary';
 import HotspotDistribution from '@/components/health/HotspotDistribution';
 import CrawlStats from '@/components/health/CrawlStats';
 import ApprovalBacklog from '@/components/health/ApprovalBacklog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
+
+interface OptimizationChange {
+  source_id: string;
+  source_name: string;
+  old_interval: number;
+  new_interval: number;
+  reason: string;
+}
+
+interface OptimizationResult {
+  success: boolean;
+  message: string;
+  changes: OptimizationChange[];
+}
 
 export default function HealthPage() {
   const t = useTranslations('Health');
+  const { toast } = useToast();
   const [report, setReport] = useState<HealthReport | null>(null);
   const [hotspots, setHotspots] = useState<Hotspot[]>([]);
   const [loading, setLoading] = useState(true);
   const [detecting, setDetecting] = useState(false);
+  const [optimizationResult, setOptimizationResult] = useState<OptimizationResult | null>(null);
+  const [isOptimizationDialogOpen, setIsOptimizationDialogOpen] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
@@ -40,11 +65,24 @@ export default function HealthPage() {
 
   const handleDetect = async () => {
     setDetecting(true);
+    toast({
+        title: "开始检测",
+        description: "正在进行全系统健康检测...",
+    });
     try {
       await healthApi.triggerDetection();
       await fetchData();
+      toast({
+        title: "检测完成",
+        description: "系统健康报告已更新",
+      });
     } catch (error) {
       console.error("Detection failed", error);
+      toast({
+        title: "检测失败",
+        description: "无法完成健康检测，请稍后重试",
+        variant: "destructive",
+      });
     } finally {
       setDetecting(false);
     }
@@ -52,11 +90,20 @@ export default function HealthPage() {
 
   const handleOptimize = async () => {
       try {
-          await evolutionApi.triggerOptimization();
-          alert(t('optimize_triggered'));
+          const result = await evolutionApi.triggerOptimization();
+          setOptimizationResult(result);
+          setIsOptimizationDialogOpen(true);
+          toast({
+            title: "优化完成",
+            description: result.message || "策略优化已完成",
+          });
       } catch (error) {
           console.error("Optimization failed", error);
-          alert(t('optimize_failed'));
+          toast({
+            title: "优化失败",
+            description: "策略优化执行失败",
+            variant: "destructive",
+          });
       }
   };
 
@@ -160,6 +207,41 @@ export default function HealthPage() {
               </div>
           </div>
       </div>
+
+      <Dialog open={isOptimizationDialogOpen} onOpenChange={setIsOptimizationDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>策略优化结果</DialogTitle>
+            <DialogDescription>
+              {optimizationResult?.message}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <h4 className="text-sm font-medium mb-3">调整详情 ({optimizationResult?.changes?.length || 0})</h4>
+            <div className="space-y-3 max-h-[300px] overflow-y-auto">
+              {optimizationResult?.changes && optimizationResult.changes.length > 0 ? (
+                optimizationResult.changes.map((change, idx) => (
+                  <div key={idx} className="flex flex-col p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 text-sm">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="font-medium text-gray-900 dark:text-gray-100">{change.source_name}</span>
+                      <span className="text-xs text-gray-500">{change.reason}</span>
+                    </div>
+                    <div className="flex items-center text-gray-600 dark:text-gray-400">
+                      <span>抓取间隔: {change.old_interval}m</span>
+                      <ArrowRight className="w-3 h-3 mx-2" />
+                      <span className="font-medium text-blue-600 dark:text-blue-400">{change.new_interval}m</span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  本次优化无需调整任何策略
+                </div>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

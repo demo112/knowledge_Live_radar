@@ -189,6 +189,25 @@ class HealthDetector:
         result = await self.db.execute(select(Pyramid).where(Pyramid.is_deleted == False))
         pyramids = result.scalars().all()
 
+        if not pyramids:
+            # Empty state handling
+            ai_result = await self._generate_issue_description(
+                issue_type="no_pyramids",
+                severity="high",
+                context={},
+                entity_info={"name": "System"}
+            )
+            issues.append({
+                "type": "no_pyramids",
+                "category": "pyramid",
+                "severity": "high",
+                "description": ai_result.get("description", "系统未创建任何知识金字塔"),
+                "suggestions": ai_result.get("suggestions", [{"action": "create_pyramid", "detail": "建议立即创建第一个知识金字塔", "priority": "high"}]),
+                "impact": ai_result.get("impact", "无法组织和结构化知识"),
+                "entity_id": None
+            })
+            return {}, issues
+
         for pyramid in pyramids:
             score = 100.0
             count_result = await self.db.execute(
@@ -243,7 +262,23 @@ class HealthDetector:
         )
         sources = result.scalars().all()
         if not sources:
-            return 100.0, []
+            # Empty state handling
+            ai_result = await self._generate_issue_description(
+                issue_type="no_sources",
+                severity="high",
+                context={},
+                entity_info={"name": "System"}
+            )
+            issues = [{
+                "type": "no_sources",
+                "category": "source",
+                "severity": "high",
+                "description": ai_result.get("description", "系统未配置任何信息源"),
+                "suggestions": ai_result.get("suggestions", [{"action": "add_source", "detail": "建议添加信息源以开始获取内容", "priority": "high"}]),
+                "impact": ai_result.get("impact", "无法获取外部信息"),
+                "entity_id": None
+            }]
+            return 0.0, issues
 
         total_score = 0.0
         issues = []
