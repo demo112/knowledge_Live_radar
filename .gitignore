@@ -65,3 +65,8 @@ openclaw/
 # test artifacts
 backend/test_output_*.txt
 backend/test_output.log
+.kiro/
+backend/debug_suggestions.log
+backend/server.log
+backend/test_output.txt
+backend/repro_issue_vector_sync.py
