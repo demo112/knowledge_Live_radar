@@ -17,20 +17,20 @@ export class SourcesPage extends BasePage {
 
   constructor(page: Page) {
     super(page, '/zh/sources');
-    this.addButton = page.getByRole('button', { name: '添加信息源' });
-    this.sourceList = page.locator('ul > li');
+    this.addButton = page.getByRole('button', { name: /创建|Add/ });
+    this.sourceList = page.locator('tbody tr');
     this.emptyState = page.getByText('未找到信息源');
 
     // Modal
     const modal = page.getByRole('dialog');
-    this.modalTitle = modal.getByRole('heading', { name: '添加新信息源' });
+    this.modalTitle = modal.getByRole('heading', { name: /添加.*信息源|Add Source/ });
     
     // Scoped to modal
-    this.urlInput = modal.locator('div.flex.gap-2 > input').first();
-    this.nameInput = modal.locator('div.mb-4 > input').first();
-    this.typeSelect = modal.locator('select');
+    this.urlInput = modal.getByLabel(/URL|链接地址/);
+    this.nameInput = modal.getByLabel(/Name|名称/);
+    this.typeSelect = modal.getByLabel(/Type|类型/);
     this.discoverButton = modal.getByRole('button', { name: '发现' });
-    this.modalAddButton = modal.getByRole('button', { name: '立即添加', exact: true });
+    this.modalAddButton = modal.locator('button[type="submit"]');
     this.modalCancelButton = modal.getByRole('button', { name: '取消' });
   }
 
@@ -49,11 +49,11 @@ export class SourcesPage extends BasePage {
   }
 
   async expectSourceVisible(name: string) {
-    await expect(this.page.getByRole('heading', { name: name })).toBeVisible();
+    await expect(this.sourceList.filter({ hasText: name }).first()).toBeVisible();
   }
 
   async crawlSource(name: string) {
-    const sourceItem = this.page.locator('li').filter({ hasText: name });
+    const sourceItem = this.sourceList.filter({ hasText: name }).first();
     
     // Handle alert dialog
     this.page.once('dialog', async dialog => {
@@ -65,7 +65,7 @@ export class SourcesPage extends BasePage {
   }
 
   async deleteSource(name: string) {
-    const sourceItem = this.page.locator('li').filter({ hasText: name });
+    const sourceItem = this.sourceList.filter({ hasText: name }).first();
     
     // Click delete button (using title or icon locator if needed, but title="删除" is in JSX)
     await sourceItem.getByTitle('删除').click();
@@ -75,6 +75,6 @@ export class SourcesPage extends BasePage {
   }
 
   async expectSourceNotVisible(name: string) {
-    await expect(this.page.getByRole('heading', { name: name })).not.toBeVisible();
+    await expect(this.sourceList.filter({ hasText: name })).not.toBeVisible();
   }
 }
