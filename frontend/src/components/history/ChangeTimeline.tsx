@@ -16,7 +16,8 @@ export default function ChangeTimeline({ items, onSelect }: Props) {
     return <div className="text-gray-500 text-center py-10">{t('timeline.empty')}</div>;
   }
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '';
     return new Date(dateString).toLocaleString('zh-CN', {
       year: 'numeric',
       month: '2-digit',

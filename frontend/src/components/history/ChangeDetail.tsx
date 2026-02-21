@@ -14,7 +14,8 @@ export default function ChangeDetail({ change, onClose, onRollback }: Props) {
   const tStatus = useTranslations('History.status');
   const tRisk = useTranslations('History.risk');
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return t('unknown_time');
     return new Date(dateString).toLocaleString('zh-CN', {
       year: 'numeric',
       month: '2-digit',

@@ -35,6 +35,7 @@
   },
   "Navigation": {
     "dashboard": "Dashboard",
+    "knowledge": "Knowledge Graph",
     "pyramid": "Pyramid",
     "sources": "Sources",
     "contents": "Contents",
@@ -45,7 +46,29 @@
     "synonyms": "Synonyms",
     "scheduler": "Scheduler",
     "metabolism": "Metabolism",
-    "settings": "Settings"
+    "settings": "Settings",
+    "aiMonitor": "AI Monitor",
+    "tools": "Tools"
+  },
+  "Tools": {
+    "Douyin": {
+      "title": "Douyin to Markdown",
+      "start": "Starting...",
+      "description": "Convert Douyin video to structured markdown document.",
+      "input_placeholder": "Paste Douyin share link...",
+      "convert_button": "Generate",
+      "converting": "Processing...",
+      "copy_success": "Copied!",
+      "copy_desc": "Markdown content copied to clipboard.",
+      "copy_failed": "Copy failed",
+      "author": "Author",
+      "duration": "Duration",
+      "watch_original": "Watch Original",
+      "generated_doc": "Generated Document",
+      "copy_markdown": "Copy Markdown",
+      "error": "Failed",
+      "error_desc": "Could not convert video. Please check the link."
+    }
   },
   "Sources": {
     "title": "Information Sources",
@@ -307,6 +330,26 @@
     "network_error": "Network error, please try again later",
     "not_found": "Resource not found",
     "unknown_error": "Unknown error occurred"
+  },
+  "Tools": {
+    "Douyin": {
+      "title": "Douyin Video to Doc",
+      "start": "Starting...",
+      "description": "Convert Douyin video links to structured Markdown documents with automatic download and transcription.",
+      "input_placeholder": "Paste Douyin share link...",
+      "convert_button": "Generate Doc",
+      "converting": "Processing...",
+      "copy_success": "Copied",
+      "copy_desc": "Markdown copied to clipboard",
+      "copy_failed": "Copy Failed",
+      "author": "Author",
+      "duration": "Duration",
+      "watch_original": "Watch Original",
+      "generated_doc": "Generated Document",
+      "copy_markdown": "Copy Markdown",
+      "error": "Processing Failed",
+      "error_desc": "Failed to convert video. Please check the link."
+    }
   },
   "Settings": {
     "title": "Settings",
@@ -776,6 +819,33 @@
         "add_success": "Added to whitelist",
         "add_failed": "Add failed",
         "remove_failed": "Remove failed"
+      }
+    }
+  },
+  "Contents": {
+    "Submit": {
+      "tabs": {
+        "url": "URL",
+        "text": "Text",
+        "file": "File"
+      },
+      "labels": {
+        "url": "URL",
+        "title": "Title",
+        "content": "Content",
+        "file": "File"
+      },
+      "actions": {
+        "submit": "Submit",
+        "submitting": "Submitting..."
+      },
+      "hints": {
+        "file_formats": "Supported formats: PDF, DOCX, TXT, MD"
+      },
+      "alerts": {
+        "success": "Submitted successfully",
+        "failed": "Submission failed",
+        "error": "An error occurred"
       }
     }
   }

@@ -13,13 +13,17 @@ import {
   Repeat,
   Settings,
   Wrench,
-  Cpu
+  Cpu,
+  Hammer,
+  Network
 } from 'lucide-react';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 const NAV_ITEMS = [
   { href: '/dashboard', labelKey: 'dashboard', icon: LayoutDashboard },
+  { href: '/knowledge', labelKey: 'knowledge', icon: Network },
   { href: '/ai-monitor', labelKey: 'aiMonitor', icon: Cpu },
+  { href: '/tools/douyin', labelKey: 'tools', icon: Hammer },
   { href: '/pyramid', labelKey: 'pyramid', icon: Layers },
   { href: '/sources', labelKey: 'sources', icon: Globe },
   { href: '/contents', labelKey: 'contents', icon: FileText },

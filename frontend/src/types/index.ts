@@ -6,6 +6,25 @@ export interface Pyramid {
   updated_at: string;
 }
 
+export interface DouyinConvertResponse {
+  video_info: {
+    title: string;
+    url: string;
+    author: string;
+    duration: number;
+    cover: string;
+    description: string;
+    create_time: string;
+  };
+  content: {
+    audio_text: string;
+    summary: string;
+    keywords: string[];
+    sentiment: string;
+  };
+  markdown: string;
+}
+
 export interface PyramidNode {
   id: string;
   pyramid_id: string;

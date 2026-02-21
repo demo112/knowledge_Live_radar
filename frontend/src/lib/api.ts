@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { MergeRequest, SplitRequest, LinkRequest, SynonymCreate } from '../types';
+import { MergeRequest, SplitRequest, LinkRequest, SynonymCreate, DouyinConvertResponse } from '../types';
 import { MetricFilters, PaginatedAIMetrics, AIStats } from '../types/ai-monitor';
 
 const isServer = typeof window === 'undefined';
@@ -16,6 +16,74 @@ const api = axios.create({
   },
 });
 
+export const toolsApi = {
+  convertDouyin: async (url: string): Promise<DouyinConvertResponse> => {
+    const response = await api.post('/tools/douyin/convert', { url });
+    return response.data;
+  },
+  convertDouyinStream: async (url: string, onProgress: (event: any) => void, cookies?: string): Promise<DouyinConvertResponse> => {
+    const response = await fetch(`${baseURL}/tools/douyin/stream`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ url, cookies }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const reader = response.body?.getReader();
+    const decoder = new TextDecoder();
+    let result: DouyinConvertResponse | null = null;
+    let buffer = '';
+
+    if (reader) {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        const chunk = decoder.decode(value, { stream: true });
+        buffer += chunk;
+        const lines = buffer.split('\n\n');
+        
+        // The last element is either empty (if string ended with \n\n) or incomplete
+        buffer = lines.pop() || '';
+        
+        for (const line of lines) {
+          if (line.trim().startsWith('data: ')) {
+            let data;
+            try {
+              const jsonStr = line.trim().substring(6);
+              data = JSON.parse(jsonStr);
+              if (data.stage === 'error') {
+                throw new Error(data.message || 'Conversion failed');
+              }
+              onProgress(data);
+              if (data.stage === 'completed') {
+                result = data.data;
+              }
+            } catch (e: any) {
+              // If it's our own error from above, re-throw it to break the loop
+              if (e.message && data?.stage === 'error') {
+                 throw e;
+              }
+              console.error('Failed to parse SSE data', e);
+            }
+          }
+        }
+      }
+    }
+    
+    if (!result) throw new Error('Stream ended without completion');
+    return result;
+  }
+};
+
+/**
+ * @deprecated Legacy Pyramid API. Use knowledgeApi instead.
+ */
 export const pyramidApi = {
   getAll: async () => {
     const response = await api.get('/pyramids/');
@@ -98,46 +166,45 @@ export const pyramidApi = {
     return response.data;
   },
   rollback: async (pyramidId: string, snapshotId: string) => {
-    const response = await api.post(`/pyramids/${pyramidId}/rollback/${snapshotId}`);
+    const response = await api.post(`/pyramids/${pyramidId}/snapshots/${snapshotId}/rollback`);
     return response.data;
   }
 };
 
+/**
+ * @deprecated Legacy Node API (PyramidNode). Use knowledgeApi instead.
+ */
 export const nodeApi = {
-  split: async (id: string, data: SplitRequest) => {
-    const response = await api.post(`/nodes/${id}/split`, data);
+  update: async (pyramidId: string, nodeId: string, data: Record<string, unknown>) => {
+    const response = await api.put(`/nodes/${nodeId}`, data);
     return response.data;
   },
-  link: async (id: string, data: LinkRequest) => {
-    const response = await api.post(`/nodes/${id}/link`, data);
+  delete: async (pyramidId: string, nodeId: string) => {
+    const response = await api.delete(`/nodes/${nodeId}`);
     return response.data;
   },
-  move: async (id: string, data: { target_parent_id: string }) => {
-    const response = await api.post(`/nodes/${id}/move`, data);
+  split: async (pyramidId: string, nodeId: string, data: SplitRequest) => {
+    const response = await api.post(`/nodes/${nodeId}/split`, data);
     return response.data;
   },
-  get: async (id: string) => {
-    const response = await api.get(`/nodes/${id}`);
+  link: async (pyramidId: string, nodeId: string, data: LinkRequest) => {
+    const response = await api.post(`/nodes/${nodeId}/link`, data);
     return response.data;
   },
-  update: async (id: string, data: Record<string, unknown>) => {
-    const response = await api.put(`/nodes/${id}`, data);
+  unlink: async (pyramidId: string, nodeId: string, targetId: string) => {
+    const response = await api.delete(`/nodes/${nodeId}/link/${targetId}`);
     return response.data;
   },
-  delete: async (id: string) => {
-    const response = await api.delete(`/nodes/${id}`);
+  move: async (pyramidId: string, nodeId: string, targetParentId: string) => {
+    const response = await api.post(`/nodes/${nodeId}/move`, { new_parent_id: targetParentId });
     return response.data;
   },
-  getContents: async (id: string) => {
-    const response = await api.get(`/nodes/${id}/contents`);
+  getContents: async (nodeId: string) => {
+    const response = await api.get(`/nodes/${nodeId}/contents`);
     return response.data;
   },
-  linkContent: async (id: string, contentId: string) => {
-    const response = await api.post(`/nodes/${id}/contents/${contentId}`);
-    return response.data;
-  },
-  unlinkContent: async (id: string, contentId: string) => {
-    const response = await api.delete(`/nodes/${id}/contents/${contentId}`);
+  unlinkContent: async (nodeId: string, contentId: string) => {
+    const response = await api.delete(`/nodes/${nodeId}/contents/${contentId}`);
     return response.data;
   }
 };
@@ -159,32 +226,40 @@ export const sourceApi = {
     const response = await api.delete(`/sources/${id}`);
     return response.data;
   },
+  check: async (id: string) => {
+    const response = await api.post(`/sources/${id}/check`);
+    return response.data;
+  },
   crawl: async (id: string) => {
     const response = await api.post(`/sources/${id}/crawl`);
     return response.data;
   },
   getCrawlHistory: async (id: string) => {
-    const response = await api.get(`/sources/${id}/history`);
+    const response = await api.get(`/sources/${id}/crawl-history`);
     return response.data;
   },
-  test: async (id: string) => {
-    const response = await api.post(`/sources/${id}/test`);
+  getDiscovered: async () => {
+    const response = await api.get('/discovery/sources');
     return response.data;
   },
   getTemplates: async () => {
     const response = await api.get('/sources/templates');
     return response.data;
   },
-  renderTemplate: async (id: string, params: Record<string, unknown>) => {
-    const response = await api.post(`/sources/templates/${id}/render`, params);
+  renderTemplate: async (templateId: string, params: Record<string, unknown>) => {
+    const response = await api.post(`/sources/templates/${templateId}/render`, params);
     return response.data;
   },
-  discover: async (pyramidId?: string) => {
-    const response = await api.post('/sources/discover', { pyramid_id: pyramidId });
+  addToWhitelist: async (domain: string) => {
+    const response = await api.post('/whitelist/', { domain, status: 'trusted' });
     return response.data;
   },
-  getDiscovered: async () => {
-    const response = await api.get('/sources/discovered');
+  ignoreDiscovered: async (domain: string) => {
+    const response = await api.post(`/sources/discovered/${domain}/ignore`);
+    return response.data;
+  },
+  test: async (id: string) => {
+    const response = await api.post(`/sources/${id}/test`);
     return response.data;
   }
 };
@@ -202,122 +277,119 @@ export const contentApi = {
     const response = await api.get(`/contents/${id}/nodes`);
     return response.data;
   },
-  uploadFile: async (file: File, submitterId?: string) => {
+  search: async (query: string) => {
+    const response = await api.get('/contents/search', { params: { q: query } });
+    return response.data;
+  },
+  submitUrl: async (url: string) => {
+    const response = await api.post('/input/url', { url });
+    return response.data;
+  },
+  submitText: async (content: string, title: string) => {
+    const response = await api.post('/input/text', { content, title });
+    return response.data;
+  },
+  uploadFile: async (file: File) => {
     const formData = new FormData();
     formData.append('file', file);
-    if (submitterId) {
-      formData.append('submitter_id', submitterId);
-    }
-    const response = await api.post('/contents/upload', formData, {
+    const response = await api.post('/input/file', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
     });
     return response.data;
   },
-  submitUrl: async (url: string, submitterId?: string) => {
-    const response = await api.post('/contents/url', { url, submitter_id: submitterId });
+  getMetabolismStats: async () => {
+    const response = await api.get('/content-management/metabolism/stats');
     return response.data;
   },
-  submitText: async (text: string, title: string, submitterId?: string) => {
-    const response = await api.post('/contents/text', { text, title, submitter_id: submitterId });
+  archiveContent: async (contentId: string, reason: string) => {
+    const response = await api.post(`/content-management/contents/${contentId}/archive`, { reason });
     return response.data;
   },
+  restoreContent: async (contentId: string) => {
+    const response = await api.post(`/content-management/contents/${contentId}/restore`);
+    return response.data;
+  },
+  deleteContent: async (contentId: string) => {
+    const response = await api.delete(`/content-management/contents/${contentId}`);
+    return response.data;
+  },
+  cleanupArchived: async (days: number) => {
+    const response = await api.post('/content-management/metabolism/cleanup', { retention_days: days });
+    return response.data;
+  }
 };
 
 export const approvalApi = {
-  getQueue: async () => {
-    const response = await api.get('/approvals/queue');
+  getAll: async (status?: string) => {
+    const params = status ? { status } : {};
+    const response = await api.get('/approvals/', { params });
     return response.data;
   },
   getPending: async () => {
     const response = await api.get('/approvals/pending');
     return response.data;
   },
-  getAll: async (status?: string) => {
-    const response = await api.get('/approvals/', { params: { status } });
+  getHistory: async () => {
+    const response = await api.get('/approvals/');
     return response.data;
   },
-  approve: async (id: string, comment?: string) => {
-    const response = await api.post(`/approvals/${id}/review`, { 
-      status: 'approved', 
-      review_comment: comment 
-    });
+  approve: async (id: string) => {
+    const response = await api.post(`/approvals/${id}/review`, { status: 'approved' });
     return response.data;
   },
   reject: async (id: string, reason: string) => {
-    const response = await api.post(`/approvals/${id}/review`, { 
-      status: 'rejected', 
-      review_comment: reason 
-    });
+    const response = await api.post(`/approvals/${id}/review`, { status: 'rejected', review_comment: reason });
     return response.data;
   },
-  review: async (id: string, status: string, note?: string, reviewer_id?: string) => {
-    const response = await api.post(`/approvals/${id}/review`, { 
-      status, 
-      review_comment: note, 
-      reviewer_id 
-    });
-    return response.data;
-  },
-  execute: async (id: string) => {
-    const response = await api.post(`/approvals/${id}/execute`);
-    return response.data;
-  },
-  getImpact: async (id: string) => {
-    const response = await api.get(`/approvals/${id}/impact`);
-    return response.data;
-  },
-  rollback: async (id: string) => {
-    const response = await api.post(`/approvals/${id}/rollback`);
+  review: async (id: string, status: 'approved' | 'rejected', comment?: string, reviewerId?: string) => {
+    const response = await api.post(`/approvals/${id}/review`, { status, review_comment: comment, reviewer_id: reviewerId });
     return response.data;
   },
   batchReview: async (ids: string[], action: 'approve' | 'reject', reason?: string) => {
     const response = await api.post('/approvals/batch/review', { ids, action, reason });
     return response.data;
   },
-  cleanup: async (reason: string = 'User cleanup') => {
+  cleanup: async (reason: string = 'Batch Cleanup') => {
     const response = await api.post('/approvals/cleanup', { reason });
     return response.data;
+  },
+  rollback: async (id: string) => {
+    const response = await api.post(`/approvals/${id}/rollback`);
+    return response.data;
+  },
+  execute: async (id: string) => {
+    const response = await api.post(`/approvals/${id}/execute`);
+    return response.data;
+  },
+  getById: async (id: string) => {
+    const response = await api.get(`/approvals/${id}`);
+    return response.data;
+  },
+  getImpact: async (id: string) => {
+    const response = await api.get(`/approvals/${id}/impact`);
+    return response.data;
   }
 };
 
-export const discoveryApi = {
-  discover: async (url: string) => {
-    const response = await api.post('/discovery/discover', { url });
+export const healthApi = {
+  getReport: async () => {
+    const response = await api.get('/health/report');
     return response.data;
   },
-  getDiscoveredDomains: async () => {
-    const response = await api.get('/discovery/domains');
+  runCheck: async () => {
+    const response = await api.post('/health/check');
     return response.data;
   },
-  approve: async (id: string) => {
-    const response = await api.post(`/discovery/domains/${id}/approve`);
+  triggerDetection: async () => {
+    const response = await api.post('/health/check');
     return response.data;
   },
-  reject: async (id: string) => {
-    const response = await api.post(`/discovery/domains/${id}/reject`);
+  getIssues: async () => {
+    const response = await api.get('/health/issues');
     return response.data;
   }
-};
-
-export const whitelistApi = {
-  getAll: async () => {
-    const response = await api.get('/whitelist/');
-    return response.data;
-  },
-  add: async (data: { domain: string; reason?: string; credibility?: number }) => {
-    const response = await api.post('/whitelist/', data);
-    return response.data;
-  },
-  remove: async (id: string) => {
-    const response = await api.delete(`/whitelist/${id}`);
-    return response.data;
-  },
-  update: async (id: string, data: Record<string, unknown>) => {
-    const response = await api.put(`/whitelist/${id}`, data);
-    return response.data;
-  },
 };
 
 export const dashboardApi = {
@@ -325,90 +397,71 @@ export const dashboardApi = {
     const response = await api.get('/dashboard/stats');
     return response.data;
   },
+  getHotspots: async () => {
+    const response = await api.get('/dashboard/hotspots');
+    return response.data;
+  },
+  getRecentActivity: async () => {
+    const response = await api.get('/dashboard/activity');
+    return response.data;
+  },
   getTrend: async (days: number = 7) => {
-    const response = await api.get(`/dashboard/trend?days=${days}`);
+    const response = await api.get('/dashboard/trend', { params: { days } });
     return response.data;
   }
 };
 
-export const healthApi = {
-  triggerDetection: async () => {
-    const response = await api.post('/health/detect');
+export const schedulerApi = {
+  getTasks: async () => {
+    const response = await api.get('/scheduler/tasks');
     return response.data;
   },
-  getReport: async () => {
-    const response = await api.get('/health/report/latest');
+  getExecutions: async (taskId?: string, limit: number = 20) => {
+    const params = { task_id: taskId, limit };
+    const response = await api.get('/scheduler/executions', { params });
     return response.data;
   },
-  getPyramidHealth: async (id: string) => {
-    const response = await api.get(`/health/pyramids/${id}`);
+  runTask: async (taskId: string) => {
+    const response = await api.post(`/scheduler/tasks/${taskId}/trigger`);
+    return response.data;
+  },
+  pause: async (taskId: string) => {
+    const response = await api.put(`/scheduler/tasks/${taskId}/pause`);
+    return response.data;
+  },
+  resume: async (taskId: string) => {
+    const response = await api.put(`/scheduler/tasks/${taskId}/resume`);
     return response.data;
   }
 };
 
-export const contributionApi = {
-  getAll: async (params?: { skip?: number; limit?: number; user_id?: string }) => {
-    const response = await api.get('/contributions', { params });
-    return response.data;
-  },
-  getById: async (id: string) => {
-    const response = await api.get(`/contributions/${id}`);
-    return response.data;
-  },
-  getStats: async (days: number = 30) => {
-    const response = await api.get('/contributions/stats', { params: { days } });
-    return response.data;
-  }
-};
-
-export const synonymApi = {
-  getAll: async (params?: { skip?: number; limit?: number }) => {
-    const response = await api.get('/synonyms', { params });
-    return response.data;
-  },
-  create: async (data: SynonymCreate) => {
-    const response = await api.post('/synonyms', data);
-    return response.data;
-  },
-  bulkCreate: async (data: SynonymCreate[]) => {
-    const response = await api.post('/synonyms/bulk', data);
-    return response.data;
-  },
-  delete: async (synonym: string) => {
-    const response = await api.delete(`/synonyms/${encodeURIComponent(synonym)}`);
-    return response.data;
-  },
-  getCanonical: async (term: string) => {
-    const response = await api.get(`/synonyms/canonical/${encodeURIComponent(term)}`);
-    return response.data;
-  }
-};
-
-export const metabolismApi = {
-  run: async () => {
-    const response = await api.post('/content-management/metabolism/run');
-    return response.data;
-  },
-  getSuggestions: async (limit: number = 50) => {
-    const response = await api.get('/content-management/metabolism/suggestions', { params: { limit } });
-    return response.data;
-  },
-  cleanup: async (ids: string[]) => {
-    const response = await api.post('/content-management/metabolism/cleanup', { ids });
-    return response.data;
-  }
-};
-
-export const hotspotApi = {
+export const configApi = {
   getAll: async () => {
-    const response = await api.get('/hotspots');
+    const response = await api.get('/config/');
     return response.data;
   },
+  update: async (key: string, value: unknown, description?: string) => {
+    const response = await api.put(`/config/${key}`, { value, description });
+    return response.data;
+  },
+  getHistory: async (key?: string) => {
+    const params = key ? { key } : {};
+    const response = await api.get('/config/history', { params });
+    return response.data;
+  },
+  testAIConnection: async (target: string = 'auto') => {
+    const response = await api.post('/config/ai/test', null, { params: { target } });
+    return response.data;
+  }
 };
 
 export const evolutionApi = {
-  triggerOptimization: async () => {
-    const response = await api.post('/strategy/optimize');
+  getDriftReport: async () => {
+    const response = await api.get('/evolution/drift/report');
+    return response.data;
+  },
+  getStrategy: async () => {
+    const response = await api.get('/strategy/current');
     return response.data;
   },
   classifyContent: async (contentId: string) => {
@@ -419,85 +472,109 @@ export const evolutionApi = {
     const response = await api.post('/evolution/classify/batch');
     return response.data;
   },
-  getEvolution: async () => {
-    return { success: true, data: [] };
-  }
-};
-
-export const schedulerApi = {
-  pause: async (taskId: string) => {
-    const response = await api.post(`/scheduler/tasks/${taskId}/pause`);
-    return response.data;
-  },
-  resume: async (taskId: string) => {
-    const response = await api.post(`/scheduler/tasks/${taskId}/resume`);
-    return response.data;
-  },
-  trigger: async (taskId: string) => {
-    const response = await api.post(`/scheduler/tasks/${taskId}/run`);
-    return response.data;
-  },
-  getExecutions: async () => {
-    const response = await api.get('/scheduler/executions');
-    return response.data;
-  },
-  getAll: async () => {
-    const response = await api.get('/scheduler/tasks');
-    return response.data;
-  },
-};
-
-export const configApi = {
-  getHistory: async () => {
-    const response = await api.get('/config/history');
-    return response.data;
-  },
-  getAll: async () => {
-    const response = await api.get('/config');
-    return response.data;
-  },
-  update: async (key: string, value: unknown) => {
-    const response = await api.put(`/config/${key}`, { value });
-    return response.data;
-  },
-  testAIConnection: async (target: 'auto' | 'local' | 'cloud' = 'auto') => {
-    const response = await api.post('/config/ai/test', null, { params: { target } });
+  triggerOptimization: async () => {
+    const response = await api.post('/strategy/optimize');
     return response.data;
   }
 };
 
-export const suggestionApi = {
-  getAll: async (params?: { pyramid_id?: string; source_id?: string; status?: string }) => {
-    const response = await api.get('/suggestions', { params });
+export const contributionApi = {
+  getStats: async (days: number = 30) => {
+    const response = await api.get('/contributions/stats', { params: { days } });
     return response.data;
   },
-  approve: async (id: string) => {
-    const response = await api.post(`/suggestions/${id}/approve`);
+  getAll: async (limit: number = 20, offset: number = 0) => {
+    const response = await api.get('/contributions/', { params: { limit, skip: offset } });
     return response.data;
   },
-  reject: async (id: string, reason?: string) => {
-    const response = await api.post(`/suggestions/${id}/reject`, null, { params: { reason } });
+  getHistory: async (limit: number = 20, offset: number = 0) => {
+    const response = await api.get('/contributions/', { params: { limit, skip: offset } });
     return response.data;
   },
-  execute: async (id: string) => {
-    const response = await api.post(`/suggestions/${id}/execute`);
+  getById: async (id: string) => {
+    const response = await api.get(`/contributions/${id}`);
+    return response.data;
+  }
+};
+
+export const synonymApi = {
+  getAll: async (params?: { skip?: number; limit?: number }) => {
+    const response = await api.get('/synonyms', { params });
+    return response.data;
+  },
+  search: async (query: string) => {
+    const response = await api.get('/synonyms/search', { params: { q: query } });
+    return response.data;
+  },
+  create: async (data: SynonymCreate) => {
+    const response = await api.post('/synonyms/', data);
+    return response.data;
+  },
+  delete: async (id: string) => {
+    const response = await api.delete(`/synonyms/${id}`);
+    return response.data;
+  },
+  getStandardTerms: async () => {
+    const response = await api.get('/synonyms/standard-terms');
+    return response.data;
+  }
+};
+
+export const whitelistApi = {
+  getAll: async () => {
+    const response = await api.get('/whitelist/');
+    return response.data;
+  },
+  add: async (data: { domain: string; credibility: number; reason: string }) => {
+    const response = await api.post('/whitelist/', data);
+    return response.data;
+  },
+  remove: async (id: string) => {
+    const response = await api.delete(`/whitelist/${id}`);
+    return response.data;
+  }
+};
+
+export const discoveryApi = {
+  getAll: async () => {
+    const response = await api.get('/sources/discovered');
+    return response.data;
+  },
+  getDiscoveredDomains: async () => {
+    const response = await api.get('/whitelist/discovered');
+    return response.data;
+  },
+  ignore: async (domain: string) => {
+    const response = await api.post(`/sources/discovered/${domain}/ignore`);
+    return response.data;
+  }
+};
+
+export const metabolismApi = {
+  run: async () => {
+    const response = await api.post('/content-management/metabolism/run');
+    return response.data;
+  },
+  getSuggestions: async () => {
+    const response = await api.get('/content-management/metabolism/suggestions');
+    return response.data;
+  },
+  cleanup: async (ids: string[]) => {
+    const response = await api.post('/content-management/metabolism/cleanup', { ids });
     return response.data;
   }
 };
 
 export const contentManagementApi = {
-  batchClean: async (dryRun: boolean = false, chineseRatioThreshold: number = 0.2) => {
-    const response = await api.post('/contents/batch/clean', { 
-      dry_run: dryRun, 
-      chinese_ratio_threshold: chineseRatioThreshold 
+  batchClean: async (data: { dry_run?: boolean; chinese_ratio_threshold?: number } = {}) => {
+    const response = await api.post('/contents/batch/clean', {
+      dry_run: data.dry_run ?? false,
+      chinese_ratio_threshold: data.chinese_ratio_threshold ?? 0.2
     });
     return response.data;
   },
-  batchSummarize: async (targetIds?: string[], overwrite: boolean = true) => {
-    const response = await api.post('/contents/batch/summarize', { 
-      target_ids: targetIds, 
-      overwrite 
-    });
+  batchSummarize: async (target_ids: string[] | undefined, overwrite: boolean) => {
+    const response = await api.post('/contents/batch/summarize', { target_ids, overwrite });
     return response.data;
   },
   batchDelete: async (ids: string[]) => {
@@ -506,18 +583,35 @@ export const contentManagementApi = {
   }
 };
 
-export const aiMonitorApi = {
-  getMetrics: async (params: MetricFilters) => {
-    const response = await api.get<PaginatedAIMetrics>('/ai-monitor/metrics', { params });
+export const hotspotApi = {
+  getTrending: async () => {
+    const response = await api.get('/hotspots/trending');
     return response.data;
   },
-  getStats: async (start_time?: string, end_time?: string) => {
-    const params = { start_time, end_time };
-    const response = await api.get<AIStats>('/ai-monitor/stats', { params });
+  ignore: async (id: string) => {
+    const response = await api.post(`/hotspots/${id}/ignore`);
     return response.data;
   },
-  cleanMetrics: async (days: number) => {
-    const response = await api.post('/ai-monitor/clean', { days });
+  getAll: async (params?: { limit?: number; offset?: number; status?: string }) => {
+    const response = await api.get('/hotspots', { params });
     return response.data;
   }
 };
+
+export const aiMonitorApi = {
+  getMetrics: async (filters: Partial<MetricFilters> = {}) => {
+    const params = { page: 1, page_size: 20, ...filters };
+    const response = await api.get<PaginatedAIMetrics>('/ai-monitor/metrics', { params });
+    return response.data;
+  },
+  getStats: async (timeRange: string = '24h') => {
+    const response = await api.get<AIStats>('/ai-monitor/stats', { params: { time_range: timeRange } });
+    return response.data;
+  },
+  cleanMetrics: async (days: number) => {
+    const response = await api.post<{ deleted_count: number }>('/ai-monitor/clean', { days });
+    return response.data;
+  }
+};
+
+export default api;

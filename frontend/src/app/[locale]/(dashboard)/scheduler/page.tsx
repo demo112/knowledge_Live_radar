@@ -13,7 +13,7 @@ export default function SchedulerPage() {
 
   const fetchData = async () => {
     try {
-      const tasksData = await schedulerApi.getAll();
+      const tasksData = await schedulerApi.getTasks();
       setTasks(tasksData);
       
       // Fetch recent executions (global)
@@ -34,7 +34,7 @@ export default function SchedulerPage() {
 
   const handleTrigger = async (id: string) => {
     try {
-      await schedulerApi.trigger(id);
+      await schedulerApi.runTask(id);
       fetchData(); // Refresh to show running
     } catch (error) {
       console.error("Failed to trigger task", error);

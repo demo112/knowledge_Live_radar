@@ -63,7 +63,7 @@ export default function PyramidDetailPage({ params }: { params: Promise<{ id: st
   const handleSplit = async (data: SplitRequest) => {
     if (!actingNode) return;
     try {
-      await nodeApi.split(actingNode.id, data);
+      await nodeApi.split(pyramidId, actingNode.id, data);
       setSplitOpen(false);
       fetchData(); // Refresh all
     } catch (error) {
@@ -89,7 +89,7 @@ export default function PyramidDetailPage({ params }: { params: Promise<{ id: st
   const handleLink = async (data: LinkRequest) => {
     if (!actingNode) return;
     try {
-      await nodeApi.link(actingNode.id, data);
+      await nodeApi.link(pyramidId, actingNode.id, data);
       setLinkOpen(false);
       fetchData();
     } catch (error) {

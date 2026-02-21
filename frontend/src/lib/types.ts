@@ -1,3 +1,4 @@
+
 export interface Pyramid {
   id: string;
   name: string;
@@ -100,9 +101,9 @@ export interface ScheduledTask {
   task_name: string;
   task_type: string;
   cron_expression: string;
-  is_active: boolean;
-  last_run_at?: string;
   next_run_at?: string;
+  last_run_at?: string;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -110,46 +111,94 @@ export interface ScheduledTask {
 export interface TaskExecution {
   id: string;
   task_id: string;
-  status: 'running' | 'success' | 'failed';
+  status: string;
   started_at: string;
   ended_at?: string;
   duration_seconds?: number;
   error_message?: string;
-  result?: unknown;
 }
 
-export interface ConfigHistory {
+export interface ContentItem {
   id: string;
-  config_key: string;
-  old_value?: unknown;
-  new_value?: unknown;
-  changed_by: string;
-  created_at: string;
-}
-
-export interface DriftProposal {
-  id: string;
-  type: string;
+  title: string;
+  url: string;
+  content_type: string;
+  summary?: string;
+  publish_date?: string;
+  author?: string;
   status: string;
-  target_id: string;
-  data: unknown;
+  quality_score?: number;
+  chinese_ratio?: number;
   created_at: string;
-}
-
-export interface ImpactAnalysis {
-  risk_level: string;
-  affected_nodes_count: number;
-  description: string;
 }
 
 export interface ChangeItem {
   id: string;
   type: string;
-  created_at: string;
-  applicant_id?: string;
-  data?: unknown;
   status: string;
+  description?: string;
+  created_at?: string;
+  updated_at?: string;
+  user_id?: string;
+  details?: any;
+  applicant_id?: string;
   reason?: string;
-  impact_analysis?: ImpactAnalysis;
-  original_data?: unknown;
+  impact_analysis?: {
+    risk_level: string;
+    affected_nodes_count: number;
+    description: string;
+  };
+  data?: any;
+  original_data?: any;
+}
+
+export interface MetricFilters {
+  start_date?: string;
+  end_date?: string;
+  metric_type?: string;
+  limit?: number;
+}
+
+export interface AIMetrics {
+  id: string;
+  timestamp: string;
+  model: string;
+  tokens_input: number;
+  tokens_output: number;
+  cost: number;
+  latency_ms: number;
+  success: boolean;
+  error_type?: string;
+}
+
+export interface PaginatedAIMetrics {
+  items: AIMetrics[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export interface AIStats {
+  total_requests: number;
+  total_tokens: number;
+  total_cost: number;
+  avg_latency: number;
+  error_rate: number;
+  daily_usage: Record<string, number>;
+  model_usage: Record<string, number>;
+}
+
+export interface SynonymCreate {
+  term: string;
+  synonyms: string[];
+  language?: string;
+}
+
+export interface ConfigHistory {
+  id: string;
+  config_key: string;
+  old_value: unknown;
+  new_value: unknown;
+  changed_by: string;
+  created_at: string;
 }

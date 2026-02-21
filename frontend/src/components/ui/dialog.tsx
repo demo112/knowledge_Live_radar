@@ -79,4 +79,13 @@ const DialogDescription = React.forwardRef<
 ))
 DialogDescription.displayName = "DialogDescription"
 
-export { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription }
+const DialogTrigger = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, children, ...props }, ref) => (
+    <div ref={ref} className={className} {...props}>
+      {children}
+    </div>
+  )
+)
+DialogTrigger.displayName = "DialogTrigger"
+
+export { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription, DialogTrigger }

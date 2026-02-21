@@ -389,7 +389,7 @@ export default function SourcesPage() {
 
       {/* Create/Edit Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" role="dialog" aria-modal="true">
           <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-4">
               {editingSource ? t('edit_source') : t('create_source')}
@@ -435,8 +435,9 @@ export default function SourcesPage() {
               ) : (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">{t('columns.name')}</label>
+                    <label htmlFor="source-name" className="block text-sm font-medium text-gray-700">{t('columns.name')}</label>
                     <input
+                      id="source-name"
                       type="text"
                       required
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
@@ -445,8 +446,9 @@ export default function SourcesPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">{t('columns.type')}</label>
+                    <label htmlFor="source-type" className="block text-sm font-medium text-gray-700">{t('columns.type')}</label>
                     <select
+                      id="source-type"
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                       value={formData.type}
                       onChange={(e) => setFormData({ ...formData, type: e.target.value })}
@@ -458,8 +460,9 @@ export default function SourcesPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">{t('columns.url')}</label>
+                    <label htmlFor="source-url" className="block text-sm font-medium text-gray-700">{t('columns.url')}</label>
                     <input
+                      id="source-url"
                       type="url"
                       required
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"

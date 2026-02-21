@@ -155,6 +155,7 @@
     "appName": "AI 知识雷达",
     "version": "v0.4.0 Iteration 4",
     "dashboard": "仪表板",
+    "knowledge": "知识图谱",
     "pyramid": "知识金字塔",
     "sources": "信息源",
     "contents": "内容库",
@@ -166,7 +167,28 @@
     "scheduler": "调度管理",
     "metabolism": "内容代谢",
     "settings": "设置",
-    "aiMonitor": "AI 监控"
+    "aiMonitor": "AI 监控",
+    "tools": "工具箱"
+  },
+  "Tools": {
+    "Douyin": {
+      "title": "抖音视频转文档",
+      "start": "开始处理...",
+      "description": "输入抖音分享链接，自动下载视频、转录音频并生成结构化文档。",
+      "input_placeholder": "粘贴抖音分享链接...",
+      "convert_button": "生成文档",
+      "converting": "正在处理中...",
+      "copy_success": "复制成功",
+      "copy_desc": "Markdown 内容已复制到剪贴板",
+      "copy_failed": "复制失败",
+      "author": "作者",
+      "duration": "时长",
+      "watch_original": "查看原视频",
+      "generated_doc": "生成文档",
+      "copy_markdown": "复制 Markdown",
+      "error": "处理失败",
+      "error_desc": "无法转换视频，请检查链接是否有效"
+    }
   },
   "Settings": {
     "title": "设置",
@@ -1279,6 +1301,33 @@
       "link_content": "关联内容",
       "update_strategy": "更新策略",
       "archive_content": "归档内容"
+    }
+  },
+  "Contents": {
+    "Submit": {
+      "tabs": {
+        "url": "链接",
+        "text": "文本",
+        "file": "文件"
+      },
+      "labels": {
+        "url": "链接地址",
+        "title": "标题",
+        "content": "内容",
+        "file": "文件"
+      },
+      "actions": {
+        "submit": "提交",
+        "submitting": "提交中..."
+      },
+      "hints": {
+        "file_formats": "支持格式: PDF, DOCX, TXT, MD"
+      },
+      "alerts": {
+        "success": "提交成功",
+        "failed": "提交失败",
+        "error": "发生错误"
+      }
     }
   }
 }
