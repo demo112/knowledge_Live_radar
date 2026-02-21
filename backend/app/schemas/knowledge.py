@@ -1,7 +1,7 @@
 from typing import Optional, List, Dict, Any
 from uuid import UUID
 from datetime import datetime
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 # Node Relation Schemas
 class KnowledgeNodeRelationBase(BaseModel):
@@ -20,7 +20,7 @@ class KnowledgeNodeRelationResponse(KnowledgeNodeRelationBase):
     source_node_id: UUID
     created_at: datetime
     
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 # Node Schemas
 class KnowledgeNodeBase(BaseModel):
@@ -52,7 +52,7 @@ class KnowledgeNodeResponse(KnowledgeNodeBase):
     outgoing_relations: List[KnowledgeNodeRelationResponse] = []
     incoming_relations: List[KnowledgeNodeRelationResponse] = []
     
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 # Cluster Membership Schemas
 class ClusterNodeMembershipBase(BaseModel):
@@ -67,7 +67,7 @@ class ClusterNodeMembershipResponse(ClusterNodeMembershipBase):
     cluster_id: UUID
     joined_at: datetime
     
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 # Cluster Schemas
 class KnowledgeClusterBase(BaseModel):
@@ -99,4 +99,19 @@ class KnowledgeClusterResponse(KnowledgeClusterBase):
     
     node_memberships: List[ClusterNodeMembershipResponse] = []
     
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
+
+class KnowledgeGraphNodeResponse(KnowledgeNodeBase):
+    id: UUID
+    health_score: int
+    content_count: int
+    last_content_at: Optional[datetime]
+    created_at: datetime
+    updated_at: datetime
+    
+    model_config = ConfigDict(from_attributes=True)
+
+class KnowledgeGraphResponse(BaseModel):
+    root_id: UUID
+    nodes: List[KnowledgeGraphNodeResponse]
+    edges: List[KnowledgeNodeRelationResponse]

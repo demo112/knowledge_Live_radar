@@ -60,7 +60,13 @@ class EvolutionEngine:
             
             linked_count = 0
             for result in similar_nodes:
-                node_id = result["id"]
+                node_id_val = result["id"]
+                # Ensure node_id is UUID
+                if isinstance(node_id_val, str):
+                    node_id = UUID(node_id_val)
+                else:
+                    node_id = node_id_val
+                    
                 distance = result["distance"]
                 
                 # Check threshold

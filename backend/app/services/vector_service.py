@@ -24,9 +24,16 @@ class DeterministicEmbeddingFunction(embedding_functions.EmbeddingFunction):
     def name(self) -> str:
         return "deterministic_hashing"
 
-    def __call__(self, texts: List[str]) -> List[List[float]]:
+    def get_config(self) -> dict:
+        return {"name": "deterministic_hashing"}
+
+    @staticmethod
+    def build_from_config(config: dict) -> "DeterministicEmbeddingFunction":
+        return DeterministicEmbeddingFunction()
+
+    def __call__(self, input: List[str]) -> List[List[float]]:
         results = []
-        for text in texts:
+        for text in input:
             # Use SHA-512 to generate enough bytes, then normalize to [-1, 1]
             digest = hashlib.sha512(text.encode("utf-8")).digest()
             # Extend if needed (384 floats = 384 bytes minimum)
@@ -229,16 +236,24 @@ class VectorService:
             logger.error(f"Error searching similar content: {e}")
             return []
 
-    async def get_content_embeddings(self, content_ids: List[UUID]) -> List[List[float]]:
+    async def get_content_embeddings(self, content_ids: List[UUID]) -> Dict[str, List[float]]:
         try:
             results = self.content_collection.get(
                 ids=[str(id) for id in content_ids],
                 include=["embeddings"]
             )
-            return results["embeddings"] if results["embeddings"] else []
+            
+            if not results or not results["embeddings"] or not results["ids"]:
+                return {}
+                
+            id_to_embedding = {}
+            for i, cid in enumerate(results["ids"]):
+                id_to_embedding[cid] = results["embeddings"][i]
+                
+            return id_to_embedding
         except Exception as e:
             logger.error(f"Error getting content embeddings: {e}")
-            return []
+            return {}
 
     async def delete_node_vector(self, node_id: UUID):
         try:

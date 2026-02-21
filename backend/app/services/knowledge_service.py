@@ -1,4 +1,4 @@
-from typing import List, Optional, Any, Union
+from typing import List, Optional, Any, Union, Dict
 from uuid import UUID
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -6,9 +6,10 @@ from sqlalchemy import select, and_, update, func
 
 from app.repositories.knowledge import KnowledgeNodeRepository, KnowledgeClusterRepository, KnowledgeRelationRepository
 from app.models.knowledge import KnowledgeNode, KnowledgeCluster, KnowledgeNodeRelation, ClusterNodeMembership
-from app.models.content import ContentKnowledgeRelation
+from app.models.content import ContentKnowledgeRelation, ContentItem
 from app.models.concept import Concept
 from app.core.ai.facade import ai_facade
+from app.services.vector_service import VectorService
 from app.schemas.knowledge import (
     KnowledgeNodeCreate, KnowledgeNodeUpdate,
     KnowledgeClusterCreate, KnowledgeClusterUpdate,
@@ -21,6 +22,7 @@ class KnowledgeService:
         self.node_repo = KnowledgeNodeRepository(db)
         self.cluster_repo = KnowledgeClusterRepository(db)
         self.relation_repo = KnowledgeRelationRepository(db)
+        self.vector_service = VectorService()
 
     # Node Operations
     async def create_node(self, data: KnowledgeNodeCreate) -> KnowledgeNode:
@@ -29,6 +31,15 @@ class KnowledgeService:
             raise HTTPException(status_code=400, detail=f"Node with name '{data.name}' already exists")
         
         node = await self.node_repo.create(data.model_dump())
+        
+        # Sync to Vector DB
+        await self.vector_service.upsert_knowledge_node_vector(
+            node_id=node.id,
+            name=node.name,
+            description=node.description,
+            ai_model=node.ai_model
+        )
+        
         return node
 
     async def get_node(self, node_id: UUID) -> Optional[KnowledgeNode]:
@@ -50,6 +61,15 @@ class KnowledgeService:
             update_data.update(kwargs)
             
         updated_node = await self.node_repo.update(node, update_data)
+        
+        # Sync to Vector DB
+        await self.vector_service.upsert_knowledge_node_vector(
+            node_id=updated_node.id,
+            name=updated_node.name,
+            description=updated_node.description,
+            ai_model=updated_node.ai_model
+        )
+        
         return updated_node
 
     async def delete_node(self, node_id: UUID) -> bool:
@@ -103,8 +123,70 @@ class KnowledgeService:
         # For now, we focus on populating the node's ai_model.
         
         await self.db.commit()
+        
+        # Sync to Vector DB
+        await self.vector_service.upsert_knowledge_node_vector(
+            node_id=node.id,
+            name=node.name,
+            description=node.description,
+            ai_model=node.ai_model
+        )
+        
         # Re-fetch the node to ensure all relationships are loaded and attributes are fresh
         # This avoids issues with expired attributes after commit
+        node = await self.get_node(node_id)
+        return node
+
+    async def evolve_node_model(self, node_id: UUID) -> KnowledgeNode:
+        """
+        Task 2.3: Model Evolution Feedback Loop
+        Evolve the cognitive model based on recently linked content.
+        """
+        node = await self.get_node(node_id)
+        
+        if not node.ai_model:
+            # If no model exists, generate one first
+            return await self.generate_cognitive_model_for_node(node_id)
+            
+        # 1. Fetch recent content linked to this node
+        stmt = (
+            select(ContentItem)
+            .join(ContentKnowledgeRelation)
+            .where(ContentKnowledgeRelation.node_id == node_id)
+            .order_by(ContentKnowledgeRelation.created_at.desc())
+            .limit(10)
+        )
+        result = await self.db.execute(stmt)
+        recent_content = result.scalars().all()
+        
+        if not recent_content:
+            # No content to evolve from
+            return node
+            
+        content_items = [
+            {"title": item.title, "summary": item.summary or (item.content_text[:200] if item.content_text else "")}
+            for item in recent_content
+        ]
+        
+        # 2. Evolve model via AI
+        updated_model = await ai_facade.evolve_cognitive_model(
+            current_model=node.ai_model,
+            new_content_items=content_items
+        )
+        
+        # 3. Update node
+        node.ai_model = updated_model
+        await self.db.commit()
+        
+        # Sync to Vector DB
+        await self.vector_service.upsert_knowledge_node_vector(
+            node_id=node.id,
+            name=node.name,
+            description=node.description,
+            ai_model=node.ai_model
+        )
+        
+        # Re-fetch
         node = await self.get_node(node_id)
         return node
 
@@ -195,6 +277,66 @@ class KnowledgeService:
         Get all relations (incoming and outgoing) for a node.
         """
         return await self.relation_repo.get_relations(node_id)
+
+    async def get_knowledge_graph(self, root_id: UUID, depth: int = 2, relation_type: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Task 3.2: Graph Query Optimization
+        Get knowledge graph structure (nodes and edges) starting from root_id up to depth.
+        Using BFS to traverse the graph and avoid N+1 queries.
+        """
+        # BFS initialization
+        visited_node_ids = {root_id}
+        # Start BFS with root node
+        current_layer_ids = {root_id}
+        
+        all_nodes = {} # id -> node object
+        all_edges = [] # list of relation objects
+        all_edge_ids = set()
+        
+        # Pre-fetch root node to ensure it exists
+        root_node = await self.get_node(root_id)
+        if not root_node:
+             raise HTTPException(status_code=404, detail="Root node not found")
+        all_nodes[root_id] = root_node
+
+        for _ in range(depth):
+            if not current_layer_ids:
+                break
+                
+            # Fetch all relations connected to current layer nodes
+            # This uses the optimized repository method with eager loading
+            relations = await self.relation_repo.get_relations_with_nodes(list(current_layer_ids), relation_type)
+            
+            next_layer_ids = set()
+            
+            for rel in relations:
+                # Add edge if not already added
+                if rel.id not in all_edge_ids:
+                    all_edges.append(rel)
+                    all_edge_ids.add(rel.id)
+                
+                # Identify neighbor
+                neighbor = None
+                # Check source/target against current_layer_ids
+                # Note: relations might connect two nodes within the same layer or already visited
+                if rel.source_node_id in current_layer_ids:
+                    neighbor = rel.target_node
+                elif rel.target_node_id in current_layer_ids:
+                    neighbor = rel.source_node
+                
+                # Add neighbor if valid and not visited
+                if neighbor and neighbor.id not in visited_node_ids:
+                    visited_node_ids.add(neighbor.id)
+                    next_layer_ids.add(neighbor.id)
+                    all_nodes[neighbor.id] = neighbor
+            
+            current_layer_ids = next_layer_ids
+            
+        return {
+            "root_id": root_id,
+            "nodes": list(all_nodes.values()),
+            "edges": all_edges
+        }
 
     # Content Linking Operations
     async def link_content(self, node_id: UUID, content_id: UUID, source: str = "manual", confidence: float = 1.0) -> ContentKnowledgeRelation:

@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, desc
 from sqlalchemy.orm import selectinload
 from app.database import get_db
-from app.models.content import ContentItem, ContentNodeRelation
+from app.models.content import ContentItem, ContentNodeRelation, ContentKnowledgeRelation
 from app.models.knowledge import KnowledgeNode
 from app.models.pyramid import PyramidNode
 from app.models.approval import Approval
@@ -62,7 +62,8 @@ async def get_contents(
 ):
     stmt = select(ContentItem).options(
         selectinload(ContentItem.validation_result),
-        selectinload(ContentItem.node_relations).selectinload(ContentNodeRelation.node).selectinload(PyramidNode.pyramid)
+        selectinload(ContentItem.node_relations).selectinload(ContentNodeRelation.node).selectinload(PyramidNode.pyramid),
+        selectinload(ContentItem.knowledge_relations).selectinload(ContentKnowledgeRelation.node)
     ).order_by(desc(ContentItem.created_at)).offset(skip).limit(limit)
     if source_id:
         stmt = stmt.where(ContentItem.source_id == source_id)
@@ -81,7 +82,8 @@ async def get_content(
 ):
     stmt = select(ContentItem).where(ContentItem.id == id).options(
         selectinload(ContentItem.validation_result),
-        selectinload(ContentItem.node_relations).selectinload(ContentNodeRelation.node).selectinload(PyramidNode.pyramid)
+        selectinload(ContentItem.node_relations).selectinload(ContentNodeRelation.node).selectinload(PyramidNode.pyramid),
+        selectinload(ContentItem.knowledge_relations).selectinload(ContentKnowledgeRelation.node)
     )
     result = await db.execute(stmt)
     content = result.scalar_one_or_none()

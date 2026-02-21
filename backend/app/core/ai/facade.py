@@ -7,12 +7,14 @@ from app.core.ai.processors.discovery import discovery_processor
 from app.core.ai.processors.enhancement import enhancement_processor
 from app.core.ai.processors.suggestion import suggestion_processor
 from app.core.ai.processors.cognitive_processor import cognitive_processor
+from app.core.ai.processors.intent import intent_processor
 from app.schemas.ai import (
     PyramidSuggestResponse, 
     ContentClassificationResponse, 
     SourceAnalyzeResponse,
     NodePlacementResponse
 )
+from app.schemas.intent import IntentParseResult
 
 
 class AIFacade:
@@ -128,6 +130,10 @@ class AIFacade:
     async def evolve_cognitive_model(self, current_model: Dict[str, Any], new_content: List[Dict[str, Any]]) -> Dict[str, Any]:
         """进化认知模型。"""
         return await cognitive_processor.evolve_cognitive_model(current_model, new_content)
+
+    async def parse_intent(self, text: str) -> IntentParseResult:
+        """解析用户意图。"""
+        return await intent_processor.parse_intent(text)
 
     async def generate_suggestions(self, scene: str, context: Dict[str, Any], db: AsyncSession = None) -> List[Dict[str, Any]]:
         """通用建议生成方法。"""

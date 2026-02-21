@@ -47,7 +47,12 @@ class DiscoveryService:
         existing_target_ids.add(node_id) # Exclude self
         
         for result in similar_nodes:
-            target_id = result["id"]
+            try:
+                target_id = UUID(result["id"])
+            except ValueError:
+                logger.warning(f"Invalid UUID returned from vector search: {result['id']}")
+                continue
+                
             if target_id in existing_target_ids:
                 continue
                 
@@ -99,20 +104,28 @@ class DiscoveryService:
         id_to_title = {row.id: row.title for row in unlinked_content}
         
         # 2. Get embeddings
-        embeddings = await self.vector_service.get_content_embeddings(unlinked_ids)
+        id_to_embedding = await self.vector_service.get_content_embeddings(unlinked_ids)
         
-        if not embeddings or len(embeddings) != len(unlinked_ids):
-            logger.warning("Mismatch in embeddings count or empty embeddings")
+        if not id_to_embedding:
             return []
             
+        # Filter unlinked_ids to only those we have embeddings for
+        valid_ids = [uid for uid in unlinked_ids if str(uid) in id_to_embedding]
+        
+        if len(valid_ids) < 3: # Need at least 3 for a cluster
+            return []
+
         # 3. Simple clustering (Connected Components)
         # O(N^2) pairwise comparison
-        adj = {uid: set() for uid in unlinked_ids}
+        adj = {uid: set() for uid in valid_ids}
         
-        for i in range(len(unlinked_ids)):
-            for j in range(i + 1, len(unlinked_ids)):
-                vec_i = embeddings[i]
-                vec_j = embeddings[j]
+        for i in range(len(valid_ids)):
+            for j in range(i + 1, len(valid_ids)):
+                uid_i = valid_ids[i]
+                uid_j = valid_ids[j]
+                
+                vec_i = id_to_embedding[str(uid_i)]
+                vec_j = id_to_embedding[str(uid_j)]
                 
                 # Manual cosine similarity
                 dot_product = sum(a*b for a,b in zip(vec_i, vec_j))
@@ -125,14 +138,14 @@ class DiscoveryService:
                     sim = dot_product / (norm_i * norm_j)
                     
                 if sim >= similarity_threshold:
-                    adj[unlinked_ids[i]].add(unlinked_ids[j])
-                    adj[unlinked_ids[j]].add(unlinked_ids[i])
+                    adj[uid_i].add(uid_j)
+                    adj[uid_j].add(uid_i)
         
         # Find connected components
         visited = set()
         clusters = []
         
-        for uid in unlinked_ids:
+        for uid in valid_ids:
             if uid not in visited:
                 component = []
                 stack = [uid]

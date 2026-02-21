@@ -33,6 +33,16 @@ class ContentNodeInfo(BaseModel):
 
     model_config = {"from_attributes": True}
 
+class ContentKnowledgeNodeInfo(BaseModel):
+    id: UUID
+    name: str
+    description: Optional[str] = None
+    node_type: str = "concept"
+    source: str = "manual"
+    confidence: float = 1.0
+
+    model_config = {"from_attributes": True}
+
 class ValidationResultResponse(BaseModel):
     overall_score: Optional[int] = None
     hard_result: Optional[dict[str, Any]] = None
@@ -49,6 +59,7 @@ class ContentResponse(ContentBase):
     created_at: datetime
     validation_result: Optional[ValidationResultResponse] = None
     nodes: List[ContentNodeInfo] = Field(default_factory=list)
+    knowledge_nodes: List[ContentKnowledgeNodeInfo] = Field(default_factory=list)
     
     model_config = {"from_attributes": True}
 

@@ -35,6 +35,7 @@ class InformationSource(Base):
     # node_relations = relationship("SourceNodeRelation", back_populates="source")
     # contents = relationship("ContentItem", back_populates="source")
     crawl_jobs: Mapped[List["CrawlJob"]] = relationship("app.models.crawl_job.CrawlJob", back_populates="source", cascade="all, delete-orphan")
+    knowledge_relations: Mapped[List["SourceKnowledgeRelation"]] = relationship("SourceKnowledgeRelation", back_populates="source", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<InformationSource(id={self.id}, name={self.name}, type={self.type})>"
@@ -53,3 +54,18 @@ class SourceNodeRelation(Base):
 
     def __repr__(self):
         return f"<SourceNodeRelation(source_id={self.source_id}, node_id={self.node_id})>"
+
+
+class SourceKnowledgeRelation(Base):
+    __tablename__ = "source_knowledge_relations"
+
+    source_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("information_sources.id"), primary_key=True)
+    node_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("knowledge_nodes.id"), primary_key=True)
+    weight: Mapped[float] = mapped_column(Float, default=1.0)
+    
+    # Relationships
+    source: Mapped["InformationSource"] = relationship("InformationSource", back_populates="knowledge_relations")
+    node: Mapped["KnowledgeNode"] = relationship("app.models.knowledge.KnowledgeNode")
+
+    def __repr__(self):
+        return f"<SourceKnowledgeRelation(source_id={self.source_id}, node_id={self.node_id})>"

@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from uuid import UUID
 from fastapi import APIRouter, Depends, status, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,7 +8,8 @@ from app.schemas.knowledge import (
     KnowledgeNodeCreate, KnowledgeNodeUpdate, KnowledgeNodeResponse,
     KnowledgeClusterCreate, KnowledgeClusterUpdate, KnowledgeClusterResponse,
     KnowledgeNodeRelationCreate, KnowledgeNodeRelationResponse,
-    ClusterNodeMembershipCreate, ClusterNodeMembershipResponse
+    ClusterNodeMembershipCreate, ClusterNodeMembershipResponse,
+    KnowledgeGraphResponse
 )
 from app.schemas.common import SuccessResponse
 
@@ -63,6 +64,17 @@ async def generate_cognitive_model(
     node = await service.generate_cognitive_model_for_node(id)
     return SuccessResponse(data=node)
 
+@router.post("/nodes/{id}/evolve-model", response_model=SuccessResponse[KnowledgeNodeResponse])
+async def evolve_node_model(
+    id: UUID,
+    service: KnowledgeService = Depends(get_service)
+):
+    """
+    Task 2.3: Evolve the cognitive model based on recently linked content.
+    """
+    node = await service.evolve_node_model(id)
+    return SuccessResponse(data=node)
+
 @router.delete("/nodes/{id}", response_model=SuccessResponse[bool])
 async def delete_node(
     id: UUID,
@@ -70,6 +82,19 @@ async def delete_node(
 ):
     result = await service.delete_node(id)
     return SuccessResponse(data=result)
+
+@router.get("/nodes/{id}/graph", response_model=SuccessResponse[KnowledgeGraphResponse])
+async def get_knowledge_graph(
+    id: UUID,
+    depth: int = Query(2, ge=1, le=5),
+    relation_type: Optional[str] = None,
+    service: KnowledgeService = Depends(get_service)
+):
+    """
+    Task 3.2: Get the knowledge graph structure (nodes and edges) starting from the given node up to the specified depth.
+    """
+    graph_data = await service.get_knowledge_graph(id, depth, relation_type)
+    return SuccessResponse(data=graph_data)
 
 # Cluster Endpoints
 @router.post("/clusters", response_model=SuccessResponse[KnowledgeClusterResponse], status_code=status.HTTP_201_CREATED)

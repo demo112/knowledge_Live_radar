@@ -23,7 +23,7 @@ class DiscoveryEvent(BaseModel):
 
 class InformationSourceBase(BaseModel):
     name: str = Field(..., max_length=100)
-    type: str = Field(..., pattern="^(RSS|API|WEB|USER|WECHAT_MP|BILIBILI_USER|JUEJIN_COLUMN)$")
+    type: str = Field(..., pattern="^(RSS|API|WEB|USER|WECHAT_MP|BILIBILI_USER|JUEJIN_COLUMN|rss|api|web|sitemap)$")
     url: str
     config: Optional[dict[str, Any]] = None
     template_id: Optional[str] = None

@@ -9,7 +9,8 @@ from app.routers import (
     input, whitelist, dashboard, health,
     hotspots, drift, strategy, scheduler, config, evolution,
     contributions, synonyms, classification, notifications,
-    content_management, suggestions, ai_monitor
+    content_management, suggestions, ai_monitor, knowledge,
+    tools, intents
 )
 
 # Configure Logging
@@ -134,6 +135,9 @@ app.include_router(content_management.router, prefix=settings.API_V1_STR)
 app.include_router(content_management.metabolism_router, prefix=settings.API_V1_STR)
 app.include_router(suggestions.router, prefix=settings.API_V1_STR)
 app.include_router(ai_monitor.router, prefix=settings.API_V1_STR)
+app.include_router(knowledge.router, prefix=settings.API_V1_STR)
+app.include_router(tools.router, prefix=settings.API_V1_STR)
+app.include_router(intents.router, prefix=settings.API_V1_STR)
 
 @app.get("/")
 async def root():

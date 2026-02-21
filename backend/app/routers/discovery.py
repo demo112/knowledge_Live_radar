@@ -18,7 +18,7 @@ class DiscoveryResponse(BaseModel):
     type: str
 
 class NodeRelationDiscoveryRequest(BaseModel):
-    pyramid_id: Optional[UUID] = None
+    node_id: UUID
     similarity_threshold: float = 0.7
     limit: int = 50
 
@@ -47,8 +47,8 @@ async def discover_node_relations(
     """
     service = DiscoveryService(db)
     results = await service.discover_node_relations(
-        pyramid_id=request.pyramid_id,
-        similarity_threshold=request.similarity_threshold,
+        node_id=request.node_id,
+        threshold=request.similarity_threshold,
         limit=request.limit
     )
     return SuccessResponse(data=results)

@@ -47,3 +47,21 @@ class KnowledgeRelationRepository(BaseRepository[KnowledgeNodeRelation]):
         )
         result = await self.db.execute(query)
         return result.scalars().all()
+
+    async def get_relations_with_nodes(self, node_ids: List[UUID], relation_type: Optional[str] = None) -> List[KnowledgeNodeRelation]:
+        if not node_ids:
+            return []
+            
+        query = select(KnowledgeNodeRelation).options(
+            selectinload(KnowledgeNodeRelation.source_node),
+            selectinload(KnowledgeNodeRelation.target_node)
+        ).where(
+            (KnowledgeNodeRelation.source_node_id.in_(node_ids)) | 
+            (KnowledgeNodeRelation.target_node_id.in_(node_ids))
+        )
+        
+        if relation_type:
+            query = query.where(KnowledgeNodeRelation.relation_type == relation_type)
+            
+        result = await self.db.execute(query)
+        return result.scalars().all()

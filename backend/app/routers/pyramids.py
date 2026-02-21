@@ -58,7 +58,7 @@ async def get_templates(
     service: TemplateService = Depends(get_template_service)
 ):
     """Get available pyramid templates"""
-    templates = service.get_templates()
+    templates = await service.get_templates()
     return SuccessResponse(data=templates)
 
 @router.post("/from-template/{template_id}", response_model=SuccessResponse[PyramidDetailResponse], status_code=status.HTTP_201_CREATED)

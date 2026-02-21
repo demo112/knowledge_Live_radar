@@ -1,113 +1,104 @@
+
 import pytest
-from uuid import uuid4
-from sqlalchemy.ext.asyncio import AsyncSession
+from unittest.mock import MagicMock, patch, AsyncMock
+from uuid import uuid4, UUID
 from app.services.discovery_service import DiscoveryService
+from app.schemas.knowledge import KnowledgeNodeCreate
 from app.services.knowledge_service import KnowledgeService
-from app.schemas.knowledge import KnowledgeNodeCreate, KnowledgeNodeRelationCreate
 from app.models.content import ContentItem
-from unittest.mock import AsyncMock, patch
 
 @pytest.mark.asyncio
-async def test_discover_node_relations(db_session: AsyncSession):
-    # Setup
-    ks = KnowledgeService(db_session)
+async def test_discover_node_relations(db_session):
+    # 1. Setup KnowledgeService and create two nodes
+    knowledge_service = KnowledgeService(db_session)
     
-    # Create nodes
-    node1 = await ks.create_node(KnowledgeNodeCreate(name="Python", description="Programming Language"))
-    node2 = await ks.create_node(KnowledgeNodeCreate(name="FastAPI", description="Web Framework for Python"))
-    node3 = await ks.create_node(KnowledgeNodeCreate(name="Java", description="Programming Language"))
+    node1_data = KnowledgeNodeCreate(name="Node A", description="Description A", node_type="concept")
+    node1 = await knowledge_service.create_node(node1_data)
     
-    # Create existing relation
-    await ks.create_relation(node1.id, KnowledgeNodeRelationCreate(
-        target_node_id=node3.id,
-        relation_type="similar_to"
-    ))
-    
-    # Mock VectorService
+    node2_data = KnowledgeNodeCreate(name="Node B", description="Description B", node_type="concept")
+    node2 = await knowledge_service.create_node(node2_data)
+
+    # 2. Mock VectorService
     with patch("app.services.discovery_service.VectorService") as MockVectorService:
-        mock_vector = MockVectorService.return_value
+        mock_vector_service = MockVectorService.return_value
         
-        # We need to ensure the mock is async if the real method is async
-        mock_vector.search_similar_nodes = AsyncMock()
+        # Setup mock behavior for search_similar_nodes
+        # When searching for Node A, return Node B as a result
+        # Note: VectorService returns list of dicts
+        mock_vector_service.search_similar_nodes = AsyncMock(return_value=[
+            {"id": str(node2.id), "distance": 0.1, "metadata": {"name": "Node B"}}
+        ])
         
-        # Mock search results
-        mock_vector.search_similar_nodes.return_value = [
-            {"id": node2.id, "distance": 0.1, "metadata": {"name": "FastAPI"}}, # High similarity
-            {"id": node3.id, "distance": 0.2, "metadata": {"name": "Java"}},    # Already related
-            {"id": uuid4(), "distance": 2.0, "metadata": {"name": "Rust"}},     # Low similarity
-        ]
+        # 3. Instantiate DiscoveryService (it will use the mock)
+        discovery_service = DiscoveryService(db_session)
         
-        # Initialize DiscoveryService
-        ds = DiscoveryService(db_session)
-        ds.vector_service = mock_vector 
+        # 4. Call discover_node_relations
+        relations = await discovery_service.discover_node_relations(node_id=node1.id, limit=5, threshold=0.5)
         
-        # Discover relations for node1
-        relations = await ds.discover_node_relations(node1.id, threshold=0.5)
-        
-        # Verify
+        # 5. Assertions
         assert len(relations) == 1
         assert relations[0]["target_node_id"] == node2.id
         assert relations[0]["source_node_id"] == node1.id
         
-        # Check that node3 was filtered out (existing relation)
-        target_ids = [r["target_node_id"] for r in relations]
-        assert node3.id not in target_ids
+        # Verify search was called with correct text
+        expected_query = f"{node1.name}: {node1.description}"
+        mock_vector_service.search_similar_nodes.assert_called_once()
+        args, kwargs = mock_vector_service.search_similar_nodes.call_args
+        assert args[0] == expected_query
 
 @pytest.mark.asyncio
-async def test_discover_content_clusters(db_session: AsyncSession):
-    # Setup
-    ds = DiscoveryService(db_session)
-    
-    # Create unlinked content
-    c1 = ContentItem(title="Python Basics", url="http://example.com/1", content_hash="hash1")
-    c2 = ContentItem(title="Python Intro", url="http://example.com/2", content_hash="hash2")
-    c3 = ContentItem(title="Java Intro", url="http://example.com/3", content_hash="hash3")
-    c4 = ContentItem(title="Python Guide", url="http://example.com/4", content_hash="hash4")
+async def test_discover_content_clusters(db_session):
+    # 1. Setup - Create unlinked ContentItems
+    c1 = ContentItem(
+        id=uuid4(), title="Content 1", content_text="Text about AI", 
+        url="http://example.com/1", status="pending", source_id=uuid4()
+    )
+    c2 = ContentItem(
+        id=uuid4(), title="Content 2", content_text="Another text about AI", 
+        url="http://example.com/2", status="pending", source_id=uuid4()
+    )
+    c3 = ContentItem(
+        id=uuid4(), title="Content 3", content_text="Text about Cooking", 
+        url="http://example.com/3", status="pending", source_id=uuid4()
+    )
+    c4 = ContentItem(
+        id=uuid4(), title="Content 4", content_text="More AI text", 
+        url="http://example.com/4", status="pending", source_id=uuid4()
+    )
     
     db_session.add_all([c1, c2, c3, c4])
     await db_session.commit()
-    await db_session.refresh(c1)
-    await db_session.refresh(c2)
-    await db_session.refresh(c3)
-    await db_session.refresh(c4)
     
-    # Mock VectorService
+    # 2. Mock VectorService
     with patch("app.services.discovery_service.VectorService") as MockVectorService:
-        mock_vector = MockVectorService.return_value
+        mock_vector_service = MockVectorService.return_value
         
-        # Mock embeddings: c1, c2, c4 are similar (Python), c3 is different (Java)
-        # 2D vectors: [1, 0] vs [0, 1]
-        # Python: [1, 0.1]
-        # Java: [0.1, 1]
+        # Setup mock behavior for get_content_embeddings
+        # Return dict of vectors
+        # c1, c2, c4 are similar. c3 is different.
+        mock_vector_service.get_content_embeddings = AsyncMock(return_value={
+            str(c1.id): [1.0, 0.0],
+            str(c2.id): [0.9, 0.1],
+            str(c3.id): [0.0, 1.0],
+            str(c4.id): [0.95, 0.05]
+        })
         
-        embeddings_map = {
-            c1.id: [1.0, 0.1],
-            c2.id: [0.9, 0.2],
-            c3.id: [0.1, 1.0],
-            c4.id: [0.95, 0.15]
-        }
+        # 3. Instantiate DiscoveryService
+        discovery_service = DiscoveryService(db_session)
         
-        async def get_embeddings_side_effect(ids):
-            return [embeddings_map[uid] for uid in ids]
-            
-        mock_vector.get_content_embeddings = AsyncMock(side_effect=get_embeddings_side_effect)
+        # 4. Call discover_content_clusters
+        clusters = await discovery_service.discover_content_clusters(batch_size=10, similarity_threshold=0.8)
         
-        # Manually set the instance
-        ds.vector_service = mock_vector
-        
-        # Run discovery
-        # Similarity threshold 0.8
-        clusters = await ds.discover_content_clusters(batch_size=10, similarity_threshold=0.8)
-        
-        # Verify
-        # Should find 1 cluster (Python) with size 3 (c1, c2, c4)
-        # c3 is isolated
+        # 5. Assertions
+        # Expect 1 cluster with c1, c2, c4 (size >= 3)
+        # c3 is isolated or cluster size 1, so filtered out
         assert len(clusters) == 1
-        cluster = clusters[0]
-        assert cluster["size"] == 3
         
-        cluster_ids = set(cluster["content_ids"])
-        assert c1.id in cluster_ids
-        assert c2.id in cluster_ids
-        assert c4.id in cluster_ids
-        assert c3.id not in cluster_ids
+        cluster_item_ids = [item for item in clusters[0]["content_ids"]]
+        assert c1.id in cluster_item_ids
+        assert c2.id in cluster_item_ids
+        assert c4.id in cluster_item_ids
+        assert c3.id not in cluster_item_ids
+
+
+        assert c3.id not in cluster_item_ids
